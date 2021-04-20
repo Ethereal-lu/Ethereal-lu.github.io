@@ -4,15 +4,17 @@
   <meta charset="utf-8">
   
   
-  <title>归档: 2021/4 | 驯鹿非鹿</title>
+  <title>tomcat笔记 | 驯鹿非鹿</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="驯鹿先生的学习笔记">
-<meta property="og:type" content="website">
-<meta property="og:title" content="驯鹿非鹿">
-<meta property="og:url" content="https://ethereal-lu.github.io/archives/2021/04/index.html">
+  <meta name="description" content="将工程部署到tomcat中 直接将工程拖拽到tomcat的webapps目录下即可访问 在tomcat中的conf\Catalina\localhost下添加配置文件来配置工程，此时工程可以存放于机器的任何位置 配置文件的示例如下   &lt;Context path&#x3D;”&#x2F;github_blog” docBase&#x3D;”E:\programme_work\vscode_work\GitHubSite\">
+<meta property="og:type" content="article">
+<meta property="og:title" content="tomcat笔记">
+<meta property="og:url" content="https://ethereal-lu.github.io/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/index.html">
 <meta property="og:site_name" content="驯鹿非鹿">
-<meta property="og:description" content="驯鹿先生的学习笔记">
+<meta property="og:description" content="将工程部署到tomcat中 直接将工程拖拽到tomcat的webapps目录下即可访问 在tomcat中的conf\Catalina\localhost下添加配置文件来配置工程，此时工程可以存放于机器的任何位置 配置文件的示例如下   &lt;Context path&#x3D;”&#x2F;github_blog” docBase&#x3D;”E:\programme_work\vscode_work\GitHubSite\">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-04-20T12:39:32.000Z">
+<meta property="article:modified_time" content="2021-04-20T14:24:38.544Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -71,134 +73,68 @@
 </header>
 
       <div class="outer">
-        <section id="main">
-  
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2021" class="archive-year">2021</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/" class="archive-article-date">
-  <time class="dt-published" datetime="2021-04-20T12:39:32.000Z" itemprop="datePublished">4月 20</time>
+        <section id="main"><article id="post-Spring系列学习笔记/tomcat笔记" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/" class="article-date">
+  <time class="dt-published" datetime="2021-04-20T12:39:32.000Z" itemprop="datePublished">2021-04-20</time>
 </a>
-      
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Spring系列学习笔记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/">tomcat笔记</a>
+    <h1 class="p-name article-title" itemprop="headline name">
+      tomcat笔记
     </h1>
   
 
-    </header>
-  </div>
-</article>
-  
+      </header>
     
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo_categories/" class="archive-article-date">
-  <time class="dt-published" datetime="2021-04-20T12:07:32.000Z" itemprop="datePublished">4月 20</time>
-</a>
+    <div class="e-content article-entry" itemprop="articleBody">
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo_categories/">“hexo的分类问题”</a>
-    </h1>
-  
+        <h3 id="将工程部署到tomcat中"><a href="#将工程部署到tomcat中" class="headerlink" title="将工程部署到tomcat中"></a>将工程部署到tomcat中</h3><ol>
+<li>直接将工程拖拽到tomcat的webapps目录下即可访问</li>
+<li>在tomcat中的conf\Catalina\localhost下添加配置文件来配置工程，此时工程可以存放于机器的任何位置<ul>
+<li>配置文件的示例如下<ul>
+<li>  &lt;Context path=”/github_blog” docBase=”E:\programme_work\vscode_work\GitHubSite\public”/&gt;</li>
+<li><u>其中，Context表示一个工程上下文<br>path表示工程的访问路径。是该文件的映射，即在url中输入<a target="_blank" rel="noopener" href="http://localhost:8080/github_blog/%EF%BC%8C%E5%B0%B1%E4%BC%9A%E8%BF%9B%E5%85%A5%E8%BF%99%E4%B8%AA%E5%B7%A5%E7%A8%8B%E3%80%82">http://localhost:8080/github_blog/，就会进入这个工程。</a><br>docBase表示工程目录的实际位置</u>  </li>
+</ul>
+</li>
+<li>一个配置文件对应于一个工程</li>
+</ul>
+</li>
+</ol>
 
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/tomcat/" class="archive-article-date">
-  <time class="dt-published" datetime="2021-04-20T09:20:53.000Z" itemprop="datePublished">4月 20</time>
-</a>
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/tomcat/">Tomcat启动一闪而过以及报java.lang.IllegalStateException: 无输出目录以及乱码</a>
-    </h1>
-  
-
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring5%E7%AC%94%E8%AE%B0/" class="archive-article-date">
-  <time class="dt-published" datetime="2021-04-20T07:39:41.000Z" itemprop="datePublished">4月 20</time>
-</a>
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/" data-id="cknq61q2c00006kaq4r1fclhy" data-title="tomcat笔记" class="article-share-link">分享</a>
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring5%E7%AC%94%E8%AE%B0/">Spring5学习笔记</a>
-    </h1>
-  
-
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/StringBuilder%E6%95%B0%E7%BB%84%E5%BC%95%E5%8F%91NullPointerException/" class="archive-article-date">
-  <time class="dt-published" datetime="2021-04-20T01:57:45.000Z" itemprop="datePublished">4月 20</time>
-</a>
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/StringBuilder%E6%95%B0%E7%BB%84%E5%BC%95%E5%8F%91NullPointerException/">StringBuilder数组引发NullPointerException</a>
-    </h1>
-  
-
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2021/04/19/hello-world/" class="archive-article-date">
-  <time class="dt-published" datetime="2021-04-19T13:52:27.439Z" itemprop="datePublished">4月 19</time>
-</a>
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2021/04/19/hello-world/">Hello World</a>
-    </h1>
-  
-
-    </header>
+    </footer>
   </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo_categories/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">后一篇</strong>
+      <div class="article-nav-title">“hexo的分类问题”</div>
+    </a>
+  
+</nav>
+
+  
 </article>
-  
-  
-    </div></section>
-  
 
 
 </section>

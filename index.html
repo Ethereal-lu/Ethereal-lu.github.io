@@ -73,6 +73,60 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Spring系列学习笔记/tomcat笔记" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/" class="article-date">
+  <time class="dt-published" datetime="2021-04-20T12:39:32.000Z" itemprop="datePublished">2021-04-20</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Spring系列学习笔记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/">tomcat笔记</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="将工程部署到tomcat中"><a href="#将工程部署到tomcat中" class="headerlink" title="将工程部署到tomcat中"></a>将工程部署到tomcat中</h3><ol>
+<li>直接将工程拖拽到tomcat的webapps目录下即可访问</li>
+<li>在tomcat中的conf\Catalina\localhost下添加配置文件来配置工程，此时工程可以存放于机器的任何位置<ul>
+<li>配置文件的示例如下<ul>
+<li>  &lt;Context path=”/github_blog” docBase=”E:\programme_work\vscode_work\GitHubSite\public”/&gt;</li>
+<li><u>其中，Context表示一个工程上下文<br>path表示工程的访问路径。是该文件的映射，即在url中输入<a target="_blank" rel="noopener" href="http://localhost:8080/github_blog/%EF%BC%8C%E5%B0%B1%E4%BC%9A%E8%BF%9B%E5%85%A5%E8%BF%99%E4%B8%AA%E5%B7%A5%E7%A8%8B%E3%80%82">http://localhost:8080/github_blog/，就会进入这个工程。</a><br>docBase表示工程目录的实际位置</u>  </li>
+</ul>
+</li>
+<li>一个配置文件对应于一个工程</li>
+</ul>
+</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/" data-id="cknq61q2c00006kaq4r1fclhy" data-title="tomcat笔记" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-常见问题及解决方法/hexo_categories" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo_categories/" class="article-date">
@@ -134,7 +188,7 @@
         
   
     <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/tomcat/">Tomcat启动一闪而过以及报java.lang.IllegalStateException: 无输出目录“</a>
+      <a class="p-name article-title" href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/tomcat/">Tomcat启动一闪而过以及报java.lang.IllegalStateException: 无输出目录以及乱码</a>
     </h1>
   
 
@@ -142,14 +196,16 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h4 id="黑屏一闪而过"><a href="#黑屏一闪而过" class="headerlink" title="黑屏一闪而过"></a>黑屏一闪而过</h4><p><strong>问题</strong>：环境变量中没有JAVA_HOME变量。<br>添加该变量，值为jdk的根目录，例如  D:\java\jdk</p>
+        <h4 id="黑屏一闪而过"><a href="#黑屏一闪而过" class="headerlink" title="黑屏一闪而过"></a>黑屏一闪而过</h4><p><strong>问题</strong>：环境变量中没有JAVA_HOME变量。<br><strong>解决</strong>：添加该变量，值为jdk的根目录，例如  D:\java\jdk</p>
 <hr>
-<h4 id="报java-lang-IllegalStateException-无输出目录"><a href="#报java-lang-IllegalStateException-无输出目录" class="headerlink" title="报java.lang.IllegalStateException: 无输出目录"></a>报java.lang.IllegalStateException: 无输出目录</h4><p><strong>解决</strong>：Tomcat文件的权限不够，导致不能正常编译。<br>将Tomcat文件的权限提升为完全控制</p>
+<h4 id="报java-lang-IllegalStateException-无输出目录"><a href="#报java-lang-IllegalStateException-无输出目录" class="headerlink" title="报java.lang.IllegalStateException: 无输出目录"></a>报java.lang.IllegalStateException: 无输出目录</h4><p><strong>问题</strong>：Tomcat文件的权限不够，导致不能正常编译。<br><strong>解决</strong>：将Tomcat文件的权限提升为完全控制</p>
+<hr>
+<h4 id="乱码"><a href="#乱码" class="headerlink" title="乱码"></a>乱码</h4><p><strong>问题</strong>：编码格式的问题<br><strong>解决</strong>：将tomcat下的conf\logging.properties中的java.util.logging.ConsoleHandler.encoding的值从UTF-8修改为GBK</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/tomcat/" data-id="cknpzcda40003ygaq9077f2jp" data-title="Tomcat启动一闪而过以及报java.lang.IllegalStateException: 无输出目录“" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/tomcat/" data-id="cknpzcda40003ygaq9077f2jp" data-title="Tomcat启动一闪而过以及报java.lang.IllegalStateException: 无输出目录以及乱码" class="article-share-link">分享</a>
       
       
       
@@ -479,11 +535,15 @@
       <ul>
         
           <li>
+            <a href="/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/">tomcat笔记</a>
+          </li>
+        
+          <li>
             <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo_categories/">“hexo的分类问题”</a>
           </li>
         
           <li>
-            <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/tomcat/">Tomcat启动一闪而过以及报java.lang.IllegalStateException: 无输出目录“</a>
+            <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/tomcat/">Tomcat启动一闪而过以及报java.lang.IllegalStateException: 无输出目录以及乱码</a>
           </li>
         
           <li>
@@ -492,10 +552,6 @@
         
           <li>
             <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/StringBuilder%E6%95%B0%E7%BB%84%E5%BC%95%E5%8F%91NullPointerException/">StringBuilder数组引发NullPointerException</a>
-          </li>
-        
-          <li>
-            <a href="/2021/04/19/hello-world/">Hello World</a>
           </li>
         
       </ul>
