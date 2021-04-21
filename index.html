@@ -101,7 +101,7 @@
       
         <ol>
 <li>访问控制的原因：在vscode中按ctrl+shift+p打开命令面板，输入更改预览安全设置，选中允许不安全的本地内容</li>
-<li>本地图片不允许使用png格式（网络图片却可以），最好换为jpg格式</li>
+<li>本地图片不允许使用png格式（网络图片却可以），最好换为jpg格式（有可能只适用于本机）</li>
 <li>本地图片路径不支持绝对路径，要通过../../…改为相对路径</li>
 </ol>
 
@@ -169,7 +169,27 @@
 <li>执行destory方法，该方法在<u>web工程停止</u>时调用一次。  </li>
 </ol>
 <hr>
-<h3 id="Servlet接口的架构"><a href="#Servlet接口的架构" class="headerlink" title="Servlet接口的架构"></a>Servlet接口的架构</h3><p><img src="./Servlet%E7%BB%93%E6%9E%84.jpg" alt="Servlet架构"></p>
+<h3 id="Servlet接口的架构"><a href="#Servlet接口的架构" class="headerlink" title="Servlet接口的架构"></a>Servlet接口的架构</h3><p><img src="servlet%E7%AC%94%E8%AE%B0%5CServlet%E7%BB%93%E6%9E%84.jpg" alt="Servlet架构"></p>
+<hr>
+<h3 id="ServletConfig类"><a href="#ServletConfig类" class="headerlink" title="ServletConfig类"></a>ServletConfig类</h3><ul>
+<li>ServletConfig类是Servlet程序的配置信息类，里面封装了一些初始化配置的信息</li>
+<li>Servlet程序和ServletConfig对象都是由Tomcat负责创建，供我们使用。  </li>
+<li>每创建一次Servlet程序时，就创建一个ServletConfig对象。</li>
+<li>每个ServletConfig对象都只能获取自己的Servlet的信息，不能跨域获取</li>
+<li>重写init方法时要带上父类的init方法，如果不带上，则在使用ServletConfig相关方法时就会引发NullPointerException，这是因为父类GenericServlet的init方法中保存了ServletConfig对象，如果重写了init方法，该对象就会丢失，故而引发NullPointerException。</li>
+<li>作用：<ol>
+<li>获取Servlet程序的别名，即servlet-name的值<code>servletConfig.getServletName()</code></li>
+<li>获取初始化参数init-param<code>servletConfig.getInitParameter()</code></li>
+<li>获取ServletContext对象<code>servletConfig.getServletContext()</code></li>
+</ol>
+</li>
+</ul>
+<hr>
+<h3 id="ServletContext类"><a href="#ServletContext类" class="headerlink" title="ServletContext类"></a>ServletContext类</h3><ul>
+<li>ServletContext是接口，表示Servlet上下文对象</li>
+<li>一个web工程只有一个ServletContext对象实例</li>
+<li></li>
+</ul>
 <hr>
 <h3 id="基于xml的方式"><a href="#基于xml的方式" class="headerlink" title="基于xml的方式"></a>基于xml的方式</h3><h4 id="Servlet中web-xml的配置"><a href="#Servlet中web-xml的配置" class="headerlink" title="Servlet中web.xml的配置"></a>Servlet中web.xml的配置</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">web-app</span> <span class="attr">xmlns</span>=<span class="string">&quot;http://xmlns.jcp.org/xml/ns/javaee&quot;</span></span></span><br><span class="line"><span class="tag">         <span class="attr">xmlns:xsi</span>=<span class="string">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span></span></span><br><span class="line"><span class="tag">         <span class="attr">xsi:schemaLocation</span>=<span class="string">&quot;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd&quot;</span></span></span><br><span class="line"><span class="tag">         <span class="attr">version</span>=<span class="string">&quot;4.0&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">&lt;!--servlet标签给Tomcat配置Servlet程序--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">servlet</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!--servlet-name标签：给Servlet程序起一个别名（一般是类名）--&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">servlet-name</span>&gt;</span>HiServlet<span class="tag">&lt;/<span class="name">servlet-name</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!--servlet-class是Servlet程序的全类名--&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">servlet-class</span>&gt;</span>com.example.tomcat.HiServlet<span class="tag">&lt;/<span class="name">servlet-class</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">servlet</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">&lt;!--servlet-mapping标签给Servlet程序配置访问地址--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">servlet-mapping</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!--servlet-name标签告诉服务器，我当前配置的地址给哪个Servlet程序使用--&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">servlet-name</span>&gt;</span>HiServlet<span class="tag">&lt;/<span class="name">servlet-name</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!--url-pattern标签配置访问地址</span></span><br><span class="line"><span class="comment">            /   斜杠在服务器解析时，表示地址为：http://ip:port/工程路径   本工程即为http://localhost:8080/tomcat_war_exploded/</span></span><br><span class="line"><span class="comment">            /hello  表示：http://ip:port/工程路径/hello    即http://localhost:8080/tomcat_war_exploded/hello</span></span><br><span class="line"><span class="comment">        --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/hello<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">servlet-mapping</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">web-app</span>&gt;</span></span><br></pre></td></tr></table></figure>
 
@@ -262,7 +282,7 @@
         
   
     <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo_categories/">“hexo的分类问题”</a>
+      <a class="p-name article-title" href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo_categories/">hexo的常见问题</a>
     </h1>
   
 
@@ -270,12 +290,62 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <p>在每个markdown文件的头部，date的下一行添加一行<br><u>categories: 类别1</u><br>即可将该文件归类为 “类别1” 这一类中</p>
+        <h3 id="hexo分类问题"><a href="#hexo分类问题" class="headerlink" title="hexo分类问题"></a>hexo分类问题</h3><p>在每个markdown文件的头部，date的下一行添加一行<br><u>categories: 类别1</u><br>即可将该文件归类为 “类别1” 这一类中</p>
+<hr>
+<h3 id="hexo无法显示图片问题"><a href="#hexo无法显示图片问题" class="headerlink" title="hexo无法显示图片问题"></a>hexo无法显示图片问题</h3>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo_categories/" data-id="cknri76nw000d2kaqgwi9g0ur" data-title="hexo的常见问题" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-常见问题及解决方法/hexo" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo/" class="article-date">
+  <time class="dt-published" datetime="2021-04-20T12:07:32.000Z" itemprop="datePublished">2021-04-20</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">常见问题及解决方法</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo/">“hexo的常见问题”</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="hexo的分类问题"><a href="#hexo的分类问题" class="headerlink" title="hexo的分类问题"></a>hexo的分类问题</h3><p>在每个markdown文件的头部，date的下一行添加一行<br><u>categories: 类别1</u><br>即可将该文件归类为 “类别1” 这一类中</p>
+<hr>
+<h3 id="hexo无法显示图片问题"><a href="#hexo无法显示图片问题" class="headerlink" title="hexo无法显示图片问题"></a>hexo无法显示图片问题</h3><ol>
+<li>确认根目录_config.yml中有:  <code>post_asset_folder: true</code></li>
+<li>确保在md文件所在目录下创建和md文件同名的目录，在里面放该md需要的图片，然后在md中插入<code>![](目录名/文件名.jpg)</code></li>
+<li>如果还不行，在站点根目录下先执行<code>npm uninstall hexo-asset-image --save</code>（如果之前下载过）。再执行<code>npm install hexo-asset-image --save</code></li>
+</ol>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo_categories/" data-id="cknri76nw000d2kaqgwi9g0ur" data-title="“hexo的分类问题”" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo/" data-id="cknrkra4l0000hoaqbdgp8kyz" data-title="“hexo的常见问题”" class="article-share-link">分享</a>
       
       
       
@@ -664,11 +734,11 @@
           </li>
         
           <li>
-            <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo_categories/">“hexo的分类问题”</a>
+            <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo_categories/">hexo的常见问题</a>
           </li>
         
           <li>
-            <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/tomcat/">Tomcat启动一闪而过以及报java.lang.IllegalStateException: 无输出目录以及乱码</a>
+            <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo/">“hexo的常见问题”</a>
           </li>
         
       </ul>
