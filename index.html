@@ -73,6 +73,123 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-常见问题及解决方法/markdown" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/04/21/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/markdown/" class="article-date">
+  <time class="dt-published" datetime="2021-04-21T13:08:18.000Z" itemprop="datePublished">2021-04-21</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">常见问题及解决方法</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/04/21/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/markdown/">MarkDown无法显示本地图片</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <ol>
+<li>访问控制的原因：在vscode中按ctrl+shift+p打开命令面板，输入更改预览安全设置，选中允许不安全的本地内容</li>
+<li>本地图片不允许使用png格式（网络图片却可以），最好换为jpg格式</li>
+<li>本地图片路径不支持绝对路径，要通过../../…改为相对路径</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2021/04/21/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/markdown/" data-id="cknri76no00042kaq1dyi3v8r" data-title="MarkDown无法显示本地图片" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Spring系列学习笔记/servlet笔记" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/04/21/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/servlet%E7%AC%94%E8%AE%B0/" class="article-date">
+  <time class="dt-published" datetime="2021-04-21T10:48:13.000Z" itemprop="datePublished">2021-04-21</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Spring系列学习笔记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/04/21/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/servlet%E7%AC%94%E8%AE%B0/">Servlet学习笔记</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="实现Servlet的主要方式"><a href="#实现Servlet的主要方式" class="headerlink" title="实现Servlet的主要方式"></a>实现Servlet的主要方式</h3><ul>
+<li><h4 id="程序实现Servlet接口（很少使用）"><a href="#程序实现Servlet接口（很少使用）" class="headerlink" title="程序实现Servlet接口（很少使用）"></a>程序实现Servlet接口（很少使用）</h4><ol>
+<li>编写类实现Servlet接口</li>
+<li>根据业务重写service方法</li>
+<li>到web.xml中配置Servlet程序的访问地址（基于注解时不需要）</li>
+</ol>
+</li>
+<li><h4 id="程序继承HttpServlet类（一般使用这种）"><a href="#程序继承HttpServlet类（一般使用这种）" class="headerlink" title="程序继承HttpServlet类（一般使用这种）"></a>程序继承HttpServlet类（一般使用这种）</h4><ol>
+<li>编写类继承HttpServlet类</li>
+<li>根据业务需要重写doGet或doPost方法</li>
+<li>到web.xml中配置Servlet程序的访问地址（基于注解时不需要）</li>
+</ol>
+</li>
+<li><h4 id="在IDEA中直接创建Servlet程序"><a href="#在IDEA中直接创建Servlet程序" class="headerlink" title="在IDEA中直接创建Servlet程序"></a>在IDEA中直接创建Servlet程序</h4>  实质上还是第二种方法，只是IDEA帮你做了一些通用的工作  </li>
+</ul>
+<hr>
+<h3 id="Servlet的生命周期"><a href="#Servlet的生命周期" class="headerlink" title="Servlet的生命周期"></a>Servlet的生命周期</h3><ol>
+<li>执行Servlet构造器方法，该方法在<u>初次访问</u>时调用一次。</li>
+<li>执行init初始化方法，该方法在<u>初次访问</u>时调用一次。</li>
+<li>执行service方法，该方法在<u>每次访问</u>时都会调用一次。</li>
+<li>执行destory方法，该方法在<u>web工程停止</u>时调用一次。  </li>
+</ol>
+<hr>
+<h3 id="Servlet接口的架构"><a href="#Servlet接口的架构" class="headerlink" title="Servlet接口的架构"></a>Servlet接口的架构</h3><p><img src="./Servlet%E7%BB%93%E6%9E%84.jpg" alt="Servlet架构"></p>
+<hr>
+<h3 id="基于xml的方式"><a href="#基于xml的方式" class="headerlink" title="基于xml的方式"></a>基于xml的方式</h3><h4 id="Servlet中web-xml的配置"><a href="#Servlet中web-xml的配置" class="headerlink" title="Servlet中web.xml的配置"></a>Servlet中web.xml的配置</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">web-app</span> <span class="attr">xmlns</span>=<span class="string">&quot;http://xmlns.jcp.org/xml/ns/javaee&quot;</span></span></span><br><span class="line"><span class="tag">         <span class="attr">xmlns:xsi</span>=<span class="string">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span></span></span><br><span class="line"><span class="tag">         <span class="attr">xsi:schemaLocation</span>=<span class="string">&quot;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd&quot;</span></span></span><br><span class="line"><span class="tag">         <span class="attr">version</span>=<span class="string">&quot;4.0&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">&lt;!--servlet标签给Tomcat配置Servlet程序--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">servlet</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!--servlet-name标签：给Servlet程序起一个别名（一般是类名）--&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">servlet-name</span>&gt;</span>HiServlet<span class="tag">&lt;/<span class="name">servlet-name</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!--servlet-class是Servlet程序的全类名--&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">servlet-class</span>&gt;</span>com.example.tomcat.HiServlet<span class="tag">&lt;/<span class="name">servlet-class</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">servlet</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">&lt;!--servlet-mapping标签给Servlet程序配置访问地址--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">servlet-mapping</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!--servlet-name标签告诉服务器，我当前配置的地址给哪个Servlet程序使用--&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">servlet-name</span>&gt;</span>HiServlet<span class="tag">&lt;/<span class="name">servlet-name</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!--url-pattern标签配置访问地址</span></span><br><span class="line"><span class="comment">            /   斜杠在服务器解析时，表示地址为：http://ip:port/工程路径   本工程即为http://localhost:8080/tomcat_war_exploded/</span></span><br><span class="line"><span class="comment">            /hello  表示：http://ip:port/工程路径/hello    即http://localhost:8080/tomcat_war_exploded/hello</span></span><br><span class="line"><span class="comment">        --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/hello<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">servlet-mapping</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">web-app</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="从url定位到Servlet程序过程"><a href="#从url定位到Servlet程序过程" class="headerlink" title="从url定位到Servlet程序过程"></a>从url定位到Servlet程序过程</h4><p>对照上方的xml配置文件：当在地址栏输入<code>http://localhost:8080/tomcat_war_exploded/hello</code>时，由8080定位到Tomcat服务器，再由/tomcat_war_exploded定位到该工程，然后根据/hello定位到xml配置文件中<code>&lt;servlet-mapping&gt;</code>标签下的<code>&lt;url-pattern&gt;</code>标签，其对应的<code>&lt;servlet-name&gt;</code>标签值为HiServlet，再根据这个标识符找到相同名的<code>&lt;servlet&gt;</code>标签，根据其标签下<code>&lt;servlet-class&gt;</code>的值定位到类的位置，然后执行类中的service方法。  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2021/04/21/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/servlet%E7%AC%94%E8%AE%B0/" data-id="cknri76nm00022kaq2udm23ed" data-title="Servlet学习笔记" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Spring系列学习笔记/tomcat笔记" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/" class="article-date">
@@ -104,7 +221,7 @@
 <li>在tomcat中的conf\Catalina\localhost下添加配置文件来配置工程，此时工程可以存放于机器的任何位置<ul>
 <li>配置文件的示例如下<ul>
 <li>  &lt;Context path=”/github_blog” docBase=”E:\programme_work\vscode_work\GitHubSite\public”/&gt;</li>
-<li><u>其中，Context表示一个工程上下文<br>path表示工程的访问路径。是该文件的映射，即在url中输入<a target="_blank" rel="noopener" href="http://localhost:8080/github_blog/%EF%BC%8C%E5%B0%B1%E4%BC%9A%E8%BF%9B%E5%85%A5%E8%BF%99%E4%B8%AA%E5%B7%A5%E7%A8%8B%E3%80%82">http://localhost:8080/github_blog/，就会进入这个工程。</a><br>docBase表示工程目录的实际位置</u>  </li>
+<li><u>其中，Context表示一个工程上下文<br>path表示工程的访问路径。是该文件的映射，即在url中输入 <code>http://localhost:8080/github_blog/</code>，就会进入这个工程。<br>docBase表示工程目录的实际位置</u>  </li>
 </ul>
 </li>
 <li>一个配置文件对应于一个工程</li>
@@ -115,7 +232,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/" data-id="cknq61q2c00006kaq4r1fclhy" data-title="tomcat笔记" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/" data-id="cknri76nk00012kaqdr810xli" data-title="tomcat笔记" class="article-share-link">分享</a>
       
       
       
@@ -158,7 +275,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo_categories/" data-id="cknpzmqj80000bgaq0x4qgr2t" data-title="“hexo的分类问题”" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo_categories/" data-id="cknri76nw000d2kaqgwi9g0ur" data-title="“hexo的分类问题”" class="article-share-link">分享</a>
       
       
       
@@ -205,7 +322,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/tomcat/" data-id="cknpzcda40003ygaq9077f2jp" data-title="Tomcat启动一闪而过以及报java.lang.IllegalStateException: 无输出目录以及乱码" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/tomcat/" data-id="cknri76nx000e2kaqgf7h11zw" data-title="Tomcat启动一闪而过以及报java.lang.IllegalStateException: 无输出目录以及乱码" class="article-share-link">分享</a>
       
       
       
@@ -389,7 +506,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring5%E7%AC%94%E8%AE%B0/" data-id="cknpzcda80007ygaq1t9a6mjv" data-title="Spring5学习笔记" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring5%E7%AC%94%E8%AE%B0/" data-id="cknri76ny000f2kaqczrqf7vo" data-title="Spring5学习笔记" class="article-share-link">分享</a>
       
       
       
@@ -434,7 +551,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/StringBuilder%E6%95%B0%E7%BB%84%E5%BC%95%E5%8F%91NullPointerException/" data-id="cknpzcd9x0000ygaqd4yk02ds" data-title="StringBuilder数组引发NullPointerException" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/StringBuilder%E6%95%B0%E7%BB%84%E5%BC%95%E5%8F%91NullPointerException/" data-id="cknri76np00052kaqbizn7tgu" data-title="StringBuilder数组引发NullPointerException" class="article-share-link">分享</a>
       
       
       
@@ -485,7 +602,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2021/04/19/hello-world/" data-id="cknpzcda10001ygaq5wu8cndv" data-title="Hello World" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2021/04/19/hello-world/" data-id="cknri76ne00002kaqd0hmcyn4" data-title="Hello World" class="article-share-link">分享</a>
       
       
       
@@ -535,6 +652,14 @@
       <ul>
         
           <li>
+            <a href="/2021/04/21/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/markdown/">MarkDown无法显示本地图片</a>
+          </li>
+        
+          <li>
+            <a href="/2021/04/21/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/servlet%E7%AC%94%E8%AE%B0/">Servlet学习笔记</a>
+          </li>
+        
+          <li>
             <a href="/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/">tomcat笔记</a>
           </li>
         
@@ -544,14 +669,6 @@
         
           <li>
             <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/tomcat/">Tomcat启动一闪而过以及报java.lang.IllegalStateException: 无输出目录以及乱码</a>
-          </li>
-        
-          <li>
-            <a href="/2021/04/20/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring5%E7%AC%94%E8%AE%B0/">Spring5学习笔记</a>
-          </li>
-        
-          <li>
-            <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/StringBuilder%E6%95%B0%E7%BB%84%E5%BC%95%E5%8F%91NullPointerException/">StringBuilder数组引发NullPointerException</a>
           </li>
         
       </ul>
