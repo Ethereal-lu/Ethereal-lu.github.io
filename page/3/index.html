@@ -73,6 +73,60 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-JavaWeb系列学习笔记/tomcat笔记" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/04/20/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/" class="article-date">
+  <time class="dt-published" datetime="2021-04-20T12:39:32.000Z" itemprop="datePublished">2021-04-20</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">JavaWeb系列学习笔记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/04/20/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/">tomcat笔记</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="将工程部署到tomcat中"><a href="#将工程部署到tomcat中" class="headerlink" title="将工程部署到tomcat中"></a>将工程部署到tomcat中</h3><ol>
+<li>直接将工程拖拽到tomcat的webapps目录下即可访问</li>
+<li>在tomcat中的conf\Catalina\localhost下添加配置文件来配置工程，此时工程可以存放于机器的任何位置<ul>
+<li>配置文件的示例如下<ul>
+<li>  &lt;Context path=”/github_blog” docBase=”E:\programme_work\vscode_work\GitHubSite\public”/&gt;</li>
+<li><u>其中，Context表示一个工程上下文<br>path表示工程的访问路径。是该文件的映射，即在url中输入 <code>http://localhost:8080/github_blog/</code>，就会进入这个工程。<br>docBase表示工程目录的实际位置</u>  </li>
+</ul>
+</li>
+<li>一个配置文件对应于一个工程</li>
+</ul>
+</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2021/04/20/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/" data-id="ckqkmyecn0004s4aq8phdhvwf" data-title="tomcat笔记" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-常见问题及解决方法/hexo" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo/" class="article-date">
@@ -493,6 +547,10 @@
       <ul>
         
           <li>
+            <a href="/2021/07/10/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/JVM%E7%AC%94%E8%AE%B0/">JVM学习笔记</a>
+          </li>
+        
+          <li>
             <a href="/2021/07/02/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E6%95%B0%E6%8D%AE%E9%A2%84%E5%A4%84%E7%90%86/">数据预处理</a>
           </li>
         
@@ -506,10 +564,6 @@
         
           <li>
             <a href="/2021/07/01/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Pandas%E5%AD%A6%E4%B9%A0/">Pandas笔记</a>
-          </li>
-        
-          <li>
-            <a href="/2021/07/01/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Matplotlib%E5%AD%A6%E4%B9%A0/">Matplotlib笔记</a>
           </li>
         
       </ul>
