@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>JUC 并发编程 | 驯鹿非鹿</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="线程基础知识每个线程拥有一个自己独立的栈，但是共享进程的堆空间。 线程实现方法Thread类是描述线程的类，要实现多线程，必须继承Thread类 方法一、创建Thread类的子类1、创建Thread类的子类，并重写run方法，其中设置线程的任务 2、创建子类对象，并执行start方法  ​    （执行start方法会创建一个新的栈空间，并在该栈空间中执行run方法。每执行一次步骤2，就开启一个新">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JUC 并发编程">
+<meta property="og:url" content="https://ethereal-lu.github.io/2021/08/16/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/JUC%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="驯鹿非鹿">
+<meta property="og:description" content="线程基础知识每个线程拥有一个自己独立的栈，但是共享进程的堆空间。 线程实现方法Thread类是描述线程的类，要实现多线程，必须继承Thread类 方法一、创建Thread类的子类1、创建Thread类的子类，并重写run方法，其中设置线程的任务 2、创建子类对象，并执行start方法  ​    （执行start方法会创建一个新的栈空间，并在该栈空间中执行run方法。每执行一次步骤2，就开启一个新">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-08-16T09:12:41.000Z">
+<meta property="article:modified_time" content="2021-08-16T14:28:34.402Z">
+<meta property="article:author" content="驯鹿先生">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="驯鹿非鹿" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">驯鹿非鹿</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS 订阅"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://Ethereal-lu.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-JavaWeb系列学习笔记/JUC笔记" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/08/16/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/JUC%E7%AC%94%E8%AE%B0/" class="article-date">
+  <time class="dt-published" datetime="2021-08-16T09:12:41.000Z" itemprop="datePublished">2021-08-16</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">JavaWeb系列学习笔记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      JUC 并发编程
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="线程基础知识"><a href="#线程基础知识" class="headerlink" title="线程基础知识"></a>线程基础知识</h2><p>每个线程拥有一个自己独立的栈，但是共享进程的堆空间。</p>
+<h3 id="线程实现方法"><a href="#线程实现方法" class="headerlink" title="线程实现方法"></a>线程实现方法</h3><p>Thread类是描述线程的类，要实现多线程，必须继承Thread类</p>
+<h5 id="方法一、创建Thread类的子类"><a href="#方法一、创建Thread类的子类" class="headerlink" title="方法一、创建Thread类的子类"></a>方法一、创建Thread类的子类</h5><p>1、创建Thread类的子类，并重写run方法，其中设置线程的任务</p>
+<p>2、创建子类对象，并执行start方法 </p>
+<p>​    （执行start方法会创建一个新的栈空间，并在该栈空间中执行run方法。每执行一次步骤2，就开启一个新的线程）</p>
+<h5 id="方法二、实现Runnable接口"><a href="#方法二、实现Runnable接口" class="headerlink" title="方法二、实现Runnable接口"></a>方法二、实现Runnable接口</h5><p><strong>推荐使用这种</strong>   —&gt;  使用该方法时，Thread 类是咱们自定义类的静态代理类</p>
+<p>1、创建一个Runnable接口的实现类，并重写run方法，其中设置线程的任务</p>
+<p>2、创建对象，并将其作为参数传递给Thread类的构造方法，再调用start方法。 </p>
+<p>​     new Thread(new MyRunnable()).start();<br>​     匿名内部类实现： new Thread(new Runnable(){重写run方法}).start();</p>
+<h5 id="方法三、实现Callable接口"><a href="#方法三、实现Callable接口" class="headerlink" title="方法三、实现Callable接口"></a>方法三、实现Callable<V>接口</h5><p><strong>Callable接口类似于Runnable，但Runnable不会返回结果，也不会抛出检查异常，Callable可以</strong>，Runnable 效率比 Callable 低。</p>
+<p>1、创建一个Callable<V>接口的实现类，并重写call方法，其中设置线程的任务<br>2、在使用的地方创建该类对象 obj 。<br>3、ExecutorService executorService = Executors.newFixedThreadPool(5);  // 创建执行服务<br>4、Future<V> future = executorService.submit(obj);                                       // 提交执行<br>5、V result = future.get();                                                                                 // 获取结果<br>6、executorService.shutdownNow();                                                               // 关闭服务</p>
+<hr>
+<h3 id="同步实现方法"><a href="#同步实现方法" class="headerlink" title="同步实现方法"></a>同步实现方法</h3><p>多个对象访问同一个资源，可以并发读取，但当其中某一个对象要修改时，就必须实现同步</p>
+<p>锁对象选取总结为一句话就是 在同步代码中要改变谁就锁谁。</p>
+<h5 id="方法一：-同步代码块"><a href="#方法一：-同步代码块" class="headerlink" title="方法一： 同步代码块"></a>方法一： 同步代码块</h5><p>synchronized (锁对象) {访问共享数据的代码}  线程不仅要抢夺CUP，还要占用锁对象。同时拥有才能执行代码<br>锁对象可以是任意对象，但必须是同一个对象，推荐将共享资源作为锁对象。线程占用锁对象后直到执行完毕才释放。</p>
+<h5 id="方法二：-同步方法"><a href="#方法二：-同步方法" class="headerlink" title="方法二： 同步方法"></a>方法二： 同步方法</h5><p>修饰符 synchronized 返回值类型 方法名 (参数列表) {访问共享数据的代码}     // 该方法即为同步方法<br>首先将 访问共享数据的代码块 抽取出来，作为上述方法。<br>同步方法的锁对象默认为 this ，即同步方法所在类的对象；创建该类的对象后，该对象调用同步方法时就会锁住对象自己。<br>当同步方法同时也是静态方法时，锁对象为同步方法所在类的 Class 对象。</p>
+<h5 id="方法三：-Lock锁"><a href="#方法三：-Lock锁" class="headerlink" title="方法三： Lock锁"></a>方法三： Lock锁</h5><p>Lock是一个接口，有两个方法 void lock()  获取锁  和  void unlock()  释放锁<br>它有一个实现类ReentrantLock（可重入锁）， 先实例化一个ReentrantLock对象。<br>在出现安全问题代码之前用该对象调用 lock() 方法。在出现安全问题代码之后用该对象调用 unlock() 方法。<br>lock() 和  unlock() 方法建议放在 try — finally 代码块中</p>
+<h5 id="synchronized-底层原理"><a href="#synchronized-底层原理" class="headerlink" title="synchronized 底层原理"></a>synchronized 底层原理</h5><p>synchronzied 使用时需要关联一个对象，而这个对象就是 monitor object。</p>
+<p>管程（monitor）机制中，monitor object 充当着维护 mutex 以及定义 wait/signal API 来管理线程的阻塞和唤醒的角色。</p>
+<p>Java 语言中的 java.lang.Object 类，便是满足这个要求的对象，任何一个 Java 对象都可以作为 monitor 机制的 monitor object。</p>
+<p>java 对象的内存布局中，每个对象的对象头都保存了锁标识。</p>
+<p>要进入一个 synchronized 方法修饰的方法或者代码块，会先获取与 synchronized 关键字绑定在一起的 Object 的对象锁，这个锁也限定了其它线程无法进入与这个锁相关的其它 synchronized 代码区域。</p>
+<p>当一个线程需要获取与 synchronized 关联的 Object 的锁时，会被放入 EntrySet 中进行等待，如果该线程获取到了锁，就成为当前锁的 owner，此时 monitor + 1，当前线程可以使用该临界资源，而在该线程持有锁的期间，该线程还可以再次进入临界区，此时 monitor 再次加 1 （这就是可重入锁），同样、线程每次退出临界区 monitor 都会减 1，当 monitor 减为 0 时，代表当前线程放弃对对象锁的拥有权。如果获取到锁的线程不是因使用完放弃，而是由于缺少外部条件时就会调用 wait 方法将锁释放，进入 wait set 中阻塞进行等待。</p>
+<p>底层使用指令码方式来控制锁的，映射成字节码指令就是两个指令：monitorenter和monitorexit。当线程执行遇到monitorenter指令时会尝试获取内置锁，如果获取锁则锁计数器+1，如果没有获取锁则阻塞；当遇到monitorexit指令时锁计数器-1，如果计数器为0则释放锁。</p>
+<p>JVM 在执行方法之前，如果发现该方法前面有 synchronized 关键字，就先在该对象的 ID 上加锁，当其他线程执行到这个方法时，会检测该对象ID上是否加锁，如果加锁时就等待锁释放。 </p>
+<p>如果一个对象中有两个方法同时被 synchronized 修饰，则同一个对象，调用这两个方法时，只能同时执行一个。</p>
+<hr>
+<h3 id="线程状态"><a href="#线程状态" class="headerlink" title="线程状态"></a>线程状态</h3><p>创建、就绪、运行、阻塞、死亡。</p>
+<h5 id="线程停止"><a href="#线程停止" class="headerlink" title="线程停止"></a>线程停止</h5><p>不推荐使用 Thread 类提供的 stop() 等方法。推荐自己设置一个标志位，通过调用自己实现的 stop 方法来停止线程。如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyRunnable</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">boolean</span> flag = <span class="keyword">true</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (flag) &#123;</span><br><span class="line">            TODO...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">stop</span><span class="params">()</span> </span>&#123; flag = <span class="keyword">false</span>; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>下方所有方法都是 Thread 类中的方法！</p>
+<h5 id="线程休眠"><a href="#线程休眠" class="headerlink" title="线程休眠"></a>线程休眠</h5><p>Thread.sleep(毫秒)      </p>
+<p>sleep 不会释放锁、 wait 会释放锁。</p>
+<p>但是常使用 <code>TimeUnit.SECONDS.sleep(2);</code> 进行休眠</p>
+<h5 id="线程礼让"><a href="#线程礼让" class="headerlink" title="线程礼让"></a>线程礼让</h5><p>Thread.yield();  </p>
+<p>使当前线程从运行状态变为就绪状态，让 cpu 从所有就绪的线程中挑一个运行。<br>礼让有可能不成功，因为 cpu 可能再挑选一次还是让当前线程继续执行。</p>
+<h5 id="线程强制执行"><a href="#线程强制执行" class="headerlink" title="线程强制执行"></a>线程强制执行</h5><p>join()  </p>
+<p>相当于插队，停止现在执行的线程，立刻执行自己的线程，且本线程执行结束才能执行其他线程</p>
+<p>在下方举例代码中，主线程执行到200之前，主线程和Runnable线程交替执行，当主线程执行到200次时，Runnable 线程插队接着执行，之后Runnable线程全部执行完毕后才由主线程继续执行。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyRunnable</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">1000</span>; i++) &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;Runnable &quot;</span> + i);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        MyRunnable myRunnable = <span class="keyword">new</span> MyRunnable();</span><br><span class="line">        Thread thread = <span class="keyword">new</span> Thread(myRunnable);</span><br><span class="line">        thread.start();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">500</span>; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (i == <span class="number">200</span>) &#123;</span><br><span class="line">                thread.join();</span><br><span class="line">            &#125;</span><br><span class="line">            System.out.println(<span class="string">&quot;主线程&quot;</span> + i);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="查看线程状态"><a href="#查看线程状态" class="headerlink" title="查看线程状态"></a>查看线程状态</h5><p>Thread.State state = thread.getState();</p>
+<p>Thread.State 是一个枚举类型</p>
+<h5 id="线程优先级"><a href="#线程优先级" class="headerlink" title="线程优先级"></a>线程优先级</h5><p>1 最小；10 最大；默认为5。优先级越高在就绪状态很大可能越早执行，但也不是一定。</p>
+<h5 id="守护（daemon）线程"><a href="#守护（daemon）线程" class="headerlink" title="守护（daemon）线程"></a>守护（daemon）线程</h5><p>线程分为用户线程和守护线程。<br>虚拟机必须保证用户线程执行完毕，但不用等待守护线程执行完毕。<br>守护线程有：后台记录日志、监控内存、垃圾回收等</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">boolean</span> daemon = <span class="keyword">false</span>;    <span class="comment">// 该句为 Thread 类的源码，默认 daemon 属性是关闭的，即默认为用户线程</span></span><br><span class="line">thread.setDaemon(<span class="keyword">true</span>);            <span class="comment">// 可通过这样将线程设置为 守护线程。</span></span><br></pre></td></tr></table></figure>
+
+<p>将线程设置为守护线程之后，虚拟机将不再保证该线程是否执行结束，<br>即只要当用户线程执行结束后就将整个程序关闭，而不考虑守护线程此时是否已经执行完毕。</p>
+<hr>
+<h3 id="线程池"><a href="#线程池" class="headerlink" title="线程池"></a>线程池</h3><h5 id="底层原理"><a href="#底层原理" class="headerlink" title="底层原理"></a>底层原理</h5><p>线程池就是一个容纳多个线程的容器，可由集合实现</p>
+<h5 id="使用步骤"><a href="#使用步骤" class="headerlink" title="使用步骤"></a>使用步骤</h5><p>1、使用线程池工厂类Executors里面的静态方法newFixedThreadPool生产一个指定线程数量的线程池，由ExecutorService接口接收。<br>2、创建Runnable接口的实现类，重写run方法，设置线程任务。<br>3、调用ExecutorService中的execute方法，传递线程任务，开启线程，执行run方法。</p>
+<p>举例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">ExecutorService executorService = Executors.newFixedThreadPool(<span class="number">5</span>);  <span class="comment">// 创建服务</span></span><br><span class="line">Runnable runnable = <span class="keyword">new</span> Runnable() &#123;  <span class="comment">//此处虽然new 的是Runnable接口，但是立即重写了run方法，故相当于其实现类。</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">//线程任务</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">executorService.execute(runnable);                                  <span class="comment">// 执行服务</span></span><br><span class="line">executorService.shutdownNow();                                      <span class="comment">// 关闭服务</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="submit-方法和-execute-方法"><a href="#submit-方法和-execute-方法" class="headerlink" title="submit()方法和 execute()方法"></a>submit()方法和 execute()方法</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ExecutorService 中的 submit()方法和 execute()方法作用相同，只是适用于不同场景</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable command)</span>           <span class="comment">// 执行任务，没有返回值，一般用于执行 Runnable</span></span></span><br><span class="line"><span class="function">&lt;T&gt; Future&lt;T&gt; <span class="title">submit</span><span class="params">(Callable&lt;T&gt; task)</span></span>;  <span class="comment">// 执行任务，有返回值，一般用于执行 Callable</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<hr>
+<hr>
+<h2 id="JUC-并发编程"><a href="#JUC-并发编程" class="headerlink" title="JUC 并发编程"></a>JUC 并发编程</h2><p><code>new Thread(new MyRunnable()).start();</code> 是传统开发方式，耦合性高，不建议使用。</p>
+<p>实际开发中，资源类是只包含属性和方法的纯粹的类，并不继承 Runnable 接口</p>
+<p><code>new Thread(new Resource()).start();</code>  即线程所操作的 Resource 类不继承  Runnable 接口。</p>
+<h3 id="1、什么是-JUC"><a href="#1、什么是-JUC" class="headerlink" title="1、什么是 JUC"></a>1、什么是 JUC</h3><p>JUC 即与并发相关的三个包：<code>java.util.concurrent</code>、 <code>java.util.concurrent.atomic</code> 、 <code>java.util.concurrent.locks</code>。</p>
+<h3 id="2、线程与进程"><a href="#2、线程与进程" class="headerlink" title="2、线程与进程"></a>2、线程与进程</h3><p>一个 java 进程默认包含 2 个线程：main 线程与 GC 线程。</p>
+<p>java 本身并不能开启线程，是通过调用本地方法（C++）实现的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取本机 CPU 的核数，其实是逻辑处理器的个数</span></span><br><span class="line">System.out.println(Runtime.getRuntime().availableProcessors());</span><br></pre></td></tr></table></figure>
+
+<p>并行编程：利用线程池</p>
+<p>并发编程的本质：充分利用 CPU 的资源。</p>
+<p>并发：多个线程操作同一个资源类</p>
+<h3 id="3、Lock-锁（重点）"><a href="#3、Lock-锁（重点）" class="headerlink" title="3、Lock 锁（重点）"></a>3、Lock 锁（重点）</h3><p><strong>Synchronized 与 Lock 的区别</strong></p>
+<p>存在层次上： synchronized 是 Java 的关键字，在jvm层面上；   Lock: 是一个接口</p>
+<p>锁的释放： synchronized: 自动释放；    Lock: 在finally中必须释放锁，不然容易造成线程死锁</p>
+<p>锁的获取： synchronized: 假设A线程获得锁，B线程等待。如果A线程阻塞，B线程会一直等待</p>
+<p>​                   Lock: 分情况而定，Lock有多个锁获取的方式，可以通过 tryLock() 尝试获得锁，线程可以不用一直等待</p>
+<p>锁的状态： synchronized: 无法判断 ；    Lock: 可以判断</p>
+<p>锁的类型： synchronized: 可重入 不可中断 非公平；     Lock: 可重入 可判断 可公平（两者皆可）</p>
+<p>性能： synchronized: 少量同步；    Lock: 大量同步</p>
+<p>调度： synchronized: 使用Object对象本身的wait 、notify、notifyAll调度机制； Lock: 可以使用Condition进行线程之间的调度</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2021/08/16/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/JUC%E7%AC%94%E8%AE%B0/" data-id="cksg54ydg00004oaqfs3141cc" data-title="JUC 并发编程" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2021/08/11/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/enum%E8%B5%8B%E5%80%BC/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">后一篇</strong>
+      <div class="article-nav-title">Enum 向注解赋值问题</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">JavaWeb系列学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">常见问题及解决方法</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E8%AF%95%E9%97%AE%E9%A2%98/">面试问题</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/08/16/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/JUC%E7%AC%94%E8%AE%B0/">JUC 并发编程</a>
+          </li>
+        
+          <li>
+            <a href="/2021/08/11/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/enum%E8%B5%8B%E5%80%BC/">Enum 向注解赋值问题</a>
+          </li>
+        
+          <li>
+            <a href="/2021/07/27/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Shiro%E7%AC%94%E8%AE%B0/">Shrio学习笔记</a>
+          </li>
+        
+          <li>
+            <a href="/2021/07/18/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/MyBatisPlus%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">MyBatisPlus学习笔记</a>
+          </li>
+        
+          <li>
+            <a href="/2021/07/10/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/JVM%E7%AC%94%E8%AE%B0/">JVM学习笔记</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2021 驯鹿先生<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
