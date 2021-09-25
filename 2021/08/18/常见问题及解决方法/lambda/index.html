@@ -6,15 +6,15 @@
   
   <title>lambda 表达式中使用的变量为什么必须是 final | 驯鹿非鹿</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="lambda 表达式中使用的变量应该是 final 或有效 final。 有效 final 即不用显示声明为 final，由 JVM 添加 final。  个人理解由于 lambda 表达式相当于生成一个对象，存储在堆中（生命周期长），而方法的局部变量存储在栈中（生命周期短）。如果 lambda 表达式在使用了外部方法中的局部变量后，该局部变量又发生变化，且方法执行完毕内存被释放，此 lambda">
+  <meta name="description" content="Java 规范中规定：Lambda 表达式中要用到的，但又未在 Lambda 表达式中声明的变量，必须声明为 final 或者是 effectively final，否则就会出现编译错误。 有效 final 即不用显示声明为 final，由 JVM 添加 final。  个人理解由于 lambda 表达式相当于生成一个对象，存储在堆中（生命周期长），而方法的局部变量存储在栈中（生命周期短）。如果">
 <meta property="og:type" content="article">
 <meta property="og:title" content="lambda 表达式中使用的变量为什么必须是 final">
 <meta property="og:url" content="https://ethereal-lu.github.io/2021/08/18/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/lambda/index.html">
 <meta property="og:site_name" content="驯鹿非鹿">
-<meta property="og:description" content="lambda 表达式中使用的变量应该是 final 或有效 final。 有效 final 即不用显示声明为 final，由 JVM 添加 final。  个人理解由于 lambda 表达式相当于生成一个对象，存储在堆中（生命周期长），而方法的局部变量存储在栈中（生命周期短）。如果 lambda 表达式在使用了外部方法中的局部变量后，该局部变量又发生变化，且方法执行完毕内存被释放，此 lambda">
+<meta property="og:description" content="Java 规范中规定：Lambda 表达式中要用到的，但又未在 Lambda 表达式中声明的变量，必须声明为 final 或者是 effectively final，否则就会出现编译错误。 有效 final 即不用显示声明为 final，由 JVM 添加 final。  个人理解由于 lambda 表达式相当于生成一个对象，存储在堆中（生命周期长），而方法的局部变量存储在栈中（生命周期短）。如果">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2021-08-18T15:08:18.000Z">
-<meta property="article:modified_time" content="2021-08-18T16:07:17.057Z">
+<meta property="article:modified_time" content="2021-09-25T09:25:24.278Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -99,14 +99,19 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <p>lambda 表达式中使用的变量应该是 final 或有效 final。</p>
+        <p>Java 规范中规定：Lambda 表达式中要用到的，但又未在 Lambda 表达式中声明的变量，必须声明为 final 或者是 effectively final，否则就会出现编译错误。</p>
 <p>有效 final 即不用显示声明为 final，由 JVM 添加 final。</p>
 <hr>
-<h4 id="个人理解"><a href="#个人理解" class="headerlink" title="个人理解"></a>个人理解</h4><p>由于 lambda 表达式相当于生成一个对象，存储在堆中（生命周期长），而方法的局部变量存储在栈中（生命周期短）。如果 lambda 表达式在使用了外部方法中的局部变量后，该局部变量又发生变化，且方法执行完毕内存被释放，此 lambda 表达式生成的对象可能依然存活，但是却无法得知局部变量改变后的值，造成数据一致性破坏。</p>
+<h4 id="个人理解"><a href="#个人理解" class="headerlink" title="个人理解"></a>个人理解</h4><p>由于 lambda 表达式相当于生成一个对象，存储在堆中（生命周期长），而方法的局部变量存储在栈中（生命周期短）。如果 lambda 表达式在使用了外部方法中的局部变量后，该局部变量又发生变化，且方法执行完毕内存被释放，此 lambda 表达式生成的对象可能依然存活（未被GC回收），但是却无法得知局部变量改变后的值，造成数据一致性破坏。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 报错</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">func</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> a = <span class="number">5</span>;</span><br><span class="line">        Runnable runnable = () -&gt; &#123;</span><br><span class="line">            a++;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上方在方法中报错而下方在类中不报错，因此推断与栈和堆的生存周期有关系。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 不报错</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> a = <span class="number">3</span>;</span><br><span class="line">    Runnable runnable = () -&gt; &#123;</span><br><span class="line">        a++;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
 <p><strong>存在问题：</strong>作为方法中的内部类，既然方法被释放后，该类绝不可能再被使用，矛盾！</p>
 <hr>
-<h4 id="其他理解"><a href="#其他理解" class="headerlink" title="其他理解"></a>其他理解</h4><p>lambda是对接口中的方法的一种简写方式，当方法想要使用外部的变量的时候，需要把值给传过去，但是方法中无论怎呢改变量的值，都不会改变这个变量在外部的值（值传递和引用传递的区别），所以加上final就是为了方便开发者，以免误以为可以更改这个变量的值。final的目的就是告诉开发人员不能改变外面的变量值。</p>
-<p><strong>存在问题：</strong>可以不传，直接使用外部的 final 变量。难道隐式的传了？</p>
+<h4 id="其他理解"><a href="#其他理解" class="headerlink" title="其他理解"></a>其他理解</h4><p>lambda是对接口中的方法的一种简写方式，当方法想要使用外部的变量的时候，需要把值给传过去，但是方法中无论怎么改变量的值，都不会改变这个变量在外部的值（值传递和引用传递的区别），所以加上final就是为了方便开发者，以免误以为可以更改这个变量的值。final的目的就是告诉开发人员不能改变外面的变量值。</p>
+<p><strong>存在问题：</strong>外部变量什么时候传递给 lambda 的。难道隐式的传了？</p>
 <hr>
 <p>悬而未决，先睡觉</p>
 
