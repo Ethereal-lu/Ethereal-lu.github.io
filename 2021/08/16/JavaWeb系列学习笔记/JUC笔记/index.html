@@ -16,7 +16,7 @@
 <meta property="og:image" content="https://ethereal-lu.github.io/2021/08/16/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/JUC%E7%AC%94%E8%AE%B0/JMM.png">
 <meta property="og:image" content="https://ethereal-lu.github.io/2021/08/16/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/JUC%E7%AC%94%E8%AE%B0/Unsafe.png">
 <meta property="article:published_time" content="2021-08-16T09:12:41.000Z">
-<meta property="article:modified_time" content="2022-03-06T14:00:47.994Z">
+<meta property="article:modified_time" content="2022-04-12T14:35:07.566Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://ethereal-lu.github.io/2021/08/16/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/JUC%E7%AC%94%E8%AE%B0/JMM.png">
@@ -136,7 +136,7 @@
 
 <p>下方所有方法都是 Thread 类中的方法！</p>
 <h5 id="线程休眠"><a href="#线程休眠" class="headerlink" title="线程休眠"></a>线程休眠</h5><p>Thread.sleep(毫秒)      </p>
-<p>sleep 不会释放锁、 wait 会释放锁。</p>
+<p>sleep 不会释放锁、 wait 会释放锁。两者都释放 CPU</p>
 <p>JUC 编程中常使用 <code>TimeUnit.SECONDS.sleep(2);</code> 进行休眠</p>
 <h5 id="线程礼让"><a href="#线程礼让" class="headerlink" title="线程礼让"></a>线程礼让</h5><p>Thread.yield();  </p>
 <p>使当前线程从运行状态变为就绪状态，让 cpu 从所有就绪的线程中挑一个运行。<br>礼让有可能不成功，因为 cpu 可能再挑选一次还是让当前线程继续执行。</p>
@@ -463,19 +463,13 @@
 <hr>
 <h3 id="17、volatile"><a href="#17、volatile" class="headerlink" title="17、volatile"></a>17、volatile</h3><p><strong>volatile 的引出</strong>：当多个线程都使用了主存中的一个值，其中当一个线程对该值作出修改并刷新到主存时，其他线程并不知道该值已经被修改，继续使用旧值操作从而产生逻辑问题。为了解决该问题，出现了volatile。</p>
 <p>volatile 是 java 虚拟机提供比 <code>sychronized</code> 关键字更<strong>轻量级的同步机制</strong>，访问 <code>volitile</code> 变量时，不会执行加锁操作。</p>
+<p>线程需要使用被 volatile 修饰的变量时，每次都会从主存中读取，即使之前已经将该变量加载到工作内存。</p>
 <p>特性：</p>
 <p>1、保证可见性     ：当一个共享变量被volatile修饰时，它会保证修改的值会立即被更新到主存，当有其他线程需要读取时，它会去内存中读取新值。</p>
 <p>2、不保证原子性 ：java 中自增包括取数、加一、保存三个过程的操作，假如 <code>volitile</code> 修饰的值执行自增，则在自增的任意一个阶段都可能被其他操作打断。</p>
 <p>3、禁止指令重排 ：编译器、CPU 都有可能通过指令重排来优化我们的代码，指令重排即对我们的源代码重新排序。 <code>volitile</code> 会在写操作的前和后都设置一道内存屏障来保证程序局部的有序性。</p>
 <hr>
-<h3 id="18、单例模式"><a href="#18、单例模式" class="headerlink" title="18、单例模式"></a>18、单例模式</h3><h4 id="18-1、饿汉式单例"><a href="#18-1、饿汉式单例" class="headerlink" title="18.1、饿汉式单例"></a>18.1、饿汉式单例</h4><p>饿汉式单例不论是否需要都先直接生成一个对象，当对象占用大量内存时会造成浪费。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 饿汉式单例</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Hungry</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 可能浪费</span></span><br><span class="line">    <span class="keyword">private</span> Byte[] data1 = <span class="keyword">new</span> Byte[<span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">    <span class="keyword">private</span> Byte[] data2 = <span class="keyword">new</span> Byte[<span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">    <span class="keyword">private</span> Byte[] data3 = <span class="keyword">new</span> Byte[<span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">    <span class="keyword">private</span> Byte[] data4 = <span class="keyword">new</span> Byte[<span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Hungry</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> Hungry hungry = <span class="keyword">new</span> Hungry();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Hungry <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> hungry;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="18-2、懒汉式单例"><a href="#18-2、懒汉式单例" class="headerlink" title="18.2、懒汉式单例"></a>18.2、懒汉式单例</h4><h5 id="18-2-1、基础懒汉式"><a href="#18-2-1、基础懒汉式" class="headerlink" title="18.2.1、基础懒汉式"></a>18.2.1、基础懒汉式</h5><p>多线程下会出现问题</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 懒汉式单例</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LazyMan</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> LazyMan lazyMan;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">LazyMan</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> LazyMan <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (lazyMan == <span class="keyword">null</span>)</span><br><span class="line">            lazyMan = <span class="keyword">new</span> LazyMan();</span><br><span class="line">        <span class="keyword">return</span> lazyMan;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>可以用 synchronized 修饰 getInstance() 方法解决线程安全问题，但是由于 getInstance() 方法在绝大多数情况下是只用于读取，是线程安全的，因此这种方式会影响性能。</p>
-<h5 id="18-2-2、DCL-懒汉式（Double-Check-Lock-双重检测锁定）"><a href="#18-2-2、DCL-懒汉式（Double-Check-Lock-双重检测锁定）" class="headerlink" title="18.2.2、DCL 懒汉式（Double Check Lock 双重检测锁定）"></a>18.2.2、DCL 懒汉式（Double Check Lock 双重检测锁定）</h5><p>第一重判断 if (lazyMan == null) 无需解释，第二重判断原因：当 a 和  b  两线程都进入第一重判断之后，a 获得锁执行完毕后释放锁，此时 b 线程获取锁又执行一次实例化操作，从而出现问题。</p>
+<h3 id="18、单例模式"><a href="#18、单例模式" class="headerlink" title="18、单例模式"></a>18、单例模式</h3><h4 id="18-1、DCL-懒汉式（Double-Check-Lock-双重检测锁定）"><a href="#18-1、DCL-懒汉式（Double-Check-Lock-双重检测锁定）" class="headerlink" title="18.1、DCL 懒汉式（Double Check Lock 双重检测锁定）"></a>18.1、DCL 懒汉式（Double Check Lock 双重检测锁定）</h4><p>第一重判断 if (lazyMan == null) 无需解释，第二重判断原因：当 a 和  b  两线程都进入第一重判断之后，a 获得锁执行完毕后释放锁，此时 b 线程获取锁又执行一次实例化操作，从而出现问题。</p>
 <p>实例加 volatile 的原因：lazyMan = new LazyMan(); 构造并不是原子操作，分为三部：</p>
 <p>1、分配内存空间</p>
 <p>2、在该内存空间初始化实例</p>
@@ -483,24 +477,17 @@
 <p>指令优化重新排序后可能按 1 3 2 的顺序执行，当 a 线程执行完 3 还没执行 2 时，lazyMan 已经不为 null ，此时线程 b 在第一重判断后直接返回 lazyMan ，但是 lazyMan 指向的空间还未初始化从而出现问题。volatile 通过限制指令重排使 CPU 只能按 1 2 3 的顺序执行从而解决问题。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// DCL 懒汉式</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LazyMan</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">static</span> LazyMan lazyMan;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">LazyMan</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> LazyMan <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (lazyMan == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">synchronized</span> (LazyMan.class) &#123;</span><br><span class="line">                <span class="keyword">if</span> (lazyMan == <span class="keyword">null</span>)</span><br><span class="line">                    lazyMan = <span class="keyword">new</span> LazyMan();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> lazyMan;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>通过反射可以很轻松的破解 DCL 的单例模式。</p>
-<p>但查看反射的 newInstance() 方法的源码可知，无法通过反射构造枚举对象，且枚举类的构造方法必须是私有的，因此枚举类是天然的单例模式。</p>
-<p>使用枚举方式实现单例模式既没有线程安全问题，也无法通过反射破坏，但它是饿汉式单例，因此在不考虑内存优化时强烈推荐使用枚举方式。</p>
-<p>用 jad 反编译枚举类的 .calss 文件可知，枚举类的默认构造函数如下</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="title">ClassName</span><span class="params">(String s, <span class="keyword">int</span> i)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>(s, i);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="18-3、静态内部类（了解即可）"><a href="#18-3、静态内部类（了解即可）" class="headerlink" title="18.3、静态内部类（了解即可）"></a>18.3、静态内部类（了解即可）</h4><p>JVM 在加载外部类的过程中, 是不会加载静态内部类的, 只有内部类的属性/方法被调用时才会被加载, 并初始化其静态属性，达到了懒加载的效果。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LazyMan</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">LazyMan</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Inner</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> LazyMan lazyMan = <span class="keyword">new</span> LazyMan();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> LazyMan <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> Inner.lazyMan;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<h4 id="18-2、springboot-单例原理"><a href="#18-2、springboot-单例原理" class="headerlink" title="18.2、springboot 单例原理"></a>18.2、springboot 单例原理</h4><p><code>springboot</code>是通过单例注册表的方式实现单例模式的，即用一个 <code>ConcurrentHashMap </code>作为单例注册表存储类名到单例的映射，每次获取单例实例时，先到注册表中查找是否已经有该实例，若有直接返回，否则新建一个实例返回并添加到单例注册表中。</p>
 <hr>
 <h3 id="19、深入理解-CAS"><a href="#19、深入理解-CAS" class="headerlink" title="19、深入理解 CAS"></a>19、深入理解 CAS</h3><h4 id="19-1、CAS-是什么"><a href="#19-1、CAS-是什么" class="headerlink" title="19.1、CAS 是什么"></a>19.1、CAS 是什么</h4><p>CAS是英文单词<strong>CompareAndSwap</strong>的缩写，中文意思是：比较并替换。CAS 是一种实现并发算法时常用到的技术，Java并发包中的很多类都使用了CAS技术。CAS需要有3个操作数：内存地址V，旧的预期值A，即将要更新的目标值B。</p>
 <p>CAS指令执行时，当且仅当内存地址V的值与预期值A相等时，将内存地址V的值修改为B，否则就什么都不做。整个比较并替换的操作是一个原子操作。</p>
+<p>原子操作在执行过程中，CPU会将内存的总线锁定（目前已优化为禁止访问缓存行），使其他处理器暂时无法通过总线访问内存，从而保证了读-改-写的原子性。</p>
 <p>具体可以参考这篇文章  <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/34556594#:~:text=CAS%EF%BC%88Compare-and-Swap%EF%BC%89%EF%BC%8C%E5%8D%B3%E6%AF%94%E8%BE%83%E5%B9%B6%E6%9B%BF%E6%8D%A2%EF%BC%8C%E6%98%AF%E4%B8%80%E7%A7%8D%E5%AE%9E%E7%8E%B0%E5%B9%B6%E5%8F%91%E7%AE%97%E6%B3%95%E6%97%B6%E5%B8%B8%E7%94%A8%E5%88%B0%E7%9A%84%E6%8A%80%E6%9C%AF%EF%BC%8CJava%E5%B9%B6%E5%8F%91%E5%8C%85%E4%B8%AD%E7%9A%84%E5%BE%88%E5%A4%9A%E7%B1%BB%E9%83%BD%E4%BD%BF%E7%94%A8%E4%BA%86CAS%E6%8A%80%E6%9C%AF%E3%80%82.,CAS%E4%B9%9F%E6%98%AF%E7%8E%B0%E5%9C%A8%E9%9D%A2%E8%AF%95%E7%BB%8F%E5%B8%B8%E9%97%AE%E7%9A%84%E9%97%AE%E9%A2%98%EF%BC%8C%E6%9C%AC%E6%96%87%E5%B0%86%E6%B7%B1%E5%85%A5%E7%9A%84%E4%BB%8B%E7%BB%8DCAS%E7%9A%84%E5%8E%9F%E7%90%86%E3%80%82.">面试必问的CAS，你懂了吗？ - 知乎 (zhihu.com)</a></p>
 <h4 id="19-2、Unsafe-类"><a href="#19-2、Unsafe-类" class="headerlink" title="19.2、Unsafe 类"></a>19.2、Unsafe 类</h4><p>Unsafe类 主要提供一些用于执行低级别、不安全操作的方法，如直接访问系统内存资源、自主管理内存资源等，这些方法在提升Java运行效率、增强Java语言底层资源操作能力方面起到了很大的作用。但由于Unsafe类使Java语言拥有了类似C语言指针一样操作内存空间的能力，这无疑也增加了程序发生相关指针问题的风险。在程序中过度、不正确使用Unsafe类会使得程序出错的概率变大，使得Java这种安全的语言变得不再“安全”，因此对Unsafe的使用一定要慎重。</p>
 <p><img src="Unsafe.png" alt="Unsafe"></p>
 <h4 id="19-3、使用示例"><a href="#19-3、使用示例" class="headerlink" title="19.3、使用示例"></a>19.3、使用示例</h4><p>普通数字 i 或由 volatile 修饰的数字执行自增操作时需要三步：取值、加一、写值。在这三步执行的任何时间都可以被打断插队执行，因此会引发并发问题：如10个线程同时各自执行1000次自增操作，则实际结果会小于10000。而 AtomicInteger 可以解决这个问题，它的计算是原子操作。</p>
-<h4 id="19-4、CAS-中存在的-ABA-问题"><a href="#19-4、CAS-中存在的-ABA-问题" class="headerlink" title="19.4、CAS 中存在的 ABA 问题"></a>19.4、CAS 中存在的 ABA 问题</h4><p>CAS 的使用流程通常如下：1）首先从地址 V 读取值 A；2）根据 A 计算目标值 B；3）通过 CAS 以原子的方式将地址 V 中的值从 A 修改为 B。</p>
-<p>但是在第1步中读取的值是A，并且在第3步修改成功了，我们就能说它的值在第1步和第3步之间没有被其他线程改变过了吗？</p>
+<h4 id="19-4、CAS-中存在的-ABA-问题"><a href="#19-4、CAS-中存在的-ABA-问题" class="headerlink" title="19.4、CAS 中存在的 ABA 问题"></a>19.4、CAS 中存在的 ABA 问题</h4><p>CAS 的使用流程通常如下：1）某一时刻从地址 V 读取值 A；2）以原子方式在当前时刻比较A与地址 V 的值，若一致则替换。</p>
+<p>CAS 的原子性是指步骤2是原子操作，会通过禁止访问缓存行实现不被打断。但步骤1和步骤2之间会有一个时间差，可能会引发 ABA 问题。</p>
 <p>如果在这段期间它的值曾经被改成了B，后来又被改回为A，那CAS操作就会误认为它从来没有被改变过。这个漏洞称为CAS操作的“ABA”问题。Java并发包为了解决这个问题，提供了一个带有标记的原子引用类“AtomicStampedReference”，它可以通过控制变量值的版本来保证CAS的正确性。因此，在使用CAS前要考虑清楚“ABA”问题是否会影响程序并发的正确性，如果需要解决ABA问题，改用传统的互斥同步可能会比原子类更高效。</p>
 <hr>
 <h3 id="20、原子引用"><a href="#20、原子引用" class="headerlink" title="20、原子引用"></a>20、原子引用</h3><p>原子引用是带版本号的原子操作，相当于 MySQL的乐观锁。</p>
@@ -566,7 +553,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/C-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">C# 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Go 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">JavaWeb系列学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">常见问题及解决方法</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B1%82%E8%81%8C/">求职</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/C-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">C# 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Go 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">JavaWeb系列学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">常见问题及解决方法</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B1%82%E8%81%8C/">求职</a></li></ul>
     </div>
   </div>
 
@@ -581,7 +568,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
     </div>
   </div>
 
@@ -594,23 +581,23 @@
       <ul>
         
           <li>
-            <a href="/2022/03/27/MySQL/MySQL%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/">MySQL主从复制</a>
+            <a href="/2022/04/12/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">Redis分布式锁</a>
           </li>
         
           <li>
-            <a href="/2022/03/27/MySQL/InnoDB%E9%94%81/">InnoDB锁</a>
+            <a href="/2022/04/09/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/">Redis持久化</a>
           </li>
         
           <li>
-            <a href="/2022/03/27/MySQL/MySQL%E7%B4%A2%E5%BC%95/">MySQL索引</a>
+            <a href="/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/">linux创建子进程--fork()方法</a>
           </li>
         
           <li>
-            <a href="/2022/03/27/MySQL/%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">事务实现原理</a>
+            <a href="/2022/04/08/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/">编码</a>
           </li>
         
           <li>
-            <a href="/2022/03/26/%E6%B1%82%E8%81%8C/%E7%AC%94%E8%AF%95%E6%80%BB%E7%BB%93/">笔试总结</a>
+            <a href="/2022/04/07/Linux/ubuntu%E7%9A%84ufw%E4%B8%8Eiptables/">ubuntu的ufw与iptables</a>
           </li>
         
       </ul>
