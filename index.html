@@ -73,6 +73,77 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Redis/缓存穿透、击穿、雪崩" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/16/Redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E3%80%81%E5%87%BB%E7%A9%BF%E3%80%81%E9%9B%AA%E5%B4%A9/" class="article-date">
+  <time class="dt-published" datetime="2022-04-16T14:39:41.000Z" itemprop="datePublished">2022-04-16</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Redis/">Redis</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/04/16/Redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E3%80%81%E5%87%BB%E7%A9%BF%E3%80%81%E9%9B%AA%E5%B4%A9/">缓存穿透、击穿、雪崩</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="1、缓存穿透"><a href="#1、缓存穿透" class="headerlink" title="1、缓存穿透"></a>1、缓存穿透</h2><h3 id="1-1、问题描述"><a href="#1-1、问题描述" class="headerlink" title="1.1、问题描述"></a>1.1、问题描述</h3><p>如果在请求数据时，在缓存层和数据库层都没有命中，这种情况就叫作缓存穿透。</p>
+<p>造成缓存穿透的主要原因就是：查询某个 Key 对应的数据，Redis 缓存中没有相应的数据，则直接到数据库中查询。数据库中也不存在要查询的数据，则数据库会返回空，而 Redis 也不会缓存这个空结果。这就造成每次通过这样的 Key 去查询数据都会直接到数据库中查询，Redis 不会缓存空结果。这就造成了缓存穿透的问题。</p>
+<h3 id="1-2、解决办法"><a href="#1-2、解决办法" class="headerlink" title="1.2、解决办法"></a>1.2、解决办法</h3><ul>
+<li>将空对象也缓存起来。即如果某个 key 在缓存和数据库都没有命中，就将该 key 的值置为空对象缓存到 redis。</li>
+<li>布隆过滤器。将所有的 key 都存放在足够大的布隆过滤器中，每次查询先由其对 key 过滤，若布隆过滤器命中，则该 key 有可能存在，若布隆过滤器未命中，则该 key 一定不存在。</li>
+</ul>
+<h3 id="1-3、布隆过滤器"><a href="#1-3、布隆过滤器" class="headerlink" title="1.3、布隆过滤器"></a>1.3、布隆过滤器</h3><p>布隆过滤器由一个 bit 数组和若干哈希函数组成。</p>
+<p>初始时将 bit 数组所有位置置 0。</p>
+<p>对任意一个 key，通过哈希函数得到哈希值，将该哈希值对 bit 数组的长度取余就得到一个确定的位置，将该位置置为 1。对所有的哈希函数都执行上述操作，则一个 key 会对应多个位置。</p>
+<p>查询时，对 key 进行同样的操作，若得到的所有位置都为 1，则该 key 有很大的可能存在；若有任意一个位置不为 1，则该值一定不存在。</p>
+<p>之所以命中时是很有可能存在，根本问题是哈希的碰撞，可能其他一个或多个值的哈希映射与该值的所有映射碰撞，则无法判断该值是否存在。</p>
+<p>布隆过滤器无法删除元素，一是无法精确判断该值是否存在，二是删除后会使得其他值在该点的碰撞映射删除导致误判。</p>
+<p>应用场景：</p>
+<ul>
+<li>redis 缓存穿透</li>
+<li>爬虫或其他业务中判断是否访问过某 url</li>
+<li>web 拦截器，拦截重复请求，防止重复攻击</li>
+</ul>
+<h2 id="2、缓存击穿"><a href="#2、缓存击穿" class="headerlink" title="2、缓存击穿"></a>2、缓存击穿</h2><h3 id="2-1、问题描述"><a href="#2-1、问题描述" class="headerlink" title="2.1、问题描述"></a>2.1、问题描述</h3><p>缓存数据都设置有过期时间，当高峰期对于某个热点数据有大量访问，若此时该数据正好过期，则大量的访问就直接落到数据库中，导致数据库崩溃。</p>
+<h3 id="2-2、解决办法"><a href="#2-2、解决办法" class="headerlink" title="2.2、解决办法"></a>2.2、解决办法</h3><ul>
+<li>对于热点数据不设置过期时间</li>
+<li>使用分布式锁。只有第一个到达的访问获取锁去数据库读取数据并写回缓存，其他的访问竞争锁失败陷入等待并循环查询缓存。</li>
+</ul>
+<h2 id="3、缓存雪崩"><a href="#3、缓存雪崩" class="headerlink" title="3、缓存雪崩"></a>3、缓存雪崩</h2><h3 id="3-1、问题描述"><a href="#3-1、问题描述" class="headerlink" title="3.1、问题描述"></a>3.1、问题描述</h3><p>若缓存服务器突然故障宕机，则大量请求就会直接淹没数据库，此时若不采取其他措施就直接重启数据库，它又会立刻被淹没，这就是缓存雪崩。</p>
+<h3 id="3-2、解决办法"><a href="#3-2、解决办法" class="headerlink" title="3.2、解决办法"></a>3.2、解决办法</h3><ul>
+<li>redis 集群，保证高可用</li>
+<li>限流，通过分布式锁限制访问数据库的线程数量</li>
+<li>数据预热 ，可能产生大量访问之前，手动将数据加载到缓存，对数据设置不同的过期时间，使其均匀过期。（感觉像是缓存击穿的解决方法呢？）</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/04/16/Redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E3%80%81%E5%87%BB%E7%A9%BF%E3%80%81%E9%9B%AA%E5%B4%A9/" data-id="cl27q3sm20000n0aqg8bf5op8" data-title="缓存穿透、击穿、雪崩" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Redis/Redis分布式锁" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/04/12/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" class="article-date">
@@ -791,97 +862,6 @@
 
 
   
-    <article id="post-MySQL/InnoDB锁" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/03/27/MySQL/InnoDB%E9%94%81/" class="article-date">
-  <time class="dt-published" datetime="2022-03-27T09:39:41.000Z" itemprop="datePublished">2022-03-27</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/03/27/MySQL/InnoDB%E9%94%81/">InnoDB锁</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>锁机制用于管理对共享资源的并发访问。</p>
-<h2 id="1、锁粒度"><a href="#1、锁粒度" class="headerlink" title="1、锁粒度"></a>1、锁粒度</h2><h3 id="表锁"><a href="#表锁" class="headerlink" title="表锁"></a>表锁</h3><p>表锁是MySQL中最大粒度的锁定机制，会锁定整张表，可以很好的避免死锁，是 MySQL 中最大颗粒度的锁定机制。</p>
-<p>表锁由 MySQL Server 实现，一般在执行 DDL 语句时会对整个表进行加锁，比如说<code>ALTER TABLE</code>等操作。在执行 DML 语句时，也可以通过<code>LOCK TABLES</code>显式指定对某个表进行加锁。</p>
-<h3 id="页锁"><a href="#页锁" class="headerlink" title="页锁"></a>页锁</h3><p>页级锁是 MySQL 中比较独特的一种锁定级别，在其他数据库管理软件中并不常见。</p>
-<p>页级锁的颗粒度介于行级锁与表级锁之间，所以获取锁定所需要的资源开销，以及所能提供的并发处理能力同样也是介于上面二者之间。另外，页级锁和行级锁一样，会发生死锁。</p>
-<p>页级锁主要应用于 BDB 存储引擎。</p>
-<h3 id="行锁"><a href="#行锁" class="headerlink" title="行锁"></a>行锁</h3><p>行级锁的锁定颗粒度在 MySQL 中是最小的，只针对操作的当前行进行加锁，所以行级锁发生锁定资源争用的概率也最小。</p>
-<p>InnoDB 默认使用行级锁。</p>
-<h2 id="2、行锁详解"><a href="#2、行锁详解" class="headerlink" title="2、行锁详解"></a>2、行锁详解</h2><p>InnoDB默认使用行锁，实现了两种标准的行锁——共享锁与排他锁；</p>
-<p><img src="%E5%85%B1%E4%BA%AB%E9%94%81%E4%B8%8E%E6%8E%92%E4%BB%96%E9%94%81.png" alt="共享锁与排他锁"></p>
-<p>1、除了显式加锁的情况，其他情况下的加锁与解锁都无需人工干预。<br>2、InnoDB所有的行锁算法都是基于索引实现的，锁定的也都是索引或索引区间</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 加锁方式：共享锁</span></span><br><span class="line">SELECT...LOCK <span class="keyword">IN</span> SHARE MODE</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 加锁方式：排它锁</span></span><br><span class="line">SELECT...FOR UPDATE </span><br></pre></td></tr></table></figure>
-
-<h2 id="3、当前读与快照读"><a href="#3、当前读与快照读" class="headerlink" title="3、当前读与快照读"></a>3、当前读与快照读</h2><p><strong>1、当前读：</strong>即加锁读，读取记录的最新版本，会加锁保证其他并发事务不能修改当前记录，直至获取锁的事务释放锁；</p>
-<p>使用当前读的操作主要包括：显式加锁的读操作与插入/更新/删除等写操作，如下所示：</p>
-<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ? <span class="keyword">lock</span> <span class="keyword">in</span> <span class="keyword">share mode</span>;</span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ? <span class="keyword">for</span> <span class="keyword">update</span>;</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> <span class="keyword">table</span> <span class="keyword">values</span> (…);</span><br><span class="line"><span class="keyword">update</span> <span class="keyword">table</span> <span class="keyword">set</span> ? <span class="keyword">where</span> ?;</span><br><span class="line"><span class="keyword">delete</span> <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ?;</span><br></pre></td></tr></table></figure>
-
-<p>注：当Update SQL被发给MySQL后，MySQL Server会根据where条件，读取第一条满足条件的记录，然后InnoDB引擎会将第一条记录返回，并加锁，待MySQL Server收到这条加锁的记录之后，会再发起一个Update请求，更新这条记录。一条记录操作完成，再读取下一条记录，直至没有满足条件的记录为止。因此，Update操作内部，就包含了当前读。同理，Delete操作也一样。Insert操作会稍微有些不同，简单来说，就是Insert操作可能会触发Unique Key的冲突检查，也会进行一个当前读。</p>
-<p><strong>2、快照读</strong>：即不加锁读，读取记录的快照版本而非最新版本，通过MVCC实现；</p>
-<p>InnoDB默认的RR事务隔离级别下，不显式加『lock in share mode』与『for update』的『select』操作都属于快照读，保证事务执行过程中只有第一次读之前提交的修改和自己的修改可见，其他的均不可见；</p>
-<h2 id="4、MVCC"><a href="#4、MVCC" class="headerlink" title="4、MVCC"></a>4、MVCC</h2><p>MVCC『多版本并发控制』，与之对应的是『基于锁的并发控制』；</p>
-<p>MVCC的最大好处：读不加任何锁，读写不冲突，对于读操作多于写操作的应用，极大的增加了系统的并发性能；</p>
-<p><img src="mvcc.png" alt="mvcc"></p>
-<h2 id="5、锁算法"><a href="#5、锁算法" class="headerlink" title="5、锁算法"></a>5、锁算法</h2><p>InnoDB主要实现了三种行锁算法：</p>
-<p><img src="%E4%B8%89%E7%A7%8D%E8%A1%8C%E9%94%81%E7%AE%97%E6%B3%95.png" alt="三种行锁算法"></p>
-<p><strong>记录锁、间隙锁、临键锁都是排它锁</strong></p>
-<h3 id="5-1、记录锁"><a href="#5-1、记录锁" class="headerlink" title="5.1、记录锁"></a>5.1、记录锁</h3><p><code>记录锁(Record Locks)</code>也称为行锁，顾名思义，表示对某一行记录加锁。</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> test <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">1</span> <span class="keyword">FOR</span> UPDATE;</span><br></pre></td></tr></table></figure>
-
-<p>它会在 id=1 的记录上加上记录锁，以阻止其他事务插入，更新，删除 id=1 这一行。</p>
-<p>记录锁总是锁定索引记录（SELECT和UPDATE都会加锁），即使表没有定义索引。对于这种情况， InnoDB创建一个隐藏的聚集索引并使用该索引进行记录锁定。</p>
-<h3 id="5-2、间隙锁"><a href="#5-2、间隙锁" class="headerlink" title="5.2、间隙锁"></a>5.2、间隙锁</h3><p>Gap锁，锁定的是索引记录之间的间隙，是防止幻读的关键；并发事务插入新数据前会先检测间隙中是否已被加锁，防止幻读的出现；</p>
-<p>注意！间隙锁锁住的是一个区间，而不仅仅是这个区间中目前仅存在的数据行。</p>
-<ul>
-<li><code>插入意向锁(Insert Intention Locks)</code>是在插入一条记录行前，由 <code>INSERT</code> 操作产生的一种<code>间隙锁</code>。该锁用以表示插入意向，当多个事务在同一区间插入位置不同的多条数据时，事务之间不需要互相等待。假设存在两条值分别为 4 和 7 的记录，两个不同的事务分别试图插入值为 5 和 6 的两条记录，每个事务在获取插入行上独占的（排他）锁前，都会获取（4，7）之间的间隙锁，但是因为数据行之间并不冲突，所以两个事务之间并不会产生冲突（阻塞等待）。</li>
-</ul>
-<h3 id="5-3、临键锁"><a href="#5-3、临键锁" class="headerlink" title="5.3、临键锁"></a>5.3、临键锁</h3><p><strong>临键锁</strong>，是<strong>记录锁与间隙锁的组合</strong>，它的封锁范围，既包含索引记录，又包含索引区间。通过临键锁可以解决幻读的问题。</p>
-<h2 id="6、表级锁"><a href="#6、表级锁" class="headerlink" title="6、表级锁"></a>6、表级锁</h2><h3 id="6-1、意向锁"><a href="#6-1、意向锁" class="headerlink" title="6.1、意向锁"></a>6.1、意向锁</h3><p><code>意向锁（Intention Locks）</code>是<strong>表级锁</strong>，指示事务稍后需要对表中的行使用哪种类型的锁（共享锁或独占锁）。</p>
-<p>意向锁有两种类型：</p>
-<ul>
-<li>意向共享锁（IS）：一个事务在获取（任何一行/或者全表）S锁之前，一定会先在所在的表上加IS锁。</li>
-<li>意向排它锁（IX）：一个事务在获取（任何一行/或者全表）X锁之前，一定会先在所在的表上加IX锁。</li>
-</ul>
-<p>意图锁定协议如下：</p>
-<ul>
-<li>在事务可以获取表中行的共享锁之前，它必须首先获取<code>IS</code>表上的锁或更强的锁。</li>
-<li>在事务获得表中行的排他锁之前，它必须首先获得<code>IX</code> 表的锁。</li>
-</ul>
-<h3 id="6-2、自增锁"><a href="#6-2、自增锁" class="headerlink" title="6.2、自增锁"></a>6.2、自增锁</h3><p><code>自增锁(auto-inc Locks)</code>是一种特殊的表级锁，主要用于事务中插入自增字段，也就是我们最常用的自增主键id。在最简单的情况下，如果一个事务正在向表中插入值，则任何其他事务都必须等待自己插入到该表中，以便第一个事务插入的行接收连续的主键值。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/03/27/MySQL/InnoDB%E9%94%81/" data-id="cl1alqgnf00027caq4zfy6c90" data-title="InnoDB锁" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -925,6 +905,10 @@
       <ul>
         
           <li>
+            <a href="/2022/04/16/Redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E3%80%81%E5%87%BB%E7%A9%BF%E3%80%81%E9%9B%AA%E5%B4%A9/">缓存穿透、击穿、雪崩</a>
+          </li>
+        
+          <li>
             <a href="/2022/04/12/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">Redis分布式锁</a>
           </li>
         
@@ -938,10 +922,6 @@
         
           <li>
             <a href="/2022/04/08/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/">编码</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/07/Linux/ubuntu%E7%9A%84ufw%E4%B8%8Eiptables/">ubuntu的ufw与iptables</a>
           </li>
         
       </ul>
