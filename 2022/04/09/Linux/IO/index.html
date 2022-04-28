@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>IO | 驯鹿非鹿</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="1、IO 多路复用1.1、概念IO多路复用是一种同步IO模型，实现一个线程可以监视多个文件描述符；一旦某个文件描述符就绪，就能够通知应用程序进行相应的读写操作；没有文件描述符就绪时会阻塞应用程序，交出cpu。多路是指网络连接，复用指的是同一个线程。 **文件描述符**：Linux 中一切都可以看作文件，包括普通文件、链接文件、Socket  以及设备驱动等，对其进行相关操作时，都可能会创建对应的文">
+<meta property="og:type" content="article">
+<meta property="og:title" content="IO">
+<meta property="og:url" content="https://ethereal-lu.github.io/2022/04/09/Linux/IO/index.html">
+<meta property="og:site_name" content="驯鹿非鹿">
+<meta property="og:description" content="1、IO 多路复用1.1、概念IO多路复用是一种同步IO模型，实现一个线程可以监视多个文件描述符；一旦某个文件描述符就绪，就能够通知应用程序进行相应的读写操作；没有文件描述符就绪时会阻塞应用程序，交出cpu。多路是指网络连接，复用指的是同一个线程。 **文件描述符**：Linux 中一切都可以看作文件，包括普通文件、链接文件、Socket  以及设备驱动等，对其进行相关操作时，都可能会创建对应的文">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://ethereal-lu.github.io/2022/04/09/Linux/IO/io%E5%A4%8D%E7%94%A8%E5%8C%BA%E5%88%AB.png">
+<meta property="article:published_time" content="2022-04-09T11:42:15.000Z">
+<meta property="article:modified_time" content="2022-04-26T12:41:05.943Z">
+<meta property="article:author" content="驯鹿先生">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ethereal-lu.github.io/2022/04/09/Linux/IO/io%E5%A4%8D%E7%94%A8%E5%8C%BA%E5%88%AB.png">
+  
+    <link rel="alternate" href="/atom.xml" title="驯鹿非鹿" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">驯鹿非鹿</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS 订阅"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://Ethereal-lu.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-Linux/IO" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/09/Linux/IO/" class="article-date">
+  <time class="dt-published" datetime="2022-04-09T11:42:15.000Z" itemprop="datePublished">2022-04-09</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Linux/">Linux</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      IO
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="1、IO-多路复用"><a href="#1、IO-多路复用" class="headerlink" title="1、IO 多路复用"></a>1、IO 多路复用</h2><h3 id="1-1、概念"><a href="#1-1、概念" class="headerlink" title="1.1、概念"></a>1.1、概念</h3><p><strong>IO多路复用</strong>是一种同步IO模型，实现一个线程可以监视多个文件描述符；一旦某个文件描述符就绪，就能够通知应用程序进行相应的读写操作；没有文件描述符就绪时会阻塞应用程序，交出cpu。多路是指网络连接，复用指的是同一个线程。</p>
+<p>**<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/143847169">文件描述符</a>**：Linux 中一切都可以看作文件，包括普通文件、链接文件、Socket  以及设备驱动等，对其进行相关操作时，都可能会创建对应的文件描述符。文件描述符（file  descriptor）是内核为了高效管理已被打开的文件所创建的索引，用于指代被打开的文件，对文件所有 I/O  操作相关的系统调用都需要通过文件描述符。</p>
+<p>**<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/234806787">Socket</a>**：在Linux 中，Socket 也是文件，发送端将数据写进发送方的 Socket ，再通过网卡、路由到接收方的 Socket ，接收方程序将数据从接收方 Socket 中读出来使用。一个 Socket 由&lt;协议、发送方 IP、发送方 Port、接收方 IP、接收方 Port&gt; 五元组描述。总之，Socket 就是一个文件，同样可以进行读写。</p>
+<h3 id="1-2、Linux-IO模型"><a href="#1-2、Linux-IO模型" class="headerlink" title="1.2、Linux IO模型"></a>1.2、Linux IO模型</h3><p>目前Linux系统中提供了5种IO处理模型</p>
+<ol>
+<li>阻塞IO</li>
+<li>非阻塞IO</li>
+<li>IO多路复用</li>
+<li>信号驱动IO</li>
+<li>异步IO</li>
+</ol>
+<h4 id="阻塞IO"><a href="#阻塞IO" class="headerlink" title="阻塞IO"></a>阻塞IO</h4><p>阻塞IO意味着当我们发起一次IO操作后一直等待成功或失败之后才返回，在这期间程序不能做其它的事情。阻塞IO操作只能对单个文件描述符进行操作</p>
+<ul>
+<li>服务端采用单线程，当accept一个请求后，在recv或send调用阻塞时，将无法accept其他请求（必须等上一个请求处recv或send完），无法处理并发。</li>
+<li>服务器端采用多线程，当accept一个请求后，开启线程进行recv，可以完成并发处理，但随着请求数增加需要增加系统线程，大量的线程占用很大的内存空间，并且线程切换会带来很大的开销。</li>
+</ul>
+<h4 id="非阻塞IO"><a href="#非阻塞IO" class="headerlink" title="非阻塞IO"></a>非阻塞IO</h4><p>服务器端当accept一个请求后，加入fds集合，每次轮询一遍fds，若IO失败则返回错误，每次轮询所有fd（包括没有发生读写事件的fd）会很浪费cpu</p>
+<h4 id="IO多路复用"><a href="#IO多路复用" class="headerlink" title="IO多路复用"></a>IO多路复用</h4><p>服务器端采用单线程通过select/epoll等系统调用获取fd列表，遍历活跃（即有读写事件）的fd进行accept/recv/send，使其能支持更多的并发连接请求。</p>
+<h3 id="1-3、IO多路复用的实现"><a href="#1-3、IO多路复用的实现" class="headerlink" title="1.3、IO多路复用的实现"></a>1.3、IO多路复用的实现</h3><h4 id="select"><a href="#select" class="headerlink" title="select"></a>select</h4><ul>
+<li><p>select 每个进程可同时监听的文件描述符数量最大为 1024，虽然可以设置，但是会降低网络效率。</p>
+</li>
+<li><p>每次调用select，都需要把fd集合从用户态拷贝到内核态，这个开销在fd很多时会很大</p>
+</li>
+<li><p>对socket扫描时是线性扫描，采用轮询的方法，效率较低（高并发时）</p>
+</li>
+</ul>
+<p>后面的不重要</p>
+<p>数据结构：<code>fd_set</code>简单地理解为一个长度是1024的比特位，每个比特位表示一个需要处理的FD，如果是1，那么表示这个FD有需要处理的I/O事件，否则没有。</p>
+<p>select 在调用期间会一直阻塞。</p>
+<p>select将监听的文件描述符分为三组，分别是：read_fds是需要进行读操作的文件描述符，write_fds是需要进行写操作的文件描述符，except_fds是需要进行异常事件处理的文件描述符。</p>
+<h4 id="poll"><a href="#poll" class="headerlink" title="poll"></a>poll</h4><p>poll 仅仅时取消了 1024 的限制，其他和 select 一样，不分为三组。poll 是 fd 数组。</p>
+<h4 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h4><p>epoll 底层是红黑树 + 链表。红黑树存储所有需要监听的 fd（文件描述符），链表存储活跃（有读写事件）的fd。</p>
+<p>使用 epoll 主要是使用如下三个系统调用</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建一个 epoll 实例</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_create</span><span class="params">(<span class="keyword">int</span> size)</span></span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">// epoll_ctl 负责把 fd 增加、删除到内核红黑树</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_ctl</span><span class="params">(<span class="keyword">int</span> epfd, <span class="keyword">int</span> op, <span class="keyword">int</span> fd, struct epoll_event *event)</span></span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">// epoll_wait 负责检测可读链表，没有可读 fd 则阻塞进程</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_wait</span><span class="params">(<span class="keyword">int</span> epfd, struct epoll_event * events, <span class="keyword">int</span> maxevents, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>不同于select和poll 的线性扫描，epoll 每次查询只需要看可读链表中是否有元素即可，是 O(1) 的时间复杂度。</p>
+<p><img src="io%E5%A4%8D%E7%94%A8%E5%8C%BA%E5%88%AB.png" alt="io复用区别"></p>
+<p>对于上述事件的理解：类似于生产者消费者模型，当有生产者在文件中写入数据了，则消费者就可以读该文件了，此时该文件的 fd 就是活跃的。</p>
+<h2 id="2、redis-使用的IO模型"><a href="#2、redis-使用的IO模型" class="headerlink" title="2、redis 使用的IO模型"></a>2、redis 使用的IO模型</h2><p>下面这篇文章可以对 非阻塞IO 与 IO多路复用 的作用解释的更通透。</p>
+<p><a target="_blank" rel="noopener" href="https://researchlab.github.io/2018/10/08/redis-11-redisio/">redis专题11 线程IO模型</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/04/09/Linux/IO/" data-id="cl2inu9cd00022oaq4hb23237" data-title="IO" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">前一篇</strong>
+      <div class="article-nav-title">
+        
+          linux创建子进程--fork()方法
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2022/04/08/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">后一篇</strong>
+      <div class="article-nav-title">编码</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/C-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">C# 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Go 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">JavaWeb系列学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">常见问题及解决方法</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B1%82%E8%81%8C/">求职</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2022/04/25/Redis/Redis%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7/">Redis缓存一致性</a>
+          </li>
+        
+          <li>
+            <a href="/2022/04/16/Redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E3%80%81%E5%87%BB%E7%A9%BF%E3%80%81%E9%9B%AA%E5%B4%A9/">缓存穿透、击穿、雪崩</a>
+          </li>
+        
+          <li>
+            <a href="/2022/04/12/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">Redis分布式锁</a>
+          </li>
+        
+          <li>
+            <a href="/2022/04/09/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/">Redis持久化</a>
+          </li>
+        
+          <li>
+            <a href="/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/">linux创建子进程--fork()方法</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2022 驯鹿先生<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
