@@ -18,7 +18,7 @@
 <meta property="og:image" content="https://ethereal-lu.github.io/2022/03/17/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/docker%E7%AC%94%E8%AE%B0/Docker%E6%9E%B6%E6%9E%84.jpeg">
 <meta property="og:image" content="https://ethereal-lu.github.io/2022/03/17/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/docker%E7%AC%94%E8%AE%B0/%E9%95%9C%E5%83%8F%E5%B1%82.png">
 <meta property="article:published_time" content="2022-03-17T09:12:41.000Z">
-<meta property="article:modified_time" content="2022-04-25T15:35:58.606Z">
+<meta property="article:modified_time" content="2022-04-30T03:30:20.547Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://ethereal-lu.github.io/2022/03/17/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/docker%E7%AC%94%E8%AE%B0/%E9%95%9C%E5%83%8F%E4%B8%8E%E5%AE%B9%E5%99%A8.jpg">
@@ -107,8 +107,21 @@
         <h2 id="1、概述"><a href="#1、概述" class="headerlink" title="1、概述"></a>1、概述</h2><p>Docker 基于 Go 语言实现。一次镜像，处处运行。</p>
 <p>Go文件编译后是平台级别的机器码，因此Docker 不需要 Go 环境支撑。由于 Docker 容器模型是基于 linux 内核的，因此 Docker 必须安装在 linux 环境上。</p>
 <p>Docker for Windows 中负责运行环境配置的工具是 Docker Machine。它会在 Windows 上创建一个 Linux 虚拟机，用于运行 Docker 引擎。</p>
-<p><strong>docker 启动为什么比虚拟机快？</strong></p>
-<p>1.Docker有着比虚拟机更少的抽象层，由于Docker不需要Hypervisor实现硬件资源虚拟化，运行在Docker容器上的程序直接使用的都是实际物理机的硬件资源，因此在Cpu、内存利用率上Docker将会在效率上有明显优势。</p>
+<p>Docker 相关的本地资源都存放在<code>/var/lib/docker/</code>目录下</p>
+<p>docker 的配置文件路劲：<code>/etc/default/docker</code></p>
+<h3 id="1-1、LCX"><a href="#1-1、LCX" class="headerlink" title="1.1、LCX"></a>1.1、LCX</h3><p>Linux Container容器是一种内核虚拟化技术，可以提供轻量级的虚拟化，以便隔离进程和资源。</p>
+<p>LXC与docker的关系</p>
+<ul>
+<li>Docker并不是LXC的替代品，Docker的底层就是使用了LXC来实现的。LXC将Linux进程沙盒化，使得进程之间相互隔离，并且能够控制各进程的资源分配。 </li>
+<li>在LXC的基础之上，Docker提供了一系列更强的功能。<ul>
+<li>移植性：通过抽象容器配置，容器可以实现一个平台移植到另一个平台；</li>
+<li>镜像系统：基于 AUFS 的镜像系统为容器的分发带来了很多的便利，同时共同的 镜像层只需要存储一份，实现高效率的存储；</li>
+<li>版本管理：类似于 GIT 的版本管理理念，用户可以更方面的创建、管理镜像文件；</li>
+<li>仓库系统：仓库系统大大降低了镜像的分发和管理的成本；</li>
+</ul>
+</li>
+</ul>
+<h3 id="1-2、docker-启动为什么比虚拟机快"><a href="#1-2、docker-启动为什么比虚拟机快" class="headerlink" title="1.2、docker 启动为什么比虚拟机快"></a>1.2、docker 启动为什么比虚拟机快</h3><p>1.Docker有着比虚拟机更少的抽象层，由于Docker不需要Hypervisor实现硬件资源虚拟化，运行在Docker容器上的程序直接使用的都是实际物理机的硬件资源，因此在Cpu、内存利用率上Docker将会在效率上有明显优势。</p>
 <p>2.Docker利用的是宿主机的内核，而不需要Guest OS，因此，当新建一个容器时，Docker不需要和虚拟机一样重新加载一个操作系统，避免了引导、加载操作系统内核这个比较费时费资源的过程，当新建一个虚拟机时，虚拟机软件需要加载Guest OS，这个新建过程是分钟级别的，而Docker由于直接利用宿主机的操作系统则省略了这个过程，因此新建一个Docker容器只需要几秒钟。</p>
 <table>
 <thead>
@@ -163,13 +176,12 @@
 <p>6 当需要限制 Docker 容器运行资源或执行用户指令等操作时，则通过 Execdriver 来完成。</p>
 <p>7 Libcontainer 是一项独立的容器管理包，Networkdriver 以及 Execdriver 都是通过 Libcontainer 来实现具体对容器进行的操作。</p>
 <p><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1768295">Docker 架构中各模块解析</a></p>
-<h2 id="5、使用"><a href="#5、使用" class="headerlink" title="5、使用"></a>5、使用</h2><p>docker system df  查看镜像/容器/数据卷所占的空间。</p>
-<p><strong>docker 虚悬镜像是什么？</strong></p>
-<p>虚悬镜像是仓库名、标签都是&lt;none&gt;的镜像。</p>
-<p>虚悬镜像一般是某镜像更新了最新版本，当我们使用docker pull拉取该最新镜像时，仓库名和标签给了新的镜像，旧的镜像仓库和标签则被取消，成为虚悬镜像。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 该命令可以删除所有虚悬镜像</span></span><br><span class="line">docker rmi $(docker images -f <span class="string">&quot;dangling=true&quot;</span> -q)</span><br><span class="line"> </span><br><span class="line"><span class="comment"># 或者</span></span><br><span class="line"> </span><br><span class="line"><span class="comment"># 这个命令会删除所有未使用到的镜像，即使并不是没有仓库名或没有标签。</span></span><br><span class="line">docker image prune</span><br></pre></td></tr></table></figure>
-
-<h3 id="5-1、run"><a href="#5-1、run" class="headerlink" title="5.1、run"></a>5.1、run</h3><ul>
+<h2 id="5、容器"><a href="#5、容器" class="headerlink" title="5、容器"></a>5、容器</h2><h3 id="5-1、容器的本质"><a href="#5-1、容器的本质" class="headerlink" title="5.1、容器的本质"></a>5.1、容器的本质</h3><p>用命令 docker run 创建的容器就是 <strong>进程/usr/bin/containerd</strong> 创建的一个组长进程，（该组长进程的父进程可能是 init 进程(docker 版本20.10.10) 也可能是 /usr/bin/containerd 进程(docker 版本 18.09.9)，这取决于 docker 的版本。</p>
+<p>在启动容器时指定的应用程序（/bin/bash）就是该组长进程的子进程，包括创建容器时的/bin/bash和exec重新进入容器时的/bin/bash都是该组长进程的子进程</p>
+<p>容器内 PID=1 的进程就是创建容器时指定的命令所对应的进程。</p>
+<p>Linux 容器的“单进程”模型，指的是容器的生命周期等同于 PID=1 的进程（即上面这个进程）的生命周期，而不是说容器里不能创建多进程。</p>
+<p>当通过 docker stop container 时，这个容器的进程及其所有子进程全部退出。</p>
+<h3 id="5-2、run"><a href="#5-2、run" class="headerlink" title="5.2、run"></a>5.2、run</h3><ul>
 <li><p><strong>–name</strong>=“容器名字”    为容器指定一个名称；</p>
 </li>
 <li><p><strong>-d:</strong> 后台运行容器，并返回容器ID；</p>
@@ -186,8 +198,11 @@
 </ul>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#将nginx的80端口映射到宿主机的800端口上</span></span><br><span class="line">docker run -it -p 800:80 nginx </span><br></pre></td></tr></table></figure>
 
-<h3 id="5-2、其他"><a href="#5-2、其他" class="headerlink" title="5.2、其他"></a>5.2、其他</h3><ul>
-<li>docker ps：列出所有正在运行的容器。其后可以跟选项，用时再查。</li>
+<h3 id="5-3、命令"><a href="#5-3、命令" class="headerlink" title="5.3、命令"></a>5.3、命令</h3><ul>
+<li><p><code>docker system df</code>  查看镜像/容器/数据卷所占的空间。</p>
+</li>
+<li><p>docker ps：列出所有正在运行的容器。其后可以跟选项，用时再查。</p>
+</li>
 </ul>
 <p>进入容器后有以下两种退出方式</p>
 <ul>
@@ -221,13 +236,13 @@
 <li><p>docker import : 从归档文件中创建镜像。 <code>cat /tmp/hello-world.tar | docker import - hello-world:0.0.1</code></p>
 </li>
 </ul>
-<h3 id="5-3、后台容器自动退出"><a href="#5-3、后台容器自动退出" class="headerlink" title="5.3、后台容器自动退出"></a>5.3、后台容器自动退出</h3><p>当用 docker 以守护进程的方式启动一个容器后，用docker ps -a 查看，会发现容器已经退出。</p>
+<h3 id="5-4、后台容器自动退出"><a href="#5-4、后台容器自动退出" class="headerlink" title="5.4、后台容器自动退出"></a>5.4、后台容器自动退出</h3><p>当用 docker 以守护进程的方式启动一个容器后，用docker ps -a 查看，会发现容器已经退出。</p>
 <p><strong>退出原因</strong></p>
 <p>1、docker容器运行必须有一个前台进程， 如果没有前台进程执行，容器认为空闲，就会自行退出<br>2、容器运行的命令如果不是那些一直挂起的命令（ 运行top，tail、循环等），就是会自动退出<br>3、这个是 docker 的机制问题</p>
 <p><strong>解决方案</strong></p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker run -d centos /bin/bash -c <span class="string">&quot;tail -f /dev/null&quot;</span>   <span class="comment"># 使后台程序一直有事干</span></span><br><span class="line">docker run -dit centos                                  <span class="comment"># 后台交互😀</span></span><br></pre></td></tr></table></figure>
 
-<h3 id="5-4、重新进入容器"><a href="#5-4、重新进入容器" class="headerlink" title="5.4、重新进入容器"></a>5.4、重新进入容器</h3><p>重新进入一个正在运行的容器有以下两种方法</p>
+<h3 id="5-5、重新进入容器"><a href="#5-5、重新进入容器" class="headerlink" title="5.5、重新进入容器"></a>5.5、重新进入容器</h3><p>重新进入一个正在运行的容器有以下两种方法</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">exec</span> -it &lt;container id/name&gt;</span><br><span class="line">docker attach &lt;container id/name&gt;</span><br></pre></td></tr></table></figure>
 
 <p><strong>exec 与 attach 的区别</strong></p>
@@ -236,9 +251,7 @@
 <h2 id="6、镜像"><a href="#6、镜像" class="headerlink" title="6、镜像"></a>6、镜像</h2><p>Docker 镜像可以看作是一个特殊的文件系统，除了提供容器运行时所需的程序、库、资源、配置等文件外，还包含了一些为运行时准备的一些配置参数（如匿名卷、环境变量、用户等）。镜像不包含任何动态数据，其内容在构建之后也不会被改变。</p>
 <p>镜像中最重要的概念就是镜像层(Layers)。镜像层依赖于一系列的底层技术，比如文件系统(filesystems)、写时复制(copy-on-write)、联合挂载(<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=union+mounts&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra=%7B%22sourceType%22:%22answer%22,%22sourceId%22:230398763%7D">union mounts</a>)等。</p>
 <p><img src="%E9%95%9C%E5%83%8F%E5%B1%82.png" alt="镜像层"></p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">在 Dockerfile 中， 每一条指令都会创建一个镜像层，继而会增加整体镜像的大小。</span><br></pre></td></tr></table></figure>
-
-<h3 id="6-1、联合文件系统（UnionFS）"><a href="#6-1、联合文件系统（UnionFS）" class="headerlink" title="6.1、联合文件系统（UnionFS）"></a>6.1、联合文件系统（UnionFS）</h3><p>联合文件系统（<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/UnionFS">UnionFS</a>）是一种分层、轻量级并且高性能的文件系统，它支持对文件系统的修改作为一次提交来一层层的叠加，同时可以将不同目录挂载到同一个虚拟文件系统下。</p>
+<h3 id="6-1、联合文件系统"><a href="#6-1、联合文件系统" class="headerlink" title="6.1、联合文件系统"></a>6.1、联合文件系统</h3><p>联合文件系统（<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/UnionFS">UnionFS</a>）是一种分层、轻量级并且高性能的文件系统，它支持对文件系统的修改作为一次提交来一层层的叠加，同时可以将不同目录挂载到同一个虚拟文件系统下。</p>
 <p>联合文件系统是 Docker 镜像的基础。镜像可以通过分层来进行继承，基于基础镜像（没有父镜像），可以制作各种具体的应用镜像。不同 Docker 容器可以共享一些基础的文件系统层，同时再加上自己独有的改动层，大大提高了存储的效率。</p>
 <p>Docker 中使用的 AUFS（AnotherUnionFS）就是一种联合文件系统。 <code>AUFS</code> 支持为每一个成员目录（类似 Git 的分支）设定只读（readonly）、读写（readwrite）和写出（whiteout-able）权限。</p>
 <p>特性：一次同时加载多个文件系统，但从外面看起来，只能看到一个文件系统，联合加载会把各层文件系统叠加起来，这样最终的文件系统会包含所有底层的文件和目录。</p>
@@ -251,27 +264,44 @@
 
 <h3 id="6-4-私有镜像仓库"><a href="#6-4-私有镜像仓库" class="headerlink" title="6.4 私有镜像仓库"></a>6.4 私有镜像仓库</h3><p>Docker Registry 是官方提供的工具，可以用于构建私有镜像仓库。</p>
 <p>先下载 Docker Registry ，它本身也是个镜像，直接拉取。<code>docker pull registry</code></p>
-<h3 id="6-5、Dockerfile"><a href="#6-5、Dockerfile" class="headerlink" title="6.5、Dockerfile"></a>6.5、Dockerfile</h3><p>Docker 镜像是一个特殊的文件系统，除了提供容器运行时所需的程序、库、资源、配置等文件外，还包含了一些为运行时准备的一些配置参数（如匿名卷、环境变量、用户等）。镜像不包含任何动态数据，其内容在构建之后也不会被改变。</p>
-<p>镜像的定制实际上就是定制每一层所添加的配置、文件。</p>
-<p>Dockerfile 是一个文本文件，其内包含了一条条的指令(Instruction)，每一条指令构建一层，因此每一条指令的内容，就是描述该层应当如何构建。</p>
-<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/ityouknow/p/8595384.html#:~:text=Dockerfile%20%E6%8C%87%E4%BB%A4%E8%AF%A6%E8%A7%A3%201%20FROM%20%E6%8C%87%E5%AE%9A%E5%9F%BA%E7%A1%80%E9%95%9C%E5%83%8F%202%20RUN%20%E6%89%A7%E8%A1%8C%E5%91%BD%E4%BB%A4,%E6%8C%87%E5%AE%9A%E5%B7%A5%E4%BD%9C%E7%9B%AE%E5%BD%95%209%20USER%20%E6%8C%87%E5%AE%9A%E5%BD%93%E5%89%8D%E7%94%A8%E6%88%B7%2010%20CMD%20%E6%9B%B4%E5%A4%9A%E7%BB%93%E6%9E%9C...%20">Dockerfile命令</a></p>
-<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/zdz8207/p/linux-docker-add-copy.html">Dockerfile中ADD与COPY命令的区别</a></p>
-<p>http1.1 与 http 2.0 区别？</p>
-<p>tcp 三次握手</p>
-<p>状态码 500  503 </p>
-<p>进程、线程、协程</p>
-<p>进程通信</p>
-<p>信号</p>
-<p>kill -9   -15</p>
-<p>bio、nio、aio</p>
-<p>多路复用</p>
-<p>两个栈？</p>
-<p>utf-8  varchar int bigint </p>
-<p>b树  b+树</p>
-<p>聚集索引</p>
-<p>主键索引</p>
-<p>手写 SQL？  join </p>
-<p>编程：三数之和？</p>
+<h3 id="6-5、制作镜像"><a href="#6-5、制作镜像" class="headerlink" title="6.5、制作镜像"></a>6.5、制作镜像</h3><p>镜像的定制实际上就是定制每一层所添加的配置、文件。</p>
+<h4 id="6-5-1、Dockerfile"><a href="#6-5-1、Dockerfile" class="headerlink" title="6.5.1、Dockerfile"></a>6.5.1、Dockerfile</h4><p>Dockerfile 是一个文本文件，其内包含了一条条的指令(Instruction)，每一条指令构建一层，因此每一条指令的内容，就是描述该层应当如何构建。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">在 Dockerfile 中， 每一条指令都会创建一个镜像层，继而会增加整体镜像的大小。</span><br></pre></td></tr></table></figure>
+
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/ityouknow/p/8595384.html">Dockerfile命令</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/zdz8207/p/linux-docker-add-copy.html">Dockerfile中ADD与COPY命令的区别</a>：</p>
+<ul>
+<li>add：复制文件、目录、url、压缩文件</li>
+<li>copy：复制文件、目录。不支持 url 和解压。为简化 add 而生。docker 团队建议使用copy</li>
+</ul>
+<h4 id="6-5-2、build"><a href="#6-5-2、build" class="headerlink" title="6.5.2、build"></a>6.5.2、build</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker build -t &lt;imageName:imageTag&gt; .      # -t 打标签；最后的点是构建上下文；可以用 -f 指定 Dockerfile 的位置</span><br></pre></td></tr></table></figure>
+
+<p>执行该命令后，docker 客户端会将<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/592ff5ee3b62">构建上下文</a>（即 . 所在的目录）打成 tar 包发送给服务端；服务端接收并解压，在执行 Dockerfile 时就是使用这个 tar 包作为上下文环境，如 Dockerfile 中的 COPY 指令的路径就是根据 tar 包的相对路径进行复制的。</p>
+<p>编写 <code>.dockerignore</code> 文件，放到 docker 构建上下文的根路径下，可以省略无需打包的文件。如 COPY 指令中的目录里有一些没用的文件，就可以省略，既能加快构建速度，又能减小镜像体积。但不添加该文件也不会对镜像造成太大影响。</p>
+<h3 id="6-6、虚悬镜像"><a href="#6-6、虚悬镜像" class="headerlink" title="6.6、虚悬镜像"></a>6.6、虚悬镜像</h3><p>虚悬镜像是仓库名、标签都是&lt;none&gt;的镜像。</p>
+<p>虚悬镜像一般是某镜像更新了最新版本，当我们使用docker pull拉取该最新镜像时，仓库名和标签给了新的镜像，旧的镜像仓库和标签则被取消，成为虚悬镜像。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 该命令可以删除所有虚悬镜像</span></span><br><span class="line">docker rmi $(docker images -f <span class="string">&quot;dangling=true&quot;</span> -q)</span><br><span class="line"> </span><br><span class="line"><span class="comment"># 或者</span></span><br><span class="line"> </span><br><span class="line"><span class="comment"># 这个命令会删除所有未使用到的镜像，即使并不是没有仓库名或没有标签。</span></span><br><span class="line">docker image prune</span><br></pre></td></tr></table></figure>
+
+<h2 id="7、核心技术"><a href="#7、核心技术" class="headerlink" title="7、核心技术"></a>7、核心技术</h2><p>从操作系统上来看，目前Docker底层依赖到核心技术主要包括Linux操作系统的命名空间（namespace）,控制组（Control Group）,联合文件系统（Union File System）和 Linux网络虚拟化支持．</p>
+<h3 id="7-1、命名空间"><a href="#7-1、命名空间" class="headerlink" title="7.1、命名空间"></a>7.1、命名空间</h3><p>命名空间是 Linux 内核一个强大的特性。<strong>每个容器都有自己单独的命名空间</strong>，运行在其中的应用都像是在独立的操作系统中运行一样。命名空间保证了容器之间彼此互不影响。</p>
+<ul>
+<li><p>pid 命名空间<br>不同的进程就是通过 pid 命名空间隔离开的，且<strong>不同命名空间中可以有相同 pid</strong>。所有的 LXC  进程在 Docker 中的父进程为Docker进程，每个 LXC 进程具有不同的命名空间。同时由于允许嵌套，因此可以很方便的实现嵌套的  Docker 容器。</p>
+</li>
+<li><p>net 命名空间<br> 有了 pid 命名空间, 每个命名空间中的 pid 能够相互隔离，但是网络端口还是<strong>共享 host 的端口</strong>。网络隔离是通过 net 命名空间实现的， 每个 net 命名空间有独立的 网络设备, IP 地址, 路由表, /proc/net 目录。这样每个容器的网络就能隔离开来。Docker 默认采用 <a target="_blank" rel="noopener" href="https://www.ibm.com/developerworks/cn/linux/1310_xiawc_networkdevice/">veth</a> 的方式，将容器中的虚拟网卡同 host 上的一 个Docker 网桥 docker0 连接在一起。</p>
+</li>
+</ul>
+<p>其他的命名空间还有ipc 命名空间（隔离进程间通信）、mnt 命名空间（隔离文件结构）、uts 命名空间 （隔离主机名、域名）、user 命名空间 （隔离用户、用户组）。</p>
+<h2 id="8、docker-如何保证安全"><a href="#8、docker-如何保证安全" class="headerlink" title="8、docker 如何保证安全"></a>8、docker 如何保证安全</h2><p>Docker是基于 Linux 内核的 Namespace 技术实现资源隔离的，所有的容器都共享主机的内核。</p>
+<p>虚拟机是通过虚拟机监视器(Hypervisor)模拟出  CPU、内存、网络等硬件，然后在这些模拟的硬件上创建客户内核和操作系统。这样做的好处就是虚拟机有自己的内核和操作系统，并且硬件都是通过虚拟机管理系统模拟出来的，用户程序无法直接使用到主机的操作系统和硬件资源，因此虚拟机也对隔离性和安全性有着更好的保证。</p>
+<p>而 Docker 容器则是通过 Linux 内核的 Namespace 技术实现了文件系统、进程、设备以及网络的隔离，然后再通过  Cgroups 对 CPU、  内存等资源进行限制，最终实现了容器之间相互不受影响，由于容器的隔离性仅仅依靠内核来提供，因此容器的隔离性也远弱于虚拟机。</p>
+<ul>
+<li><p>通过 User Namespace 做用户隔离，实现了容器中的 root 用户映射到主机上的非 root 用户，从而大大减轻了容器被突破的风险。</p>
+</li>
+<li><p>在私有镜像仓库安装镜像安全扫描组件，在拉取镜像时，确保只从受信任的镜像仓库拉取，并且与镜像仓库通信使用 HTTPS 协议。</p>
+</li>
+<li><p>在 docker run 时添加下列参数以限制容器的资源使用</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">--cpus                          限制 CPU 配额</span><br><span class="line">-m, --memory                    限制内存配额</span><br><span class="line">--pids-limit                    限制容器的 PID 个数</span><br></pre></td></tr></table></figure></li>
+</ul>
 
       
     </div>
@@ -343,6 +373,10 @@
       <ul>
         
           <li>
+            <a href="/2022/04/26/%E6%B1%82%E8%81%8C/%E5%85%B6%E4%BB%96%E9%9D%A2%E7%BB%8F-%E5%AD%97%E8%8A%82/">其他面经-字节</a>
+          </li>
+        
+          <li>
             <a href="/2022/04/25/Redis/Redis%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7/">Redis缓存一致性</a>
           </li>
         
@@ -356,10 +390,6 @@
         
           <li>
             <a href="/2022/04/09/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/">Redis持久化</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/">linux创建子进程--fork()方法</a>
           </li>
         
       </ul>

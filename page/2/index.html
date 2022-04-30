@@ -73,6 +73,143 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Linux/Linux基础" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/07/Linux/Linux%E5%9F%BA%E7%A1%80/" class="article-date">
+  <time class="dt-published" datetime="2022-04-07T06:42:15.000Z" itemprop="datePublished">2022-04-07</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Linux/">Linux</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/04/07/Linux/Linux%E5%9F%BA%E7%A1%80/">Linux基础</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="1、-bin-bash"><a href="#1、-bin-bash" class="headerlink" title="1、#!/bin/bash"></a>1、#!/bin/bash</h3><p>shell 脚本第一行的 <code>#!/bin/bash</code> 用于指定执行该文件的解释器路径，不写默认是 <code>/bin/bash</code>；也可以执行时手动指定解释器路径，如：<code>/usr/bin/python3 test_py</code>，手动指定优先级高于文件内第一行指定的优先级。</p>
+<h3 id="2、-bin；-sbin；-usr-sbin；-usr-bin"><a href="#2、-bin；-sbin；-usr-sbin；-usr-bin" class="headerlink" title="2、 /bin；/sbin；/usr/sbin；/usr/bin"></a>2、 /bin；/sbin；/usr/sbin；/usr/bin</h3><ul>
+<li> <strong>/bin</strong> 存放系统的一些指令。如：ls、chmod、rm、cp、mkdir、su等等</li>
+<li>**/sbin **存放超级用户指令。如：shutdown、halt、init、ifconfig、fdisk等等</li>
+<li><strong>/usr/bin</strong> 存放用户后期安装的一些软件的运行脚本。如：awk、man、python3、c++、less等等</li>
+<li> <strong>/usr/sbin</strong>  存放一些用户安装的系统命令：如：httpd、netconfig、swap等等。</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/04/07/Linux/Linux%E5%9F%BA%E7%A1%80/" data-id="cl2lifthq0002zcaqd0sk2tx2" data-title="Linux基础" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Java 进阶/BIO,NIO,AIO" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/06/Java%20%E8%BF%9B%E9%98%B6/BIO,NIO,AIO/" class="article-date">
+  <time class="dt-published" datetime="2022-04-06T13:12:41.000Z" itemprop="datePublished">2022-04-06</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/04/06/Java%20%E8%BF%9B%E9%98%B6/BIO,NIO,AIO/">BIO,NIO,AIO</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>本文摘自<a target="_blank" rel="noopener" href="https://blog.csdn.net/m0_38109046/article/details/89449305">(31条消息) Java面试常考的 BIO，NIO，AIO 总结_有梦想的小树的博客-CSDN博客_bio nio</a></p>
+<p>Java 中的 BIO、NIO和 AIO 理解为是 Java 语言对操作系统的各种 IO 模型的封装。程序员在使用这些 API 的时候，不需要关心操作系统层面的知识，也不需要根据不同操作系统编写不同的代码。只需要使用Java的API就可以了。</p>
+<p><strong>同步与异步</strong></p>
+<ul>
+<li><strong>同步：</strong> 同步就是发起一个调用后，被调用者未处理完请求之前，调用不返回。</li>
+<li><strong>异步：</strong> 异步就是发起一个调用后，立刻得到被调用者的回应表示已接收到请求，但是被调用者并没有返回结果，此时我们可以处理其他的请求，被调用者通常依靠事件，回调等机制来通知调用者其返回结果。</li>
+</ul>
+<p>同步和异步的区别最大在于异步的话调用者不需要等待处理结果，被调用者会通过回调等机制来通知调用者其返回结果。</p>
+<p><strong>阻塞和非阻塞</strong></p>
+<ul>
+<li><strong>阻塞：</strong> 阻塞就是发起一个请求，调用者一直等待请求结果返回，也就是当前线程会被挂起，无法从事其他任务，只有当条件就绪才能继续。</li>
+<li><strong>非阻塞：</strong> 非阻塞就是发起一个请求，调用者不用一直等着结果返回，可以先去干其他事情。</li>
+</ul>
+<p><strong>那么同步阻塞、同步非阻塞和异步非阻塞又代表什么意思呢？</strong></p>
+<p>举个生活中简单的例子，你妈妈让你烧水，小时候你比较笨啊，在哪里傻等着水开（<strong>同步阻塞</strong>）。等你稍微再长大一点，你知道每次烧水的空隙可以去干点其他事，然后只需要时不时来看看水开了没有（<strong>同步非阻塞</strong>）。后来，你们家用上了水开了会发出声音的壶，这样你就只需要听到响声后就知道水开了，在这期间你可以随便干自己的事情，你需要去倒水了（<strong>异步非阻塞</strong>）。</p>
+<h2 id="1-BIO-Blocking-I-O"><a href="#1-BIO-Blocking-I-O" class="headerlink" title="1. BIO (Blocking I/O)"></a>1. BIO (Blocking I/O)</h2><p>同步阻塞I/O模式，数据的读取写入必须阻塞在一个线程内等待其完成。</p>
+<h3 id="1-1-传统-BIO"><a href="#1-1-传统-BIO" class="headerlink" title="1.1 传统 BIO"></a>1.1 传统 BIO</h3><p>BIO通信（一请求一应答）模型图如下(图源网络，原出处不明)：</p>
+<p><img src="https://img-blog.csdnimg.cn/2019042212100021.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L20wXzM4MTA5MDQ2,size_16,color_FFFFFF,t_70" alt="img"></p>
+<p>采用 <strong>BIO 通信模型</strong> 的服务端，通常由一个独立的 Acceptor 线程负责监听客户端的连接。我们一般通过在 <code>while(true)</code> 循环中服务端会调用 <code>accept()</code> 方法等待接收客户端的连接的方式监听请求，请求一旦接收到一个连接请求，就可以建立通信套接字在这个通信套接字上进行读写操作，此时不能再接收其他客户端连接请求，只能等待同当前连接的客户端的操作执行完成， 不过可以通过多线程来支持多个客户端的连接，如上图所示。</p>
+<p>如果要让 <strong>BIO 通信模型</strong> 能够同时处理多个客户端请求，就必须使用多线程（主要原因是 <code>socket.accept()</code>、 <code>socket.read()</code>、 <code>socket.write()</code> 涉及的三个主要函数都是同步阻塞的），也就是说它在接收到客户端连接请求之后为每个客户端创建一个新的线程进行链路处理，处理完成之后，通过输出流返回应答给客户端，线程销毁。这就是典型的 <strong>一请求一应答通信模型</strong> 。我们可以设想一下如果这个连接不做任何事情的话就会造成不必要的线程开销，不过可以通过 <strong>线程池机制</strong> 改善，线程池还可以让线程的创建和回收成本相对较低。使用<code>FixedThreadPool</code> 可以有效的控制了线程的最大数量，保证了系统有限的资源的控制，实现了N(客户端请求数量):M(处理客户端请求的线程数量)的伪异步I/O模型（N 可以远远大于 M），下面一节”伪异步 BIO”中会详细介绍到。</p>
+<p><strong>我们再设想一下当客户端并发访问量增加后这种模型会出现什么问题？</strong></p>
+<p>在 Java 虚拟机中，线程是宝贵的资源，线程的创建和销毁成本很高，除此之外，线程的切换成本也是很高的。尤其在 Linux 这样的操作系统中，线程本质上就是一个进程，创建和销毁线程都是重量级的系统函数。如果并发访问量增加会导致线程数急剧膨胀可能会导致线程堆栈溢出、创建新线程失败等问题，最终导致进程宕机或者僵死，不能对外提供服务。</p>
+<h3 id="1-2-伪异步-IO"><a href="#1-2-伪异步-IO" class="headerlink" title="1.2 伪异步 IO"></a>1.2 伪异步 IO</h3><p>为了解决同步阻塞I/O面临的一个链路需要一个线程处理的问题，后来有人对它的线程模型进行了优化一一一后端通过一个线程池来处理多个客户端的请求接入，形成客户端个数M：线程池最大线程数N的比例关系，其中M可以远远大于N.通过线程池可以灵活地调配线程资源，设置线程的最大值，防止由于海量并发接入导致线程耗尽。</p>
+<p>伪异步IO模型图(图源网络，原出处不明)：</p>
+<p><img src="https://img-blog.csdnimg.cn/20190422121019666.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L20wXzM4MTA5MDQ2,size_16,color_FFFFFF,t_70" alt="img"></p>
+<p>采用线程池和任务队列可以实现一种叫做伪异步的 I/O 通信框架，它的模型图如上图所示。当有新的客户端接入时，将客户端的 Socket 封装成一个Task（该任务实现java.lang.Runnable接口）投递到后端的线程池中进行处理，JDK 的线程池维护一个消息队列和 N 个活跃线程，对消息队列中的任务进行处理。由于线程池可以设置消息队列的大小和最大线程数，因此，它的资源占用是可控的，无论多少个客户端并发访问，都不会导致资源的耗尽和宕机。</p>
+<p>伪异步I/O通信框架采用了线程池实现，因此避免了为每个请求都创建一个独立线程造成的线程资源耗尽问题。不过因为它的底层任然是同步阻塞的BIO模型，因此无法从根本上解决问题。</p>
+<h2 id="2-NIO-New-I-O"><a href="#2-NIO-New-I-O" class="headerlink" title="2. NIO (New I/O)"></a>2. NIO (New I/O)</h2><h3 id="2-1-NIO-简介"><a href="#2-1-NIO-简介" class="headerlink" title="2.1 NIO 简介"></a>2.1 NIO 简介</h3><p>NIO是一种同步非阻塞的I/O模型，在Java 1.4 中引入了NIO框架，对应 java.nio 包，提供了 Channel , Selector，Buffer等抽象。</p>
+<p>NIO中的N可以理解为Non-blocking，不单纯是New。它支持面向缓冲的，基于通道的I/O操作方法。 NIO提供了与传统BIO模型中的 <code>Socket</code> 和 <code>ServerSocket</code> 相对应的 <code>SocketChannel</code> 和 <code>ServerSocketChannel</code> 两种不同的套接字通道实现,两种通道都支持阻塞和非阻塞两种模式。阻塞模式使用就像传统中的支持一样，比较简单，但是性能和可靠性都不好；非阻塞模式正好与之相反。对于低负载、低并发的应用程序，可以使用同步阻塞I/O来提升开发速率和更好的维护性；对于高负载、高并发的（网络）应用，应使用 NIO 的非阻塞模式来开发。</p>
+<h3 id="2-2-NIO的特性-NIO与IO区别"><a href="#2-2-NIO的特性-NIO与IO区别" class="headerlink" title="2.2 NIO的特性/NIO与IO区别"></a>2.2 NIO的特性/NIO与IO区别</h3><p>如果是在面试中回答这个问题，我觉得首先肯定要从 NIO 流是非阻塞 IO 而 IO 流是阻塞 IO 说起。然后，可以从 NIO 的3个核心组件/特性为 NIO 带来的一些改进来分析。如果，你把这些都回答上了我觉得你对于 NIO 就有了更为深入一点的认识，面试官问到你这个问题，你也能很轻松的回答上来了。</p>
+<p>1)Non-blocking IO（非阻塞IO）</p>
+<p><strong>IO流是阻塞的，NIO流是不阻塞的。</strong></p>
+<p>Java NIO使我们可以进行非阻塞IO操作。比如说，单线程中从通道读取数据到buffer，同时可以继续做别的事情，当数据读取到buffer中后，线程再继续处理数据。写数据也是一样的。另外，非阻塞写也是如此。一个线程请求写入一些数据到某通道，但不需要等待它完全写入，这个线程同时可以去做别的事情。</p>
+<p>Java IO的各种流是阻塞的。这意味着，当一个线程调用 <code>read()</code> 或 <code>write()</code> 时，该线程被阻塞，直到有一些数据被读取，或数据完全写入。该线程在此期间不能再干任何事情了</p>
+<p>2)Buffer(缓冲区)</p>
+<p><strong>IO 面向流(Stream oriented)，而 NIO 面向缓冲区(Buffer oriented)。</strong></p>
+<p>Buffer是一个对象，它包含一些要写入或者要读出的数据。在NIO类库中加入Buffer对象，体现了新库与原I/O的一个重要区别。在面向流的I/O中·可以将数据直接写入或者将数据直接读到 Stream 对象中。虽然 Stream 中也有 Buffer 开头的扩展类，但只是流的包装类，还是从流读到缓冲区，而 NIO 却是直接读到 Buffer 中进行操作。</p>
+<p>在NIO厍中，所有数据都是用缓冲区处理的。在读取数据时，它是直接读到缓冲区中的; 在写入数据时，写入到缓冲区中。任何时候访问NIO中的数据，都是通过缓冲区进行操作。</p>
+<p>最常用的缓冲区是 ByteBuffer,一个 ByteBuffer 提供了一组功能用于操作 byte 数组。除了ByteBuffer,还有其他的一些缓冲区，事实上，每一种Java基本类型（除了Boolean类型）都对应有一种缓冲区。</p>
+<p>3)Channel (通道)</p>
+<p>NIO 通过Channel（通道） 进行读写。</p>
+<p>通道是双向的，可读也可写，而流的读写是单向的。无论读写，通道只能和Buffer交互。因为 Buffer，通道可以异步地读写。</p>
+<p>4)Selectors(选择器)</p>
+<p>NIO有选择器，而IO没有。</p>
+<p>选择器用于使用单个线程处理多个通道。因此，它需要较少的线程来处理这些通道。线程之间的切换对于操作系统来说是昂贵的。 因此，为了提高系统效率选择器是有用的。</p>
+<h2 id="3-AIO-Asynchronous-I-O"><a href="#3-AIO-Asynchronous-I-O" class="headerlink" title="3. AIO (Asynchronous I/O)"></a>3. AIO (Asynchronous I/O)</h2><p>异步非阻塞，此种方式下，用户进程只需要发起一个IO操作便立即返回，等 IO 操作真正完成以后，应用程序会得到IO操作完成的通知，此时用户进程只需要对数据处理就好了，不需要进行实际的 IO 读写操作，因为真正的 IO 操作已经由操作系统内核完成了。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/04/06/Java%20%E8%BF%9B%E9%98%B6/BIO,NIO,AIO/" data-id="cl1zs7vse0003zwaqfjykbo9i" data-title="BIO,NIO,AIO" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-求职/面试总结" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/04/05/%E6%B1%82%E8%81%8C/%E9%9D%A2%E8%AF%95%E6%80%BB%E7%BB%93/" class="article-date">
@@ -657,314 +794,11 @@
 
 
   
-    <article id="post-求职/面经-2022-美团实习" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/03/26/%E6%B1%82%E8%81%8C/%E9%9D%A2%E7%BB%8F-2022-%E7%BE%8E%E5%9B%A2%E5%AE%9E%E4%B9%A0/" class="article-date">
-  <time class="dt-published" datetime="2022-03-26T03:12:41.000Z" itemprop="datePublished">2022-03-26</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E6%B1%82%E8%81%8C/">求职</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/03/26/%E6%B1%82%E8%81%8C/%E9%9D%A2%E7%BB%8F-2022-%E7%BE%8E%E5%9B%A2%E5%AE%9E%E4%B9%A0/">面经 2022 美团实习</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="一面：75min-4-21"><a href="#一面：75min-4-21" class="headerlink" title="一面：75min   4.21"></a>一面：75min   4.21</h2><p>1、自我介绍</p>
-<p>2、项目中用户权限控制的数据表设计问题</p>
-<p>3、如果有 100 个元素，且之后不会增加，存储在 hashmap 中，初始容量应该设置为多少？</p>
-<p>答：64？ 100？  128？ 瞎蒙</p>
-<p>正确：为了不触发扩容操作，初始值应该设置为 129 到 256 的任意一个值；因为在 hashmap 的构造函数中，会将输入的初始容量转换为第一个大于等于它的 2 的幂次值并赋值给 threshold ，而在 put 操作中，会将该 threshold 赋值给 capacity ，并根据 <code>capacity * loadfactory</code>得到新 threshold 。因此，如果初始值设置为小于等于 128，则经过 put 操作后，threshold 会变为 96，小于 100，如此一定会触发扩容操作。故为了不触发扩容需保证初始容量为 256。</p>
-<p>4、如果有 41 个 int 数字，另外再给一个数字，如何判断这个数字在不在之前的 41 中？</p>
-<p>答：hashset 或 布隆过滤器，瞎蒙</p>
-<p>5、hashmap 的 put 过程？</p>
-<p>6、并发场景下 HashMap 有什么问题？</p>
-<ul>
-<li>put 操作的值覆盖问题：两个线程插入时定位到了同一个位置，则后写入的线程的值会覆盖先写入的值。</li>
-<li>///// 不存在环链问题：jdk 1.8 在链表迁移时使用尾插法，所以不会再出现环链问题。</li>
-<li>依然可能存在两个红黑树节点的父指针相互引用，从而引发死循环。具体原因还需探究。</li>
-</ul>
-<p>7、什么时候会触发 full GC？（ full GC 和 Major GC 是等价的）</p>
-<ul>
-<li>调用System.gc()：只是建议虚拟机执行 Full GC，但是虚拟机不一定真正去执行。</li>
-<li>老年代空间不足：老年代空间不足的常见场景比如大对象、大数组直接进入老年代、长期存活的对象进入老年代等。</li>
-<li>空间分配担保失败</li>
-</ul>
-<p>8、 full GC 对服务器有什么影响？ 由于 full GC 期间 STW ，不能提供服务了呗。</p>
-<p>9、如果服务器在运行期将发生了 full GC ，你会如何处理？</p>
-<ul>
-<li>增大 survivor space ；可避免在 Minor GC 时由于 survivor space 太小而晋升到老年代。</li>
-<li>增大老年代空间；降低 full GC 的频率。</li>
-<li>代码层面避免使用大数组和大对象。</li>
-</ul>
-<p>尽量做到让对象在Minor GC阶段被回收、让对象在新生代多存活一段时间及不要创建过大的对象及数组。</p>
-<p>10、执行一次 System.gc() 的流程？  不会！扯了一通可达性分析</p>
-<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/zhxdick/p/14449554.html">深入理解System.gc()</a></p>
-<p><code>System.gc()</code>实际上调用的是<code>RunTime.getRunTime().gc()</code>，这个方法是一个 native 方法：首先，根据 DisableExplicitGC 这个 JVM 启动参数的状态，确定是否会 GC，如果需要 GC，不同 GC 会有不同的处理。 以 G1 GC 为例：如果是 <code>System.gc()</code> 触发的 GC，G1 GC 会根据 ExplicitGCInvokesConcurrent 这个 JVM 参数决定是默认 GC （轻量 GC，YoungGC）还是 FullGC。</p>
-<p><code>System.gc()</code> 相关的 JVM 参数</p>
-<ul>
-<li>DisableExplicitGC： <strong>说明</strong>：是否禁用<strong>显式 GC</strong>，默认是不禁用的。</li>
-<li>ExplicitGCInvokesConcurrent： <strong>说明</strong>：对于<strong>显式 GC</strong>，是执行轻量并行 GC （YoungGC）还是 FullGC，如果为 <strong>true 则是执行轻量并行 GC （YoungGC），false 则是执行 FullGC</strong></li>
-</ul>
-<p>11、进程与线程</p>
-<p>12、进程间通信方式</p>
-<p>每个进程各自有不同的用户地址空间,任何一个进程的全局变量在另一个进程中都看不到，所以进程之间要交换数据必须通过内核,在内核中开辟一块缓冲区,进程A把数据从用户空间拷到内核缓冲区,进程B再从内核缓冲区把数据读走,内核提供的这种机制称为进程间通信。</p>
-<ul>
-<li>管道通信：管道是一种半双工的通信方式，数据只能单向流动，而且只能在具有亲缘关系的进程间使用。进程的亲缘关系通常是指父子进程关系。</li>
-<li>命名管道FIFO：有名管道也是半双工的通信方式，但是它允许无亲缘关系进程间的通信。</li>
-<li>消息队列通信：消息队列，是消息的链接表，存放在内核中。一个消息队列由一个标识符（即队列ID）来标识。</li>
-<li>信号量通信：信号量是一个计数器，用于实现进程间的互斥与同步，而不是用于存储进程间通信数据。</li>
-<li>信号： 信号是在软件层次上对中断机制的一种模拟，是一种异步通信方式，信号可以在用户空间进程和内核之间直接交互。</li>
-<li>共享内存通信：共享内存就是映射一段能被其他进程所访问的内存，这段共享内存由一个进程创建，但多个进程都可以访问。共享内存是最快的 IPC 方式，它是针对其他进程间通信方式运行效率低而专门设计的。</li>
-<li>套接字通信：可用于不同机器间的进程通信。</li>
-</ul>
-<p>编程题1、<a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/linked-list-cycle-ii/">142. 环形链表 II</a></p>
-<p>用快慢指针算半天不会，崩了。最后想出个用 hashset 存储已遍历的节点，看当前节点的 next 在不在 hashset 里，如果在 next 就是入环节点，否则遍历结束返回null。面试官对于这种非主流的思路表示惊讶，索性全通过了，他只能接受。</p>
-<p>编程题2、<a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/binary-tree-maximum-path-sum/">124. 二叉树中的最大路径和</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/03/26/%E6%B1%82%E8%81%8C/%E9%9D%A2%E7%BB%8F-2022-%E7%BE%8E%E5%9B%A2%E5%AE%9E%E4%B9%A0/" data-id="cl2inu9ce00042oaq6e45gnm3" data-title="面经 2022 美团实习" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-JavaWeb系列学习笔记/docker笔记" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/03/17/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/docker%E7%AC%94%E8%AE%B0/" class="article-date">
-  <time class="dt-published" datetime="2022-03-17T09:12:41.000Z" itemprop="datePublished">2022-03-17</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">JavaWeb系列学习笔记</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/03/17/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/docker%E7%AC%94%E8%AE%B0/">Docker</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="1、概述"><a href="#1、概述" class="headerlink" title="1、概述"></a>1、概述</h2><p>Docker 基于 Go 语言实现。一次镜像，处处运行。</p>
-<p>Go文件编译后是平台级别的机器码，因此Docker 不需要 Go 环境支撑。由于 Docker 容器模型是基于 linux 内核的，因此 Docker 必须安装在 linux 环境上。</p>
-<p>Docker for Windows 中负责运行环境配置的工具是 Docker Machine。它会在 Windows 上创建一个 Linux 虚拟机，用于运行 Docker 引擎。</p>
-<p><strong>docker 启动为什么比虚拟机快？</strong></p>
-<p>1.Docker有着比虚拟机更少的抽象层，由于Docker不需要Hypervisor实现硬件资源虚拟化，运行在Docker容器上的程序直接使用的都是实际物理机的硬件资源，因此在Cpu、内存利用率上Docker将会在效率上有明显优势。</p>
-<p>2.Docker利用的是宿主机的内核，而不需要Guest OS，因此，当新建一个容器时，Docker不需要和虚拟机一样重新加载一个操作系统，避免了引导、加载操作系统内核这个比较费时费资源的过程，当新建一个虚拟机时，虚拟机软件需要加载Guest OS，这个新建过程是分钟级别的，而Docker由于直接利用宿主机的操作系统则省略了这个过程，因此新建一个Docker容器只需要几秒钟。</p>
-<table>
-<thead>
-<tr>
-<th></th>
-<th>Docker容器</th>
-<th>虚拟机（VM）</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>操作系统</td>
-<td>与宿主机共享OS</td>
-<td>宿主机OS上运行宿主机OS</td>
-</tr>
-<tr>
-<td>存储大小</td>
-<td>镜像小，便于存储与传输</td>
-<td>镜像庞大（vmdk等）</td>
-</tr>
-<tr>
-<td>运行性能</td>
-<td>几乎无额外性能损失</td>
-<td>操作系统额外的cpu、内存消耗</td>
-</tr>
-<tr>
-<td>移植性</td>
-<td>轻便、灵活、适用于Linux</td>
-<td>笨重、与虚拟化技术耦合度高</td>
-</tr>
-<tr>
-<td>硬件亲和性</td>
-<td>面向软件开发者</td>
-<td>面向硬件运维者</td>
-</tr>
-</tbody></table>
-<h2 id="2、基本组成"><a href="#2、基本组成" class="headerlink" title="2、基本组成"></a>2、基本组成</h2><p>docker 的三要素是：镜像、容器、仓库。</p>
-<p>镜像：类似于 Java 的类；镜像由两部分组成：文件和元数据。文件即 /bin/bash 等，元数据即环境变量、端口映射、卷等。</p>
-<p>容器：类似于根据上方的类实例出来的对象</p>
-<p>仓库：集中存放镜像文件的地方，类似于 Maven 仓库</p>
-<p>也可以将容器看作是一个简易版的 Linux 环境，只包含root用户空间、进程空间、网络空间等（不包含内核，使用宿主机的内核）以及运行在其上的应用程序。</p>
-<p>Docker 软件本身是一个容器的运行载体及管理引擎。我们将应用程序和配置环境打包形成一个可交付的运行环境就是镜像文件，可以根据自己打包的或从仓库中拉取的镜像生成容器实例。</p>
-<p><img src="%E9%95%9C%E5%83%8F%E4%B8%8E%E5%AE%B9%E5%99%A8.jpg" alt="镜像与容器"></p>
-<h2 id="3、工作原理"><a href="#3、工作原理" class="headerlink" title="3、工作原理"></a>3、工作原理</h2><p><img src="Docker%E5%8E%9F%E7%90%86.jpg" alt="Docker原理"></p>
-<p>Docker 是一个 Client-Server 结构的系统，Docker 守护进程运行在主机上，客户端通过 Socket 连接访问该守护进程，守护进程从客户端接收命令并管理运行在主机上的容器。</p>
-<h2 id="4、架构"><a href="#4、架构" class="headerlink" title="4、架构"></a>4、架构</h2><p>Docker 是一个 C/S 模式的架构，后端是一个松耦合架构，模块各司其职。下图是它的总体架构图：</p>
-<p><img src="Docker%E6%9E%B6%E6%9E%84.jpeg" alt="Docker架构"></p>
-<p>1 用户是使用 Docker Client 与 Docker Daemon 建立通信，并发送请求给后者。</p>
-<p>2 Docker Daemon 作为 Docker 架构中的主体部分，首先提供 Docker Server 的功能使其可以接受 Docker Client 的请求。</p>
-<p>3 Docker Engine 执行 Docker 内部的一系列工作，每一项工作都是以一个 Job 的形式的存在。</p>
-<p>4 Job 的运行过程中，当需要容器镜像时，则从 Docker Registry 中下载镜像，并通过镜像管理驱动 Graphdriver 将下载镜像以 Graph 的形式存储。</p>
-<p>5 当需要为 Docker 创建网络环境时，通过网络管理驱动 Networkdriver 创建并配置 Docker容器网络环境。</p>
-<p>6 当需要限制 Docker 容器运行资源或执行用户指令等操作时，则通过 Execdriver 来完成。</p>
-<p>7 Libcontainer 是一项独立的容器管理包，Networkdriver 以及 Execdriver 都是通过 Libcontainer 来实现具体对容器进行的操作。</p>
-<p><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1768295">Docker 架构中各模块解析</a></p>
-<h2 id="5、使用"><a href="#5、使用" class="headerlink" title="5、使用"></a>5、使用</h2><p>docker system df  查看镜像/容器/数据卷所占的空间。</p>
-<p><strong>docker 虚悬镜像是什么？</strong></p>
-<p>虚悬镜像是仓库名、标签都是&lt;none&gt;的镜像。</p>
-<p>虚悬镜像一般是某镜像更新了最新版本，当我们使用docker pull拉取该最新镜像时，仓库名和标签给了新的镜像，旧的镜像仓库和标签则被取消，成为虚悬镜像。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 该命令可以删除所有虚悬镜像</span></span><br><span class="line">docker rmi $(docker images -f <span class="string">&quot;dangling=true&quot;</span> -q)</span><br><span class="line"> </span><br><span class="line"><span class="comment"># 或者</span></span><br><span class="line"> </span><br><span class="line"><span class="comment"># 这个命令会删除所有未使用到的镜像，即使并不是没有仓库名或没有标签。</span></span><br><span class="line">docker image prune</span><br></pre></td></tr></table></figure>
-
-<h3 id="5-1、run"><a href="#5-1、run" class="headerlink" title="5.1、run"></a>5.1、run</h3><ul>
-<li><p><strong>–name</strong>=“容器名字”    为容器指定一个名称；</p>
-</li>
-<li><p><strong>-d:</strong> 后台运行容器，并返回容器ID；</p>
-</li>
-<li><p><strong>-i:</strong> 以交互模式运行容器，通常与 -t 同时使用；</p>
-</li>
-<li><p><strong>-t:</strong> 为容器重新分配一个伪输入终端，通常与 -i 同时使用；</p>
-</li>
-<li><p><strong>-P:</strong> 随机端口映射，容器内部端口随机映射到主机的端口</p>
-</li>
-<li><p><strong>-p:</strong> 指定端口映射，格式为：<strong>主机(宿主)端口:容器端口</strong></p>
-<p>端口映射时一般使用小写的 -p 以映射到指定端口。例如：当我们在 docker 中运行了redis 服务，并开启了 6379 端口监听。但是由于 docker 的隔离，在外面无法直接通过 6379 端口访问到 redis 服务。因此，需要将容器中的端口映射到物理机上，这样当访问映射到物理机的端口时，就找到了 docker，之后 docker 再根据映射表找到容器中真实的服务。</p>
-</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#将nginx的80端口映射到宿主机的800端口上</span></span><br><span class="line">docker run -it -p 800:80 nginx </span><br></pre></td></tr></table></figure>
-
-<h3 id="5-2、其他"><a href="#5-2、其他" class="headerlink" title="5.2、其他"></a>5.2、其他</h3><ul>
-<li>docker ps：列出所有正在运行的容器。其后可以跟选项，用时再查。</li>
-</ul>
-<p>进入容器后有以下两种退出方式</p>
-<ul>
-<li><p>exit：容器停止（这只针对于 linux 系列容器，其他容器需要使用对应的退出命令）</p>
-</li>
-<li><p>ctrl + p + q ：容器不停止</p>
-</li>
-</ul>
-<p>以下命令后都可以接容器名或容器id。</p>
-<ul>
-<li><p>docker start :启动一个或多个已经被停止的容器</p>
-</li>
-<li><p>docker stop :停止一个运行中的容器</p>
-</li>
-<li><p>docker restart :重启容器</p>
-</li>
-<li><p>docker kill :杀掉一个运行中的容器。</p>
-</li>
-<li><p>docker rm ：删除一个或多个容器。</p>
-</li>
-<li><p>docker logs：查看容器日志</p>
-</li>
-<li><p>docker top :查看容器中运行的进程信息，支持 ps 命令参数。</p>
-</li>
-<li><p>docker inspect : 获取容器/镜像的元数据。</p>
-</li>
-<li><p>docker cp :用于容器与主机之间的数据拷贝。可双向复制</p>
-</li>
-<li><p>docker export：将容器作为一个tar文件导出到STDOUT。因此一般使用 -o 参数或 &gt; 重定向 导出为一个 tar 文件。</p>
-</li>
-<li><p>docker import : 从归档文件中创建镜像。 <code>cat /tmp/hello-world.tar | docker import - hello-world:0.0.1</code></p>
-</li>
-</ul>
-<h3 id="5-3、后台容器自动退出"><a href="#5-3、后台容器自动退出" class="headerlink" title="5.3、后台容器自动退出"></a>5.3、后台容器自动退出</h3><p>当用 docker 以守护进程的方式启动一个容器后，用docker ps -a 查看，会发现容器已经退出。</p>
-<p><strong>退出原因</strong></p>
-<p>1、docker容器运行必须有一个前台进程， 如果没有前台进程执行，容器认为空闲，就会自行退出<br>2、容器运行的命令如果不是那些一直挂起的命令（ 运行top，tail、循环等），就是会自动退出<br>3、这个是 docker 的机制问题</p>
-<p><strong>解决方案</strong></p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker run -d centos /bin/bash -c <span class="string">&quot;tail -f /dev/null&quot;</span>   <span class="comment"># 使后台程序一直有事干</span></span><br><span class="line">docker run -dit centos                                  <span class="comment"># 后台交互😀</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="5-4、重新进入容器"><a href="#5-4、重新进入容器" class="headerlink" title="5.4、重新进入容器"></a>5.4、重新进入容器</h3><p>重新进入一个正在运行的容器有以下两种方法</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">exec</span> -it &lt;container id/name&gt;</span><br><span class="line">docker attach &lt;container id/name&gt;</span><br></pre></td></tr></table></figure>
-
-<p><strong>exec 与 attach 的区别</strong></p>
-<p>attach 不会新建一个终端，它直接进入该容器启动时所用的终端，因此使用 exit 退出时，会导致容器停止。</p>
-<p>exec 会在容器中打开一个新的终端，使用 exit 退出时，不会导致容器停止。【使用这个】</p>
-<h2 id="6、镜像"><a href="#6、镜像" class="headerlink" title="6、镜像"></a>6、镜像</h2><p>Docker 镜像可以看作是一个特殊的文件系统，除了提供容器运行时所需的程序、库、资源、配置等文件外，还包含了一些为运行时准备的一些配置参数（如匿名卷、环境变量、用户等）。镜像不包含任何动态数据，其内容在构建之后也不会被改变。</p>
-<p>镜像中最重要的概念就是镜像层(Layers)。镜像层依赖于一系列的底层技术，比如文件系统(filesystems)、写时复制(copy-on-write)、联合挂载(<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=union+mounts&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra=%7B%22sourceType%22:%22answer%22,%22sourceId%22:230398763%7D">union mounts</a>)等。</p>
-<p><img src="%E9%95%9C%E5%83%8F%E5%B1%82.png" alt="镜像层"></p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">在 Dockerfile 中， 每一条指令都会创建一个镜像层，继而会增加整体镜像的大小。</span><br></pre></td></tr></table></figure>
-
-<h3 id="6-1、联合文件系统（UnionFS）"><a href="#6-1、联合文件系统（UnionFS）" class="headerlink" title="6.1、联合文件系统（UnionFS）"></a>6.1、联合文件系统（UnionFS）</h3><p>联合文件系统（<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/UnionFS">UnionFS</a>）是一种分层、轻量级并且高性能的文件系统，它支持对文件系统的修改作为一次提交来一层层的叠加，同时可以将不同目录挂载到同一个虚拟文件系统下。</p>
-<p>联合文件系统是 Docker 镜像的基础。镜像可以通过分层来进行继承，基于基础镜像（没有父镜像），可以制作各种具体的应用镜像。不同 Docker 容器可以共享一些基础的文件系统层，同时再加上自己独有的改动层，大大提高了存储的效率。</p>
-<p>Docker 中使用的 AUFS（AnotherUnionFS）就是一种联合文件系统。 <code>AUFS</code> 支持为每一个成员目录（类似 Git 的分支）设定只读（readonly）、读写（readwrite）和写出（whiteout-able）权限。</p>
-<p>特性：一次同时加载多个文件系统，但从外面看起来，只能看到一个文件系统，联合加载会把各层文件系统叠加起来，这样最终的文件系统会包含所有底层的文件和目录。</p>
-<p><a target="_blank" rel="noopener" href="https://www.php.cn/docker/488967.html">Docker镜像原理之联合文件系统和分层理解</a></p>
-<h3 id="6-2-commit-制作镜像"><a href="#6-2-commit-制作镜像" class="headerlink" title="6.2 commit 制作镜像"></a>6.2 commit 制作镜像</h3><p>Docker Hub 中的 ubuntu 不具备 vim 功能，通过这个 ubuntu 镜像创建一个容器，在该容器中下载 vim 工具，然后用 commit 指令将该容器生成一个镜像，则新镜像就自带有 vim 工具。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker commit -m=<span class="string">&quot;描述信息&quot;</span> -a=<span class="string">&quot;作者&quot;</span> 容器id 仓库名:tag</span><br></pre></td></tr></table></figure>
-
-<h3 id="6-3-push-推送至远程仓库"><a href="#6-3-push-推送至远程仓库" class="headerlink" title="6.3 push 推送至远程仓库"></a>6.3 push 推送至远程仓库</h3><p>阿里云提供免费的个人版的镜像仓库服务。开启后创建命名空间与仓库名称，选择本地仓库上传。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 登录阿里云Docker Registry</span></span><br><span class="line">$ docker login --username=驯鹿是鹿呀 registry.cn-hangzhou.aliyuncs.com</span><br><span class="line"><span class="comment"># docker push : 将本地的镜像上传到镜像仓库,要先登陆到镜像仓库</span></span><br><span class="line"><span class="comment"># 给 6.2 创建的镜像打标签，使其与远程仓库地址一致；若不打标签，默认推送到 docker.io/library/** 下，会被拒绝。</span></span><br><span class="line"><span class="comment"># docker push 推送镜像的规范是：注册用户名/镜像名</span></span><br><span class="line">$ docker tag [ImageId] registry.cn-hangzhou.aliyuncs.com/just_for_lu/mycentos:[镜像版本号]</span><br><span class="line">$ docker push registry.cn-hangzhou.aliyuncs.com/just_for_lu/mycentos:[镜像版本号]</span><br></pre></td></tr></table></figure>
-
-<h3 id="6-4-私有镜像仓库"><a href="#6-4-私有镜像仓库" class="headerlink" title="6.4 私有镜像仓库"></a>6.4 私有镜像仓库</h3><p>Docker Registry 是官方提供的工具，可以用于构建私有镜像仓库。</p>
-<p>先下载 Docker Registry ，它本身也是个镜像，直接拉取。<code>docker pull registry</code></p>
-<h3 id="6-5、Dockerfile"><a href="#6-5、Dockerfile" class="headerlink" title="6.5、Dockerfile"></a>6.5、Dockerfile</h3><p>Docker 镜像是一个特殊的文件系统，除了提供容器运行时所需的程序、库、资源、配置等文件外，还包含了一些为运行时准备的一些配置参数（如匿名卷、环境变量、用户等）。镜像不包含任何动态数据，其内容在构建之后也不会被改变。</p>
-<p>镜像的定制实际上就是定制每一层所添加的配置、文件。</p>
-<p>Dockerfile 是一个文本文件，其内包含了一条条的指令(Instruction)，每一条指令构建一层，因此每一条指令的内容，就是描述该层应当如何构建。</p>
-<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/ityouknow/p/8595384.html#:~:text=Dockerfile%20%E6%8C%87%E4%BB%A4%E8%AF%A6%E8%A7%A3%201%20FROM%20%E6%8C%87%E5%AE%9A%E5%9F%BA%E7%A1%80%E9%95%9C%E5%83%8F%202%20RUN%20%E6%89%A7%E8%A1%8C%E5%91%BD%E4%BB%A4,%E6%8C%87%E5%AE%9A%E5%B7%A5%E4%BD%9C%E7%9B%AE%E5%BD%95%209%20USER%20%E6%8C%87%E5%AE%9A%E5%BD%93%E5%89%8D%E7%94%A8%E6%88%B7%2010%20CMD%20%E6%9B%B4%E5%A4%9A%E7%BB%93%E6%9E%9C...%20">Dockerfile命令</a></p>
-<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/zdz8207/p/linux-docker-add-copy.html">Dockerfile中ADD与COPY命令的区别</a></p>
-<p>http1.1 与 http 2.0 区别？</p>
-<p>tcp 三次握手</p>
-<p>状态码 500  503 </p>
-<p>进程、线程、协程</p>
-<p>进程通信</p>
-<p>信号</p>
-<p>kill -9   -15</p>
-<p>bio、nio、aio</p>
-<p>多路复用</p>
-<p>两个栈？</p>
-<p>utf-8  varchar int bigint </p>
-<p>b树  b+树</p>
-<p>聚集索引</p>
-<p>主键索引</p>
-<p>手写 SQL？  join </p>
-<p>编程：三数之和？</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/03/17/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/docker%E7%AC%94%E8%AE%B0/" data-id="cl1alqgn800007caq0bbe23fz" data-title="Docker" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
     
-    <a class="extend prev" rel="prev" href="/">&laquo; 上一页</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/3/">下一页 &raquo;</a>
+    <a class="extend prev" rel="prev" href="/">&laquo; 上一页</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/">7</a><a class="extend next" rel="next" href="/page/3/">下一页 &raquo;</a>
   </nav>
 
 </section>
@@ -1003,6 +837,10 @@
       <ul>
         
           <li>
+            <a href="/2022/04/26/%E6%B1%82%E8%81%8C/%E5%85%B6%E4%BB%96%E9%9D%A2%E7%BB%8F-%E5%AD%97%E8%8A%82/">其他面经-字节</a>
+          </li>
+        
+          <li>
             <a href="/2022/04/25/Redis/Redis%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7/">Redis缓存一致性</a>
           </li>
         
@@ -1016,10 +854,6 @@
         
           <li>
             <a href="/2022/04/09/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/">Redis持久化</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/">linux创建子进程--fork()方法</a>
           </li>
         
       </ul>

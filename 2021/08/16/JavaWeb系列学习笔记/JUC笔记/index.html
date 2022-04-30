@@ -16,7 +16,7 @@
 <meta property="og:image" content="https://ethereal-lu.github.io/2021/08/16/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/JUC%E7%AC%94%E8%AE%B0/JMM.png">
 <meta property="og:image" content="https://ethereal-lu.github.io/2021/08/16/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/JUC%E7%AC%94%E8%AE%B0/Unsafe.png">
 <meta property="article:published_time" content="2021-08-16T09:12:41.000Z">
-<meta property="article:modified_time" content="2022-04-20T12:37:27.989Z">
+<meta property="article:modified_time" content="2022-04-29T16:15:57.219Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://ethereal-lu.github.io/2021/08/16/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/JUC%E7%AC%94%E8%AE%B0/JMM.png">
@@ -443,6 +443,9 @@
 <hr>
 <h3 id="16、JMM"><a href="#16、JMM" class="headerlink" title="16、JMM"></a>16、JMM</h3><p>JMM是<strong>面试高频</strong>，这里还是不够详细，其他知识如主线嗅探、缓存一致性、监听管道等等在面试前搞懂、理顺。</p>
 <p>JMM 是 java的内存模型，是一种概念、约定，不是一个实物。根据这种约定来操作线程。</p>
+<p><strong>主内存与工作内存</strong>：</p>
+<p>主内存与工作内存都是 JMM 中的抽象定义，主内存是共享的，工作内存是私有的。</p>
+<p>主内存主要包括本地方法区和堆。每个线程都有一个工作内存，工作内存中主要包括两个部分，一个是属于该线程私有的栈和对主存部分变量拷贝的寄存器(包括程序计数器PC和cup工作的高速缓存区)。<br>1.所有的变量都存储在主内存中(虚拟机内存的一部分)，对于所有线程都是共享的。<br>2.每条线程都有自己的工作内存，工作内存中保存的是主存中某些变量的拷贝，线程对变量的所有操作都必须在工作内存中进行，而不能直接读写主内存中的变量。<br>3.线程之间无法直接访问对方的工作内存中的变量，线程间变量的传递均需要通过主内存来完成。</p>
 <p>关于 JMM 的一些同步的约定：</p>
 <p>1、线程加锁前，必须读取主存中的最新值到线程自己的工作内存中</p>
 <p>2、线程解锁前，必须把共享变量<strong>立刻</strong>刷回主存</p>
@@ -463,11 +466,13 @@
 <hr>
 <h3 id="17、volatile"><a href="#17、volatile" class="headerlink" title="17、volatile"></a>17、volatile</h3><p><strong>volatile 的引出</strong>：当多个线程都使用了主存中的一个值，其中当一个线程对该值作出修改并刷新到主存时，其他线程并不知道该值已经被修改，继续使用旧值操作从而产生逻辑问题。为了解决该问题，出现了volatile。</p>
 <p>volatile 是 java 虚拟机提供比 <code>sychronized</code> 关键字更<strong>轻量级的同步机制</strong>，访问 <code>volitile</code> 变量时，不会执行加锁操作。</p>
-<p>线程需要使用被 volatile 修饰的变量时，每次都会从主存中读取，即使之前已经将该变量加载到工作内存。</p>
 <p>特性：</p>
 <p>1、保证可见性     ：当一个共享变量被volatile修饰时，它会保证修改的值会立即被更新到主存，当有其他线程需要读取时，它会去内存中读取新值。</p>
 <p>2、不保证原子性 ：java 中自增包括取数、加一、保存三个过程的操作，假如 <code>volitile</code> 修饰的值执行自增，则在自增的任意一个阶段都可能被其他操作打断。</p>
 <p>3、禁止指令重排 ：编译器、CPU 都有可能通过指令重排来优化我们的代码，指令重排即对我们的源代码重新排序。 <code>volitile</code> 会在写操作的前和后都设置一道内存屏障来保证程序局部的有序性。</p>
+<h4 id="volatile-如何保证可见性"><a href="#volatile-如何保证可见性" class="headerlink" title="volatile 如何保证可见性"></a>volatile 如何保证可见性</h4><p>volatile 通过缓存一致性协议和总线嗅探机制来保证可见性。</p>
+<p>cpu1 的 线程1 与 cpu2 的 线程2 同时将主内存中的被 volatile 修饰的变量 v 加载的自己的工作内存（栈和L3缓存）。当 cpu1 的 线程1 对变量 v 修改后，总线就会发起通知， cpu2 嗅探到总线通知发现有其他线程对变量 v 产生了修改，就会将自己的 L3 缓存中的变量 v 的副本所在的缓存行置为无效状态，当线程 2 访问 v 时发现 v 所在缓存行失效就会丢弃该数据并去主内存中读取 v。</p>
+<p>单核 CPU 不存在可见性问题！</p>
 <hr>
 <h3 id="18、单例模式"><a href="#18、单例模式" class="headerlink" title="18、单例模式"></a>18、单例模式</h3><h4 id="18-1、DCL-懒汉式（Double-Check-Lock-双重检测锁定）"><a href="#18-1、DCL-懒汉式（Double-Check-Lock-双重检测锁定）" class="headerlink" title="18.1、DCL 懒汉式（Double Check Lock 双重检测锁定）"></a>18.1、DCL 懒汉式（Double Check Lock 双重检测锁定）</h4><p>第一重判断 if (lazyMan == null) 无需解释，第二重判断原因：当 a 和  b  两线程都进入第一重判断之后，a 获得锁执行完毕后释放锁，此时 b 线程获取锁又执行一次实例化操作，从而出现问题。</p>
 <p>实例加 volatile 的原因：lazyMan = new LazyMan(); 构造并不是原子操作，分为三部：</p>
@@ -581,6 +586,10 @@
       <ul>
         
           <li>
+            <a href="/2022/04/26/%E6%B1%82%E8%81%8C/%E5%85%B6%E4%BB%96%E9%9D%A2%E7%BB%8F-%E5%AD%97%E8%8A%82/">其他面经-字节</a>
+          </li>
+        
+          <li>
             <a href="/2022/04/25/Redis/Redis%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7/">Redis缓存一致性</a>
           </li>
         
@@ -594,10 +603,6 @@
         
           <li>
             <a href="/2022/04/09/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/">Redis持久化</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/">linux创建子进程--fork()方法</a>
           </li>
         
       </ul>
