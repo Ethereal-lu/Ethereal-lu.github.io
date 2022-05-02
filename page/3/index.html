@@ -73,6 +73,51 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Java 进阶/ConcurrentHashMap" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/03/26/Java%20%E8%BF%9B%E9%98%B6/ConcurrentHashMap/" class="article-date">
+  <time class="dt-published" datetime="2022-03-26T03:12:41.000Z" itemprop="datePublished">2022-03-26</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/03/26/Java%20%E8%BF%9B%E9%98%B6/ConcurrentHashMap/">ConcurrentHashMap</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="1、ConcurrentHashMap-如何保证线程安全"><a href="#1、ConcurrentHashMap-如何保证线程安全" class="headerlink" title="1、ConcurrentHashMap 如何保证线程安全"></a>1、ConcurrentHashMap 如何保证线程安全</h3><p>ConcurrentHashMap 是由 Node 数组构成，这里先将 Node 数组的每个下标对应的空间称为一个桶，以方便叙述。ConcurrentHashMap 的 get 操作不需要加锁，只有 put 和 remove 需要加锁。当执行 put\remove 操作时，会先定位到桶，然后将桶中的链表头节点或树的根节点锁住，因为必须要获取到链表头节点或树的根节点才能对整个链表或树操作，所以可以保证线程安全。</p>
+<p>当 put 操作发现桶中没有数据时，会通过 cas 操作赋值，而不是上锁。</p>
+<h3 id="2、ConcurrentHashMap-扩容"><a href="#2、ConcurrentHashMap-扩容" class="headerlink" title="2、ConcurrentHashMap 扩容"></a>2、ConcurrentHashMap 扩容</h3><p>ConcurrentHashMap 中有一个 sizeCtl 变量，它类似于 HashMap 中的 threshold ，通过比较元素数量与 sizeCtl 的大小判断是否需要扩容。扩容时，先创建一个2倍大小的新数组并初始化一个forwardNode实例fwd，然后遍历每一个桶，若桶中元素为 null 时，直接将其赋值为fwd，否则将桶中的元素转移到新数组，再将其赋值为fwd。在扩容的过程中若进来其他的读线程，若读线程发现桶中的元素是 fwd，就会帮助进行转移，否则进行正常的读操作。若进来写线程，若写线程发现桶中的元素是 fwd，就会帮助进行转移，否则阻塞，直到扩容完成。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/03/26/Java%20%E8%BF%9B%E9%98%B6/ConcurrentHashMap/" data-id="cl1zs7vsf0005zwaq0xj9hts6" data-title="ConcurrentHashMap" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-求职/面经-2022-美团实习" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/03/26/%E6%B1%82%E8%81%8C/%E9%9D%A2%E7%BB%8F-2022-%E7%BE%8E%E5%9B%A2%E5%AE%9E%E4%B9%A0/" class="article-date">
@@ -104,8 +149,9 @@
 <p>3、如果有 100 个元素，且之后不会增加，存储在 hashmap 中，初始容量应该设置为多少？</p>
 <p>答：64？ 100？  128？ 瞎蒙</p>
 <p>正确：为了不触发扩容操作，初始值应该设置为 129 到 256 的任意一个值；因为在 hashmap 的构造函数中，会将输入的初始容量转换为第一个大于等于它的 2 的幂次值并赋值给 threshold ，而在 put 操作中，会将该 threshold 赋值给 capacity ，并根据 <code>capacity * loadfactory</code>得到新 threshold 。因此，如果初始值设置为小于等于 128，则经过 put 操作后，threshold 会变为 96，小于 100，如此一定会触发扩容操作。故为了不触发扩容需保证初始容量为 256。</p>
-<p>4、如果有 41 个 int 数字，另外再给一个数字，如何判断这个数字在不在之前的 41 中？</p>
-<p>答：hashset 或 布隆过滤器，瞎蒙</p>
+<p>4、如果有 41 个 int 数字，另外再给一个数字，如何判断这个数字在不在之前的 41 中？（后续准备八股文才反应过来，应该是40亿吧）</p>
+<p>答：hashset 或 布隆过滤器，瞎蒙。布隆过滤器存在误差。</p>
+<p>应该使用位图。由于 2^32 大约42亿多，故可以申请 2^32 个 bit，每个数对应一个bit，若有值该bit位为1，否则为0；如若 1 在，则第一个 bit 位置为 1，若17在，则第17个 bit 位置为 1。这样判断一个值在不在时只需判断该 bit 位是否为 1 即可。40 亿个 32 位int 大约 16GB，而使用位图算法，大约只需 500MB，可以在内存中判断。</p>
 <p>5、hashmap 的 put 过程？</p>
 <p>6、并发场景下 HashMap 有什么问题？</p>
 <ul>
@@ -264,7 +310,8 @@
 <p>6 当需要限制 Docker 容器运行资源或执行用户指令等操作时，则通过 Execdriver 来完成。</p>
 <p>7 Libcontainer 是一项独立的容器管理包，Networkdriver 以及 Execdriver 都是通过 Libcontainer 来实现具体对容器进行的操作。</p>
 <p><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1768295">Docker 架构中各模块解析</a></p>
-<h2 id="5、容器"><a href="#5、容器" class="headerlink" title="5、容器"></a>5、容器</h2><h3 id="5-1、容器的本质"><a href="#5-1、容器的本质" class="headerlink" title="5.1、容器的本质"></a>5.1、容器的本质</h3><p>用命令 docker run 创建的容器就是 <strong>进程/usr/bin/containerd</strong> 创建的一个组长进程，（该组长进程的父进程可能是 init 进程(docker 版本20.10.10) 也可能是 /usr/bin/containerd 进程(docker 版本 18.09.9)，这取决于 docker 的版本。</p>
+<h2 id="5、容器"><a href="#5、容器" class="headerlink" title="5、容器"></a>5、容器</h2><p>Docker 容器本质上是宿主机上的一个进程。Docker 通过 namespace 实现了资源隔离，通过 cgroups 实现了资源的限制，通过写时复制机制（copy-on-write）实现了高效的文件操作。</p>
+<h3 id="5-1、容器的本质"><a href="#5-1、容器的本质" class="headerlink" title="5.1、容器的本质"></a>5.1、容器的本质</h3><p>用命令 docker run 创建的容器就是 <strong>进程/usr/bin/containerd</strong> 创建的一个组长进程，（该组长进程的父进程可能是 init 进程(docker 版本20.10.10) 也可能是 /usr/bin/containerd 进程(docker 版本 18.09.9)，这取决于 docker 的版本。</p>
 <p>在启动容器时指定的应用程序（/bin/bash）就是该组长进程的子进程，包括创建容器时的/bin/bash和exec重新进入容器时的/bin/bash都是该组长进程的子进程</p>
 <p>容器内 PID=1 的进程就是创建容器时指定的命令所对应的进程。</p>
 <p>Linux 容器的“单进程”模型，指的是容器的生命周期等同于 PID=1 的进程（即上面这个进程）的生命周期，而不是说容器里不能创建多进程。</p>
@@ -373,7 +420,7 @@
 <h2 id="7、核心技术"><a href="#7、核心技术" class="headerlink" title="7、核心技术"></a>7、核心技术</h2><p>从操作系统上来看，目前Docker底层依赖到核心技术主要包括Linux操作系统的命名空间（namespace）,控制组（Control Group）,联合文件系统（Union File System）和 Linux网络虚拟化支持．</p>
 <h3 id="7-1、命名空间"><a href="#7-1、命名空间" class="headerlink" title="7.1、命名空间"></a>7.1、命名空间</h3><p>命名空间是 Linux 内核一个强大的特性。<strong>每个容器都有自己单独的命名空间</strong>，运行在其中的应用都像是在独立的操作系统中运行一样。命名空间保证了容器之间彼此互不影响。</p>
 <ul>
-<li><p>pid 命名空间<br>不同的进程就是通过 pid 命名空间隔离开的，且<strong>不同命名空间中可以有相同 pid</strong>。所有的 LXC  进程在 Docker 中的父进程为Docker进程，每个 LXC 进程具有不同的命名空间。同时由于允许嵌套，因此可以很方便的实现嵌套的  Docker 容器。</p>
+<li><p>pid 命名空间<br>不同的进程就是通过 pid 命名空间隔离开的，且<strong>不同命名空间中可以有相同 pid</strong>。一个 Docker 容器就是一个进程，即每个容器都有自己的命名空间，从而达到容器的隔离。</p>
 </li>
 <li><p>net 命名空间<br> 有了 pid 命名空间, 每个命名空间中的 pid 能够相互隔离，但是网络端口还是<strong>共享 host 的端口</strong>。网络隔离是通过 net 命名空间实现的， 每个 net 命名空间有独立的 网络设备, IP 地址, 路由表, /proc/net 目录。这样每个容器的网络就能隔离开来。Docker 默认采用 <a target="_blank" rel="noopener" href="https://www.ibm.com/developerworks/cn/linux/1310_xiawc_networkdevice/">veth</a> 的方式，将容器中的虚拟网卡同 host 上的一 个Docker 网桥 docker0 连接在一起。</p>
 </li>
@@ -700,7 +747,9 @@
 <p>其他的 pojo 和 controller 都很常规。至此，完整的 Eureka 微服务体系完成。</p>
 <h3 id="2-4、Eureka-架构原理"><a href="#2-4、Eureka-架构原理" class="headerlink" title="2.4、Eureka 架构原理"></a>2.4、Eureka 架构原理</h3><p><img src="eureka%E6%9E%B6%E6%9E%84%E5%9B%BE.png" alt="eureka架构图"></p>
 <p>Replicate 表示多个注册中心之间的数据同步。</p>
-<h3 id="2-5、CAP-原则"><a href="#2-5、CAP-原则" class="headerlink" title="2.5、CAP 原则"></a>2.5、CAP 原则</h3><p>C 为保证数据一致性，A 为服务高可用即快速响应，P 为分区容错即分布式。</p>
+<h3 id="2-5、CAP-原则"><a href="#2-5、CAP-原则" class="headerlink" title="2.5、CAP 原则"></a>2.5、CAP 原则</h3><p>C 为保证数据一致性，是强一致性，即任何时候读取的都是最新的数据，类似于数据库的当前读；</p>
+<p>A 为服务高可用即快速响应；</p>
+<p>P 为分区容错，是分布式的固有属性。</p>
 <p>任何时候，只能在 CP , AP , CA 中三选一，不可能同时满足三个。</p>
 <p>CA 不能实现分布式。一般用于规模小，不打算扩展的应用。MySQL</p>
 <p>AP 不能实现一致性。一般是前几步操作满足快速响应，后续实现一致性。金融领域绝对不允许使用AP。</p>
@@ -2226,63 +2275,6 @@
 
 
   
-    <article id="post-常见问题及解决方法/lambda" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2021/08/18/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/lambda/" class="article-date">
-  <time class="dt-published" datetime="2021-08-18T15:08:18.000Z" itemprop="datePublished">2021-08-18</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">常见问题及解决方法</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/08/18/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/lambda/">lambda 表达式中使用的变量为什么必须是 final</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>Java 规范中规定：Lambda 表达式中要用到的，但又未在 Lambda 表达式中声明的变量，必须声明为 final 或者是 effectively final，否则就会出现编译错误。</p>
-<p>有效 final 即不用显示声明为 final，由 JVM 添加 final。</p>
-<hr>
-<h4 id="个人理解"><a href="#个人理解" class="headerlink" title="个人理解"></a>个人理解</h4><p>由于 lambda 表达式相当于生成一个对象，存储在堆中（生命周期长），而方法的局部变量存储在栈中（生命周期短）。如果 lambda 表达式在使用了外部方法中的局部变量后，该局部变量又发生变化，且方法执行完毕内存被释放，此 lambda 表达式生成的对象可能依然存活（未被GC回收），但是却无法得知局部变量改变后的值，造成数据一致性破坏。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 报错</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">func</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> a = <span class="number">5</span>;</span><br><span class="line">        Runnable runnable = () -&gt; &#123;</span><br><span class="line">            a++;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上方在方法中报错而下方在类中不报错，因此推断与栈和堆的生存周期有关系。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 不报错</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> a = <span class="number">3</span>;</span><br><span class="line">    Runnable runnable = () -&gt; &#123;</span><br><span class="line">        a++;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>存在问题：</strong>作为方法中的内部类，既然方法被释放后，该类绝不可能再被使用，矛盾！</p>
-<hr>
-<h4 id="其他理解"><a href="#其他理解" class="headerlink" title="其他理解"></a>其他理解</h4><p>lambda是对接口中的方法的一种简写方式，当方法想要使用外部的变量的时候，需要把值给传过去，但是方法中无论怎么改变量的值，都不会改变这个变量在外部的值（值传递和引用传递的区别），所以加上final就是为了方便开发者，以免误以为可以更改这个变量的值。final的目的就是告诉开发人员不能改变外面的变量值。</p>
-<p><strong>存在问题：</strong>外部变量什么时候传递给 lambda 的。难道隐式的传了？</p>
-<hr>
-<p>悬而未决，先睡觉</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2021/08/18/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/lambda/" data-id="cktwe4n7600044caqdb0kflp7" data-title="lambda 表达式中使用的变量为什么必须是 final" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -2313,7 +2305,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
     </div>
   </div>
 
@@ -2326,6 +2318,14 @@
       <ul>
         
           <li>
+            <a href="/2022/05/01/Redis/Redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">Redis底层数据结构</a>
+          </li>
+        
+          <li>
+            <a href="/2022/04/28/Linux/Linux%E5%9F%BA%E7%A1%80/">Linux基础</a>
+          </li>
+        
+          <li>
             <a href="/2022/04/26/%E6%B1%82%E8%81%8C/%E5%85%B6%E4%BB%96%E9%9D%A2%E7%BB%8F-%E5%AD%97%E8%8A%82/">其他面经-字节</a>
           </li>
         
@@ -2335,14 +2335,6 @@
         
           <li>
             <a href="/2022/04/16/Redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E3%80%81%E5%87%BB%E7%A9%BF%E3%80%81%E9%9B%AA%E5%B4%A9/">缓存穿透、击穿、雪崩</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/12/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">Redis分布式锁</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/09/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/">Redis持久化</a>
           </li>
         
       </ul>

@@ -4,18 +4,18 @@
   <meta charset="utf-8">
   
   
-  <title>IO | 驯鹿非鹿</title>
+  <title>IO 多路复用 | 驯鹿非鹿</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="1、IO 多路复用1.1、概念IO多路复用是一种同步IO模型，实现一个线程可以监视多个文件描述符；一旦某个文件描述符就绪，就能够通知应用程序进行相应的读写操作；没有文件描述符就绪时会阻塞应用程序，交出cpu。多路是指网络连接，复用指的是同一个线程。 **文件描述符**：Linux 中一切都可以看作文件，包括普通文件、链接文件、Socket  以及设备驱动等，对其进行相关操作时，都可能会创建对应的文">
+  <meta name="description" content="1、概念IO多路复用是一种同步IO模型，实现一个线程可以监视多个文件描述符；一旦某个文件描述符就绪，就能够通知应用程序进行相应的读写操作；没有文件描述符就绪时会阻塞应用程序，交出cpu。多路是指网络连接，复用指的是同一个线程。 **文件描述符**：Linux 中一切都可以看作文件，包括普通文件、链接文件、Socket  以及设备驱动等，对其进行相关操作时，都可能会创建对应的文件描述符。文件描述符（">
 <meta property="og:type" content="article">
-<meta property="og:title" content="IO">
+<meta property="og:title" content="IO 多路复用">
 <meta property="og:url" content="https://ethereal-lu.github.io/2022/04/09/Linux/IO/index.html">
 <meta property="og:site_name" content="驯鹿非鹿">
-<meta property="og:description" content="1、IO 多路复用1.1、概念IO多路复用是一种同步IO模型，实现一个线程可以监视多个文件描述符；一旦某个文件描述符就绪，就能够通知应用程序进行相应的读写操作；没有文件描述符就绪时会阻塞应用程序，交出cpu。多路是指网络连接，复用指的是同一个线程。 **文件描述符**：Linux 中一切都可以看作文件，包括普通文件、链接文件、Socket  以及设备驱动等，对其进行相关操作时，都可能会创建对应的文">
+<meta property="og:description" content="1、概念IO多路复用是一种同步IO模型，实现一个线程可以监视多个文件描述符；一旦某个文件描述符就绪，就能够通知应用程序进行相应的读写操作；没有文件描述符就绪时会阻塞应用程序，交出cpu。多路是指网络连接，复用指的是同一个线程。 **文件描述符**：Linux 中一切都可以看作文件，包括普通文件、链接文件、Socket  以及设备驱动等，对其进行相关操作时，都可能会创建对应的文件描述符。文件描述符（">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://ethereal-lu.github.io/2022/04/09/Linux/IO/io%E5%A4%8D%E7%94%A8%E5%8C%BA%E5%88%AB.png">
 <meta property="article:published_time" content="2022-04-09T11:42:15.000Z">
-<meta property="article:modified_time" content="2022-04-26T12:41:05.943Z">
+<meta property="article:modified_time" content="2022-04-30T15:17:02.079Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://ethereal-lu.github.io/2022/04/09/Linux/IO/io%E5%A4%8D%E7%94%A8%E5%8C%BA%E5%88%AB.png">
@@ -93,7 +93,7 @@
         
   
     <h1 class="p-name article-title" itemprop="headline name">
-      IO
+      IO 多路复用
     </h1>
   
 
@@ -101,10 +101,10 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h2 id="1、IO-多路复用"><a href="#1、IO-多路复用" class="headerlink" title="1、IO 多路复用"></a>1、IO 多路复用</h2><h3 id="1-1、概念"><a href="#1-1、概念" class="headerlink" title="1.1、概念"></a>1.1、概念</h3><p><strong>IO多路复用</strong>是一种同步IO模型，实现一个线程可以监视多个文件描述符；一旦某个文件描述符就绪，就能够通知应用程序进行相应的读写操作；没有文件描述符就绪时会阻塞应用程序，交出cpu。多路是指网络连接，复用指的是同一个线程。</p>
+        <h2 id="1、概念"><a href="#1、概念" class="headerlink" title="1、概念"></a>1、概念</h2><p><strong>IO多路复用</strong>是一种同步IO模型，实现一个线程可以监视多个文件描述符；一旦某个文件描述符就绪，就能够通知应用程序进行相应的读写操作；没有文件描述符就绪时会阻塞应用程序，交出cpu。多路是指网络连接，复用指的是同一个线程。</p>
 <p>**<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/143847169">文件描述符</a>**：Linux 中一切都可以看作文件，包括普通文件、链接文件、Socket  以及设备驱动等，对其进行相关操作时，都可能会创建对应的文件描述符。文件描述符（file  descriptor）是内核为了高效管理已被打开的文件所创建的索引，用于指代被打开的文件，对文件所有 I/O  操作相关的系统调用都需要通过文件描述符。</p>
 <p>**<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/234806787">Socket</a>**：在Linux 中，Socket 也是文件，发送端将数据写进发送方的 Socket ，再通过网卡、路由到接收方的 Socket ，接收方程序将数据从接收方 Socket 中读出来使用。一个 Socket 由&lt;协议、发送方 IP、发送方 Port、接收方 IP、接收方 Port&gt; 五元组描述。总之，Socket 就是一个文件，同样可以进行读写。</p>
-<h3 id="1-2、Linux-IO模型"><a href="#1-2、Linux-IO模型" class="headerlink" title="1.2、Linux IO模型"></a>1.2、Linux IO模型</h3><p>目前Linux系统中提供了5种IO处理模型</p>
+<h2 id="2、Linux-IO模型"><a href="#2、Linux-IO模型" class="headerlink" title="2、Linux IO模型"></a>2、Linux IO模型</h2><p>目前Linux系统中提供了5种IO处理模型</p>
 <ol>
 <li>阻塞IO</li>
 <li>非阻塞IO</li>
@@ -119,7 +119,7 @@
 </ul>
 <h4 id="非阻塞IO"><a href="#非阻塞IO" class="headerlink" title="非阻塞IO"></a>非阻塞IO</h4><p>服务器端当accept一个请求后，加入fds集合，每次轮询一遍fds，若IO失败则返回错误，每次轮询所有fd（包括没有发生读写事件的fd）会很浪费cpu</p>
 <h4 id="IO多路复用"><a href="#IO多路复用" class="headerlink" title="IO多路复用"></a>IO多路复用</h4><p>服务器端采用单线程通过select/epoll等系统调用获取fd列表，遍历活跃（即有读写事件）的fd进行accept/recv/send，使其能支持更多的并发连接请求。</p>
-<h3 id="1-3、IO多路复用的实现"><a href="#1-3、IO多路复用的实现" class="headerlink" title="1.3、IO多路复用的实现"></a>1.3、IO多路复用的实现</h3><h4 id="select"><a href="#select" class="headerlink" title="select"></a>select</h4><ul>
+<h2 id="3、IO多路复用的实现"><a href="#3、IO多路复用的实现" class="headerlink" title="3、IO多路复用的实现"></a>3、IO多路复用的实现</h2><h3 id="3-1、select"><a href="#3-1、select" class="headerlink" title="3.1、select"></a>3.1、select</h3><ul>
 <li><p>select 每个进程可同时监听的文件描述符数量最大为 1024，虽然可以设置，但是会降低网络效率。</p>
 </li>
 <li><p>每次调用select，都需要把fd集合从用户态拷贝到内核态，这个开销在fd很多时会很大</p>
@@ -131,21 +131,37 @@
 <p>数据结构：<code>fd_set</code>简单地理解为一个长度是1024的比特位，每个比特位表示一个需要处理的FD，如果是1，那么表示这个FD有需要处理的I/O事件，否则没有。</p>
 <p>select 在调用期间会一直阻塞。</p>
 <p>select将监听的文件描述符分为三组，分别是：read_fds是需要进行读操作的文件描述符，write_fds是需要进行写操作的文件描述符，except_fds是需要进行异常事件处理的文件描述符。</p>
-<h4 id="poll"><a href="#poll" class="headerlink" title="poll"></a>poll</h4><p>poll 仅仅时取消了 1024 的限制，其他和 select 一样，不分为三组。poll 是 fd 数组。</p>
-<h4 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h4><p>epoll 底层是红黑树 + 链表。红黑树存储所有需要监听的 fd（文件描述符），链表存储活跃（有读写事件）的fd。</p>
+<h3 id="3-2、poll"><a href="#3-2、poll" class="headerlink" title="3.2、poll"></a>3.2、poll</h3><p>poll 仅仅时取消了 1024 的限制，其他和 select 一样，不分为三组。poll 是 fd 数组。</p>
+<h3 id="3-3、epoll"><a href="#3-3、epoll" class="headerlink" title="3.3、epoll"></a>3.3、epoll</h3><p>epoll 底层是红黑树 + 链表。红黑树存储所有需要监听的 fd（文件描述符），链表存储活跃（有读写事件）的fd。</p>
 <p>使用 epoll 主要是使用如下三个系统调用</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建一个 epoll 实例</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_create</span><span class="params">(<span class="keyword">int</span> size)</span></span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">// epoll_ctl 负责把 fd 增加、删除到内核红黑树</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_ctl</span><span class="params">(<span class="keyword">int</span> epfd, <span class="keyword">int</span> op, <span class="keyword">int</span> fd, struct epoll_event *event)</span></span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">// epoll_wait 负责检测可读链表，没有可读 fd 则阻塞进程</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_wait</span><span class="params">(<span class="keyword">int</span> epfd, struct epoll_event * events, <span class="keyword">int</span> maxevents, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
 
 <p>不同于select和poll 的线性扫描，epoll 每次查询只需要看可读链表中是否有元素即可，是 O(1) 的时间复杂度。</p>
 <p><img src="io%E5%A4%8D%E7%94%A8%E5%8C%BA%E5%88%AB.png" alt="io复用区别"></p>
-<p>对于上述事件的理解：类似于生产者消费者模型，当有生产者在文件中写入数据了，则消费者就可以读该文件了，此时该文件的 fd 就是活跃的。</p>
-<h2 id="2、redis-使用的IO模型"><a href="#2、redis-使用的IO模型" class="headerlink" title="2、redis 使用的IO模型"></a>2、redis 使用的IO模型</h2><p>下面这篇文章可以对 非阻塞IO 与 IO多路复用 的作用解释的更通透。</p>
+<p><strong>事件</strong>：</p>
+<p>可读事件，当文件描述符关联的内核读缓冲区可读，则触发可读事件。 (可读：内核缓冲区非空，有数据可以读取)</p>
+<p>可写事件，当文件描述符关联的内核写缓冲区可写，则触发可写事件。 (可写：内核缓冲区不满，有空闲空间可以写入）</p>
+<h4 id="边沿触发vs水平触发"><a href="#边沿触发vs水平触发" class="headerlink" title="边沿触发vs水平触发"></a>边沿触发vs水平触发</h4><p><code>epoll</code>事件有两种模型，边沿触发：edge-triggered (ET)， 水平触发：level-triggered (LT)</p>
+<p><strong>水平触发(level-triggered)</strong></p>
+<ul>
+<li> socket接收缓冲区不为空 有数据可读 读事件一直触发</li>
+<li> socket发送缓冲区不满 可以继续写入数据 写事件一直触发</li>
+</ul>
+<p><strong>边沿触发(edge-triggered)</strong></p>
+<ul>
+<li>socket的接收缓冲区状态变化时触发读事件，即空的接收缓冲区刚接收到数据时触发读事件</li>
+<li>socket的发送缓冲区状态变化时触发写事件，即满的缓冲区刚空出空间时触发读事件</li>
+</ul>
+<p>边沿触发仅触发一次，水平触发会一直触发。</p>
+<p><code>libevent</code> 采用水平触发， <code>nginx</code>  采用边沿触发 </p>
+<p>JDK在Linux已经默认使用epoll方式，但是JDK的epoll采用的是水平触发，而Netty重新实现了epoll机制，采用边缘触发方式。</p>
+<h2 id="4、redis-使用的IO模型"><a href="#4、redis-使用的IO模型" class="headerlink" title="4、redis 使用的IO模型"></a>4、redis 使用的IO模型</h2><p>下面这篇文章可以对 非阻塞IO 与 IO多路复用 的作用解释的更通透。</p>
 <p><a target="_blank" rel="noopener" href="https://researchlab.github.io/2018/10/08/redis-11-redisio/">redis专题11 线程IO模型</a></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/04/09/Linux/IO/" data-id="cl2inu9cd00022oaq4hb23237" data-title="IO" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2022/04/09/Linux/IO/" data-id="cl2inu9cd00022oaq4hb23237" data-title="IO 多路复用" class="article-share-link">分享</a>
       
       
       
@@ -199,7 +215,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
     </div>
   </div>
 
@@ -212,6 +228,14 @@
       <ul>
         
           <li>
+            <a href="/2022/05/01/Redis/Redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">Redis底层数据结构</a>
+          </li>
+        
+          <li>
+            <a href="/2022/04/28/Linux/Linux%E5%9F%BA%E7%A1%80/">Linux基础</a>
+          </li>
+        
+          <li>
             <a href="/2022/04/26/%E6%B1%82%E8%81%8C/%E5%85%B6%E4%BB%96%E9%9D%A2%E7%BB%8F-%E5%AD%97%E8%8A%82/">其他面经-字节</a>
           </li>
         
@@ -221,14 +245,6 @@
         
           <li>
             <a href="/2022/04/16/Redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E3%80%81%E5%87%BB%E7%A9%BF%E3%80%81%E9%9B%AA%E5%B4%A9/">缓存穿透、击穿、雪崩</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/12/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">Redis分布式锁</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/09/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/">Redis持久化</a>
           </li>
         
       </ul>

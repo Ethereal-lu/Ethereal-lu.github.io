@@ -14,7 +14,7 @@
 <meta property="og:description" content="一面：75min   4.211、自我介绍 2、项目中用户权限控制的数据表设计问题 3、如果有 100 个元素，且之后不会增加，存储在 hashmap 中，初始容量应该设置为多少？ 答：64？ 100？  128？ 瞎蒙 正确：为了不触发扩容操作，初始值应该设置为 129 到 256 的任意一个值；因为在 hashmap 的构造函数中，会将输入的初始容量转换为第一个大于等于它的 2 的幂次值并赋值">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-03-26T03:12:41.000Z">
-<meta property="article:modified_time" content="2022-04-25T05:58:13.148Z">
+<meta property="article:modified_time" content="2022-05-01T14:22:08.615Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -104,8 +104,9 @@
 <p>3、如果有 100 个元素，且之后不会增加，存储在 hashmap 中，初始容量应该设置为多少？</p>
 <p>答：64？ 100？  128？ 瞎蒙</p>
 <p>正确：为了不触发扩容操作，初始值应该设置为 129 到 256 的任意一个值；因为在 hashmap 的构造函数中，会将输入的初始容量转换为第一个大于等于它的 2 的幂次值并赋值给 threshold ，而在 put 操作中，会将该 threshold 赋值给 capacity ，并根据 <code>capacity * loadfactory</code>得到新 threshold 。因此，如果初始值设置为小于等于 128，则经过 put 操作后，threshold 会变为 96，小于 100，如此一定会触发扩容操作。故为了不触发扩容需保证初始容量为 256。</p>
-<p>4、如果有 41 个 int 数字，另外再给一个数字，如何判断这个数字在不在之前的 41 中？</p>
-<p>答：hashset 或 布隆过滤器，瞎蒙</p>
+<p>4、如果有 41 个 int 数字，另外再给一个数字，如何判断这个数字在不在之前的 41 中？（后续准备八股文才反应过来，应该是40亿吧）</p>
+<p>答：hashset 或 布隆过滤器，瞎蒙。布隆过滤器存在误差。</p>
+<p>应该使用位图。由于 2^32 大约42亿多，故可以申请 2^32 个 bit，每个数对应一个bit，若有值该bit位为1，否则为0；如若 1 在，则第一个 bit 位置为 1，若17在，则第17个 bit 位置为 1。这样判断一个值在不在时只需判断该 bit 位是否为 1 即可。40 亿个 32 位int 大约 16GB，而使用位图算法，大约只需 500MB，可以在内存中判断。</p>
 <p>5、hashmap 的 put 过程？</p>
 <p>6、并发场景下 HashMap 有什么问题？</p>
 <ul>
@@ -208,7 +209,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
     </div>
   </div>
 
@@ -221,6 +222,14 @@
       <ul>
         
           <li>
+            <a href="/2022/05/01/Redis/Redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">Redis底层数据结构</a>
+          </li>
+        
+          <li>
+            <a href="/2022/04/28/Linux/Linux%E5%9F%BA%E7%A1%80/">Linux基础</a>
+          </li>
+        
+          <li>
             <a href="/2022/04/26/%E6%B1%82%E8%81%8C/%E5%85%B6%E4%BB%96%E9%9D%A2%E7%BB%8F-%E5%AD%97%E8%8A%82/">其他面经-字节</a>
           </li>
         
@@ -230,14 +239,6 @@
         
           <li>
             <a href="/2022/04/16/Redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E3%80%81%E5%87%BB%E7%A9%BF%E3%80%81%E9%9B%AA%E5%B4%A9/">缓存穿透、击穿、雪崩</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/12/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">Redis分布式锁</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/09/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/">Redis持久化</a>
           </li>
         
       </ul>
