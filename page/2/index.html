@@ -73,6 +73,299 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Linux/linux创建子进程--fork()方法" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/" class="article-date">
+  <time class="dt-published" datetime="2022-04-09T11:42:15.000Z" itemprop="datePublished">2022-04-09</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Linux/">Linux</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/">linux创建子进程--fork()方法</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="1、fork-的定义"><a href="#1、fork-的定义" class="headerlink" title="1、fork()的定义"></a>1、fork()的定义</h3><p>fork()函数是Unix中派生新进程的唯一方法，子进程和父进程独立运行互不干扰。</p>
+<p>声明如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span> </span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">pid_t</span> <span class="title">fork</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br></pre></td></tr></table></figure>
+
+
+<p>调用一次fork()方法，该方法会返回两次。一次是在父进程中返回一次，返回值是新派生的进程的进程ID。一次是在子进程中返回，返回值是0，代表当前进程为子进程。如果返回值为-1的话，则代表在派生新进程的过程中出错。</p>
+<p>那么在程序中，我们就可以根据此返回值来判断当前进程是父进程还是子进程，来实现一些具体的操作。例如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    <span class="keyword">pid_t</span> pid;  </span><br><span class="line">  </span><br><span class="line">    <span class="keyword">if</span>((pid = fork()) = <span class="number">0</span>)  </span><br><span class="line">    &#123;  </span><br><span class="line">        <span class="comment">// <span class="doctag">TODO:</span> 在子进程中实现具体操作  </span></span><br><span class="line">        <span class="comment">// ...  </span></span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>); <span class="comment">// 结束子进程  </span></span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> 在调用进程(父进程)实现具体操作  </span></span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<h3 id="2、getpid和getppid函数"><a href="#2、getpid和getppid函数" class="headerlink" title="2、getpid和getppid函数"></a>2、getpid和getppid函数</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">pid_t</span> <span class="title">getpid</span><span class="params">(<span class="keyword">void</span>)</span></span>; <span class="comment">// 获取当前进程的pid</span></span><br><span class="line"><span class="function"><span class="keyword">pid_t</span> <span class="title">getppid</span><span class="params">(<span class="keyword">void</span>)</span></span>; <span class="comment">// 获取当前进程父进程的pid</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3、fork-原理"><a href="#3、fork-原理" class="headerlink" title="3、fork() 原理"></a>3、fork() 原理</h3><p>父进程中在调用fork()派生新进程，实际上相当于创建了进程的一个拷贝；即在fork()之前的进程拥有的资源会被复制到新的进程中去。</p>
+<p>​        （1）进程不同于程序是动态运行在内存中的实体，占用系统资源（CPU、内存等），而程序则是存放在磁盘中的静态的资源，占用磁盘空间而不占用系统资源。进程在内存中运行，由CPU分配资源。</p>
+<p>　　（2）与进程相关的两个内存：虚拟内存和物理内存。所谓虚拟内存就是我们程序员视角下的内存，比如int a = 10; &amp;a 所得的值就是虚拟内存，是给我们程序员看的连续的地址空间。（当我们在代码中连续定义几个local object时，通过&amp;可以观察到它们的地址是连续的）相对的，物理内存才是实实在在的存在于计算机硬件中的内存（比如买内存条时我们可以参考的4G、8G等容量参数），当执行 a = 20这条语句时，操作系统就会将 a 的虚拟地址送入 CPU的地址转换单元（MMU），如果a还没有实际的物理单元，则为a分配物理内存，写入20，反之直接将20写入a物理内存单元。</p>
+<p>　　（3）为什么会有虚拟内存？ 虚拟内存的产生源自物理内存的稀缺，买过SSD或者内存条的伙伴都知道，250G的SSD也就是250块左右，而仅仅8G的内存条就要250块，内存的小容量与高价格的反差促使猿们必须节省内存的开销。由此产生了虚拟内存技术，32位系统下，CPU会为每个进程分配4G的虚拟地址单元（地址编号为0-4G），分为用户空间（通常为0-3G）和内核（kernel）空间（3-4G），用户空间存放该进程的堆栈变量、全局变量等，kernel里存放该进程的进程控制块（<strong>PCB，唯一区分每一个进程</strong>）。虚拟内存单元只有在被进程访问后才会映射为物理内存单元（见（2）a=20的执行过程）。</p>
+<p>　　（4）内存使用的一大机制（虚拟内存能实现的原因）：缺页中断（见文章最后）。</p>
+<p>  　　3. fork()是如何产生子进程的？ 上面说了每一个进程都有自己0-4G的虚拟地址空间，因此，fork所做的动作就是在当前进程的基础上产生一个新进程：<strong>（1）复制父进程的0-3G的用户空间（2）创建新进程（子进程）的PCB</strong></p>
+<p>看一个例子吧：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="comment">//global variable</span></span><br><span class="line"><span class="keyword">int</span> globalVar = <span class="number">78</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">pid_t</span> pid = <span class="built_in">getpid</span>();</span><br><span class="line">    <span class="keyword">int</span> k = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; <span class="number">5</span>; ++i)&#123;</span><br><span class="line">        pid = fork();   <span class="comment">// 循环生成5个子进程</span></span><br><span class="line">        <span class="keyword">if</span>(<span class="number">-1</span> == pid)&#123;</span><br><span class="line">            <span class="built_in">perror</span>(<span class="string">&quot;FORK&quot;</span>);</span><br><span class="line">            <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 由于fork()返回两个值，该分支一定会被子进程执行，即每子进程都会跳出循环去执行下方代码，</span></span><br><span class="line">        <span class="comment">// 而父进程一直执行到循环结束，故每个子进程都会执行下方的if(i &lt; 5)，而父进程执行else</span></span><br><span class="line">        <span class="comment">// 所以下方图片输出可表明每个子进程写时都复制父进程的变量再修改，且不影响其他进程。</span></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span>(<span class="number">0</span> == pid)&#123;  </span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">sleep</span>(i); <span class="comment">// 保证父进程最后退出</span></span><br><span class="line">    <span class="keyword">if</span>(i &lt; <span class="number">5</span>)&#123;</span><br><span class="line">        ++k;  <span class="comment">// 写时复制</span></span><br><span class="line">        --globalVar; <span class="comment">//写时复制</span></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;I&#x27;m %dth child, pid = %d, parent is %d, k = %d, globalVar = %d\n&quot;</span>, i, <span class="built_in">getpid</span>(), <span class="built_in">getppid</span>(), k, globalVar);</span><br><span class="line">    &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        ++k;</span><br><span class="line">        --globalVar;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;I&#x27;m parent, pid = %d, k = %d, globalVar = %d\n&quot;</span>, <span class="built_in">getpid</span>(), k, globalVar);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img2020.cnblogs.com/blog/1696980/202007/1696980-20200715102950625-1441570329.png" alt="img"></p>
+<h3 id="4、父子进程共享"><a href="#4、父子进程共享" class="headerlink" title="4、父子进程共享"></a>4、父子进程共享</h3><p>　　<strong>共享的定义是二者可以共同使用一件东西，前提是一件东西，而不是一个东西的两个副本。</strong></p>
+<p>　　fork()完成的动作是子进程拿到了父进程0-3G用户空间的副本而不是原件，因此严格来说父子进程之间是不共享的，那为什么这里还要说到共享呢？前面说到，父进程的0-3G用户空间是虚拟内存空间，<strong>只有我们访问了某个单元时，才会真正在物理内存上分配一份地址空间</strong>，也就是说，这些虚拟内存里总会有一部分被真正的映射到了物理内存中，但是为了节省内存开销，fork在复制0-3G的虚拟内存空间时并不会将父进程中已经映射到物理内存的内存单元再复制一份到物理内存中，而是遵循“<strong>读时共享，写时复制</strong>”的原则，即仅复制虚拟地址空间。</p>
+<p>　　因此这里说的“共享”更大意义上存在于 父子进程共同访问一块内存空间的过程0，比如fork产生的子进程要输出父进程中变量a的值，那么子进程只需要共享父进程提供的变量a的物理单元，取出20这个值输出即可，如果子进程不单要输出a，还要对a执行+1操作，这个时候子进程才会将父进程中变量a的物理内存单元复制一份并执行+1操作，执行完后父进程中的变量a值仍为20，子进程a值为21。</p>
+<p>　　因此可以说fork后父子进程的用户空间是相同的，kernel空间是不同的。</p>
+<p>　　但是fork后父子进程的用户空间遵循的是“读时共享，写时复制”的原则，类似于“父子进程共享栈变量、全局变量”的说法都是不准确的。</p>
+<h3 id="5、缺页中断"><a href="#5、缺页中断" class="headerlink" title="5、缺页中断"></a>5、缺页中断</h3><p>缺页中断：缺页中断的过程其实已经在1.（2）中描述了，缺页中断简单来说就是：先对 待访问数据的虚拟地址进行段表和页表的映射，试图访问其对应的物理内存单元， 然后——待访问的数据在物理内存中吗 ？ （在）访问/修改该物理内存单元 ： （不在）申请一段物理内存存放该数据并完成与虚拟地址的映射，然后访问/修改该内存单元。 （段表和页表是段页式内存管理中记录虚拟地址与物理地址映射关系的表）</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/" data-id="cl1zs7vs10001zwaq2xa7bza2" data-title="linux创建子进程--fork()方法" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Linux/IO" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/09/Linux/IO/" class="article-date">
+  <time class="dt-published" datetime="2022-04-09T11:42:15.000Z" itemprop="datePublished">2022-04-09</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Linux/">Linux</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/04/09/Linux/IO/">IO 多路复用</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="1、概念"><a href="#1、概念" class="headerlink" title="1、概念"></a>1、概念</h2><p><strong>IO多路复用</strong>是一种同步IO模型，实现一个线程可以监视多个文件描述符；一旦某个文件描述符就绪，就能够通知应用程序进行相应的读写操作；没有文件描述符就绪时会阻塞应用程序，交出cpu。多路是指网络连接，复用指的是同一个线程。</p>
+<p>**<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/143847169">文件描述符</a>**：Linux 中一切都可以看作文件，包括普通文件、链接文件、Socket  以及设备驱动等，对其进行相关操作时，都可能会创建对应的文件描述符。文件描述符（file  descriptor）是内核为了高效管理已被打开的文件所创建的索引，用于指代被打开的文件，对文件所有 I/O  操作相关的系统调用都需要通过文件描述符。</p>
+<p>**<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/234806787">Socket</a>**：在Linux 中，Socket 也是文件，发送端将数据写进发送方的 Socket ，再通过网卡、路由到接收方的 Socket ，接收方程序将数据从接收方 Socket 中读出来使用。一个 Socket 由&lt;协议、发送方 IP、发送方 Port、接收方 IP、接收方 Port&gt; 五元组描述。总之，Socket 就是一个文件，同样可以进行读写。</p>
+<h2 id="2、Linux-IO模型"><a href="#2、Linux-IO模型" class="headerlink" title="2、Linux IO模型"></a>2、Linux IO模型</h2><p>目前Linux系统中提供了5种IO处理模型</p>
+<ol>
+<li>阻塞IO</li>
+<li>非阻塞IO</li>
+<li>IO多路复用</li>
+<li>信号驱动IO</li>
+<li>异步IO</li>
+</ol>
+<h4 id="阻塞IO"><a href="#阻塞IO" class="headerlink" title="阻塞IO"></a>阻塞IO</h4><p>阻塞IO意味着当我们发起一次IO操作后一直等待成功或失败之后才返回，在这期间程序不能做其它的事情。阻塞IO操作只能对单个文件描述符进行操作</p>
+<ul>
+<li>服务端采用单线程，当accept一个请求后，在recv或send调用阻塞时，将无法accept其他请求（必须等上一个请求处recv或send完），无法处理并发。</li>
+<li>服务器端采用多线程，当accept一个请求后，开启线程进行recv，可以完成并发处理，但随着请求数增加需要增加系统线程，大量的线程占用很大的内存空间，并且线程切换会带来很大的开销。</li>
+</ul>
+<h4 id="非阻塞IO"><a href="#非阻塞IO" class="headerlink" title="非阻塞IO"></a>非阻塞IO</h4><p>服务器端当accept一个请求后，加入fds集合，每次轮询一遍fds，若IO失败则返回错误，每次轮询所有fd（包括没有发生读写事件的fd）会很浪费cpu</p>
+<h4 id="IO多路复用"><a href="#IO多路复用" class="headerlink" title="IO多路复用"></a>IO多路复用</h4><p>服务器端采用单线程通过select/epoll等系统调用获取fd列表，遍历活跃（即有读写事件）的fd进行accept/recv/send，使其能支持更多的并发连接请求。</p>
+<h2 id="3、IO多路复用的实现"><a href="#3、IO多路复用的实现" class="headerlink" title="3、IO多路复用的实现"></a>3、IO多路复用的实现</h2><h3 id="3-1、select"><a href="#3-1、select" class="headerlink" title="3.1、select"></a>3.1、select</h3><ul>
+<li><p>select 每个进程可同时监听的文件描述符数量最大为 1024，虽然可以设置，但是会降低网络效率。</p>
+</li>
+<li><p>每次调用select，都需要把fd集合从用户态拷贝到内核态，这个开销在fd很多时会很大</p>
+</li>
+<li><p>对socket扫描时是线性扫描，采用轮询的方法，效率较低（高并发时）</p>
+</li>
+</ul>
+<p>后面的不重要</p>
+<p>数据结构：<code>fd_set</code>简单地理解为一个长度是1024的比特位，每个比特位表示一个需要处理的FD，如果是1，那么表示这个FD有需要处理的I/O事件，否则没有。</p>
+<p>select 在调用期间会一直阻塞。</p>
+<p>select将监听的文件描述符分为三组，分别是：read_fds是需要进行读操作的文件描述符，write_fds是需要进行写操作的文件描述符，except_fds是需要进行异常事件处理的文件描述符。</p>
+<h3 id="3-2、poll"><a href="#3-2、poll" class="headerlink" title="3.2、poll"></a>3.2、poll</h3><p>poll 仅仅时取消了 1024 的限制，其他和 select 一样，不分为三组。poll 是 fd 数组。</p>
+<h3 id="3-3、epoll"><a href="#3-3、epoll" class="headerlink" title="3.3、epoll"></a>3.3、epoll</h3><p>epoll 底层是红黑树 + 链表。红黑树存储所有需要监听的 fd（文件描述符），链表存储活跃（有读写事件）的fd。</p>
+<p>使用 epoll 主要是使用如下三个系统调用</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建一个 epoll 实例</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_create</span><span class="params">(<span class="keyword">int</span> size)</span></span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">// epoll_ctl 负责把 fd 增加、删除到内核红黑树</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_ctl</span><span class="params">(<span class="keyword">int</span> epfd, <span class="keyword">int</span> op, <span class="keyword">int</span> fd, struct epoll_event *event)</span></span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">// epoll_wait 负责检测可读链表，没有可读 fd 则阻塞进程</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_wait</span><span class="params">(<span class="keyword">int</span> epfd, struct epoll_event * events, <span class="keyword">int</span> maxevents, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>不同于select和poll 的线性扫描，epoll 每次查询只需要看可读链表中是否有元素即可，是 O(1) 的时间复杂度。</p>
+<p><img src="io%E5%A4%8D%E7%94%A8%E5%8C%BA%E5%88%AB.png" alt="io复用区别"></p>
+<p><strong>事件</strong>：</p>
+<p>可读事件，当文件描述符关联的内核读缓冲区可读，则触发可读事件。 (可读：内核缓冲区非空，有数据可以读取)</p>
+<p>可写事件，当文件描述符关联的内核写缓冲区可写，则触发可写事件。 (可写：内核缓冲区不满，有空闲空间可以写入）</p>
+<h4 id="边沿触发vs水平触发"><a href="#边沿触发vs水平触发" class="headerlink" title="边沿触发vs水平触发"></a>边沿触发vs水平触发</h4><p><code>epoll</code>事件有两种模型，边沿触发：edge-triggered (ET)， 水平触发：level-triggered (LT)</p>
+<p><strong>水平触发(level-triggered)</strong></p>
+<ul>
+<li> socket接收缓冲区不为空 有数据可读 读事件一直触发</li>
+<li> socket发送缓冲区不满 可以继续写入数据 写事件一直触发</li>
+</ul>
+<p><strong>边沿触发(edge-triggered)</strong></p>
+<ul>
+<li>socket的接收缓冲区状态变化时触发读事件，即空的接收缓冲区刚接收到数据时触发读事件</li>
+<li>socket的发送缓冲区状态变化时触发写事件，即满的缓冲区刚空出空间时触发读事件</li>
+</ul>
+<p>边沿触发仅触发一次，水平触发会一直触发。</p>
+<p><code>libevent</code> 采用水平触发， <code>nginx</code>  采用边沿触发 </p>
+<p>JDK在Linux已经默认使用epoll方式，但是JDK的epoll采用的是水平触发，而Netty重新实现了epoll机制，采用边缘触发方式。</p>
+<h2 id="4、redis-使用的IO模型"><a href="#4、redis-使用的IO模型" class="headerlink" title="4、redis 使用的IO模型"></a>4、redis 使用的IO模型</h2><p>下面这篇文章可以对 非阻塞IO 与 IO多路复用 的作用解释的更通透。</p>
+<p><a target="_blank" rel="noopener" href="https://researchlab.github.io/2018/10/08/redis-11-redisio/">redis专题11 线程IO模型</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/04/09/Linux/IO/" data-id="cl2inu9cd00022oaq4hb23237" data-title="IO 多路复用" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-小碎片知识/编码" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/08/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/" class="article-date">
+  <time class="dt-published" datetime="2022-04-08T15:08:18.000Z" itemprop="datePublished">2022-04-08</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/04/08/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/">编码</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>本文摘自<a target="_blank" rel="noopener" href="https://www.cnblogs.com/lonely-wolf/p/14676335.html">为了彻底理解乱码问题，一怒之下我把字符集历史扒了个底朝天 - 双子孤狼 - 博客园 (cnblogs.com)</a></p>
+<h2 id="1、为什么使用编码"><a href="#1、为什么使用编码" class="headerlink" title="1、为什么使用编码"></a>1、为什么使用编码</h2><p>人类的语言并不适合计算机使用，所以就需要发明一种适合计算机的语言，这就是二进制。电脑读不懂人类语言，所以需要将人类语言转换为二进制语言，这就是编码；人类读不懂电脑的二进制语言，所以需要转换为人类语言，这就是解码。</p>
+<h2 id="2、为什么会乱码"><a href="#2、为什么会乱码" class="headerlink" title="2、为什么会乱码"></a>2、为什么会乱码</h2><p>编码与解码使用的规则不一样，就会乱码。即解码的时候，解码器不知道如何将当前的二进制转换为人类语言，就会乱码。</p>
+<h2 id="3、字符集的历史"><a href="#3、字符集的历史" class="headerlink" title="3、字符集的历史"></a>3、字符集的历史</h2><h3 id="3-1、百花齐放"><a href="#3-1、百花齐放" class="headerlink" title="3.1、百花齐放"></a>3.1、百花齐放</h3><p><code>ASCII</code> 码占用了 0~127，即一个字节中的后 7 位。</p>
+<p><code>IOS-8859-n</code> 编码家族占用了 128~255，即利用了 <code>ASCII</code> 码未使用的第 1 位，因此<code>IOS-8859-n</code> 编码家族兼容<code>ASCII</code> 码。</p>
+<hr>
+<p>至此一个字节的 8 位已全部占用，后来的编码必须使用多个字节。</p>
+<hr>
+<p><code>GB2312</code>：<code>GB2312</code> 并不兼容 <code>ISO-8859-n</code> 编码集，但是兼容 <code>ASCII</code> 编码。因为 <code>ASCII</code> 编码中的单字节字符一定是小于 <code>128</code> 的，所以最后我们就决定，中文的双字节字符都从 <code>128</code> 之后开始，也就是当发现字符连续两位都大于 <code>128</code> 时，就说明这是一个中文，指定了之后我们就把这种编码方式称之为 <code>GB2312</code> 编码。</p>
+<p><code>GB2312</code> 中收录的中文汉字都是简体字和常用字，对于一些生僻字以及繁体字没有收录，于是乎 <code>GBK</code> 出现了。</p>
+<p><code>GBK</code>： <code>GBK</code> 只要求第一位是大于 <code>128</code>，第二位可以小于 <code>128</code>，只要发现一个字节大于 <code>128</code>，那么紧随其后的一个字节就是和其作为一个整体作为中文字符。<code>GBK</code>兼容<code>GB2312</code>、<code>ASCII</code>，不兼容<code>IOS-8859-n</code> 。</p>
+<h3 id="3-2、Unicode"><a href="#3-2、Unicode" class="headerlink" title="3.2、Unicode"></a>3.2、Unicode</h3><p><code>Unicode</code> 不兼容以上任何编码。<code>Unicode</code> 字符最开始采用的是 <code>UCS-2</code> 标准，<code>UCS-2</code> 标准规定一个字符至少使用 <code>2</code> 个字节来表示。由于无法攘括全世界所有字符，后来又有了 <code>UCS-4</code> 标准，可以用 <code>4</code> 个字节来存储一个字符。</p>
+<p><code>Unicode</code> 编码只是定义了字符集，对于字符集具体应该如何存储并没有做要求。</p>
+<p><code>UTF</code> 系列编码就是对 <code>Unicode</code> 字符集的实现，只不过实现的方式有所区别，其中主要有：<code>UTF-8</code>，<code>UTF-16</code>，<code>UTF-32</code> 等类型。</p>
+<h4 id="3-2-1、UTF-32-编码"><a href="#3-2-1、UTF-32-编码" class="headerlink" title="3.2.1、UTF-32 编码"></a>3.2.1、UTF-32 编码</h4><p><code>UTF-32</code> 编码基本按照 <code>Unicode</code>字符集标准来实现，任何一个符号都占用 <code>4</code> 个字节。浪费严重。</p>
+<h4 id="3-2-2、UTF-16-编码"><a href="#3-2-2、UTF-16-编码" class="headerlink" title="3.2.2、UTF-16 编码"></a>3.2.2、UTF-16 编码</h4><p><code>UTF-16</code> 编码相比较 <code>UTF-32</code> 做了一点改进，其采用 <code>2</code> 个字节或者 <code>4</code> 个字节来存储。大部分情况下 <code>UTF-16</code> 编码都是采用 <code>2</code> 个字节来存储，而当 <code>2</code> 个字节存储时，<code>UTF-16</code> 编码会将 <code>Unicode</code> 字符直接转成二进制进行存储，对于另外一些生僻字或者使用较少的符号，<code>UTF-16</code> 编码会采用 <code>4</code> 个字节来存储，但是采用四个字节存储时需要做一次编码转换。</p>
+<p>下表就是 <code>UTF-16</code> 编码的存储格式：</p>
+<table>
+<thead>
+<tr>
+<th>Unicode 编码范围（16 进制）</th>
+<th>UTF-16 编码的二进制存储格式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x0000 0000 - 0x0000 FFFF</td>
+<td>xxxxxxxx xxxxxxxx</td>
+</tr>
+<tr>
+<td>0x0001 0000 - 0x0010 FFFF</td>
+<td>110110xx xxxxxxxx 110111xx xxxxxxxx</td>
+</tr>
+</tbody></table>
+<p>即二字节存储时，直接存 <code>Unicode</code> 码，四字节时将 <code>Unicode</code> 码依次填充到表中的 x 处。</p>
+<p>java 采用 UTF-16 编码。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">一个汉字在 UTF-16 编码 中占 2 个或 4 个字节。</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-2-3、UTF-8-编码"><a href="#3-2-3、UTF-8-编码" class="headerlink" title="3.2.3、UTF-8 编码"></a>3.2.3、UTF-8 编码</h4><p><code>UTF-8</code> 是一种变长的编码，兼容了 <code>ASCII</code> 编码，为了实现变长这个特性，那么就必须要有一个规范来规定存储格式，这样当程序读了 <code>2</code> 个或者多个字节时能解析出这到底是表示多个单字节字符还是一个多字节字符。</p>
+<p><code>UTF-8</code> 编码的存储规范如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>Unicode 编码范围（16 进制）</th>
+<th>UTF-8 编码的二进制存储格式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x0000 0000 - 0x0000 007F</td>
+<td>0xxxxxxx</td>
+</tr>
+<tr>
+<td>0x0000 0080 - 0x0000 07FF</td>
+<td>110xxxxx 10xxxxxx</td>
+</tr>
+<tr>
+<td>0x0000 0800 - 0x0000 FFFF</td>
+<td>1110xxxx 10xxxxxx 10xxxxxx</td>
+</tr>
+<tr>
+<td>0x0001 0000 - 0x0010 FFFF</td>
+<td>11110xxx 10xxxxxx 10xxxxxx 10xxxxxx</td>
+</tr>
+</tbody></table>
+<p>接下来我们以 <code>双</code> 字为例来进行说明：</p>
+<p>双：对应的 <code>Unicode</code> 编码为 <code>\u53cc</code>，转成二进制就是：<code>101001111001100</code>，这时候表格中的第一行只有 <code>7</code> 位存不下去，第二列也只有 <code>11</code> 位，也不够存储，所以只能存储到第三列，第三列有 <code>16</code> 位，从后往前依次填补 <code>x</code> 的位置，填完之后还有一位空余，直接补 <code>0</code>，最终得到：<strong>1110</strong>0101 <strong>10</strong>001111 <strong>10</strong>001100，所以<code>双</code> 字就占用了 <code>3</code> 个字节，当然，有些生僻字会占用到四个字节。</p>
+<p>所以上面的 <code>UTF-16</code> 编码也是同理，如果当前字符采用的是两字节存储，那么直接转成二进制存储即可，位数不足直接补 <code>0</code> 即可，而当采用 <code>4</code> 个字节存储时，则需要和 <code>UTF-8</code> 一样进行一次转换，也就是说只能将其填充到 <code>x</code> 的位置，<code>x</code> 之外的是固定格式。</p>
+<p>需要注意的是：在 <code>UTF-16</code> 编码中，<code>2</code> 个字节也可能出现 <code>4</code> 字节中 <code>110110xx</code> 或者 <code>110111xx</code> 开头的格式，这两部分对应的区间分别是：<code>D800~DBFF</code> 和 <code>DC00~DFFF</code>，所以为了避免这种歧义的发生，这两部分区间是是专门空出来的，没有进行编码。</p>
+<p><code>UTF-8</code>存储中，若字节的第一位是 0，表示一个字节即一个<code>Unicode</code> 字符；否则字节开头 1 有几个，就表示该<code>Unicode</code> 字符由几个字节组成。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">一个汉字在 UTF-8 编码 中占 3 个或 4 个字节。</span><br></pre></td></tr></table></figure>
+
+<h2 id="4、为什么有时候乱码都是-号"><a href="#4、为什么有时候乱码都是-号" class="headerlink" title="4、为什么有时候乱码都是 ? 号"></a>4、为什么有时候乱码都是 ? 号</h2><p>在 <code>Java</code> 开发中，经常会碰到乱码显示为 <code>?</code> 号，比如下面这个例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">String name = <span class="string">&quot;双子孤狼&quot;</span>;</span><br><span class="line"><span class="keyword">byte</span>[] bytes = name.getBytes(StandardCharsets.ISO_8859_1);</span><br><span class="line">System.out.println(<span class="keyword">new</span> String(bytes));<span class="comment">//输出：????</span></span><br></pre></td></tr></table></figure>
+
+<p>这个输出结果的原因是中文无法用 <code>ISO_8859_1</code> 编码进行存储，而示例中却强制用 <code>ISO_8859_1</code> 编码进行解码。</p>
+<p>在 <code>Java</code> 中提供了一个 <code>ISO_8859_1</code> 类用来解码，解码时当发现当前字符转成十进制之后大于 <code>255</code> 时就会直接不进行解码，转而直接赋一个默认值 <code>63</code>，所以上面的示例中的 <code>byte</code> 数组结果就是 <code>63 63 63 63</code>，而<code>63</code> 在 <code>ASCII</code> 中就恰好就对应了 <code>?</code> 号。</p>
+<p>所以一般我们看到编码出现 <code>?</code> 基本就说明当前是采用 <code>ISO_8859_1</code> 进行的解码，而当前的字符又大于 <code>255</code>。</p>
+<h2 id="5、代码点和代码单元"><a href="#5、代码点和代码单元" class="headerlink" title="5、代码点和代码单元"></a>5、代码点和代码单元</h2><p>在 <code>Java</code> 中的字符串是由 <code>char</code> 序列组成，而 <code>char</code> 又是采用 <code>UTF-16</code> 表示的 <code>Unicode</code> 代码点的代码单元。</p>
+<ul>
+<li>代码点：一个代码点等同于一个 <code>Unicode</code> 字符。</li>
+<li>代码单元：在 <code>UTF-16</code> 中，两个字节表示一个代码单元，代码单元是最小的不可拆分的部分，所以如果在 <code>UTF-8</code> 中，一个代码单元就是一个字节，因为 <code>UTF-8</code> 中可以用一个字节表示一个字符。</li>
+</ul>
+<p>平常我们调用字符串的 <code>length()</code> 方法，返回的就是代码单元数量，而不是代码点数量，所有如果碰到一些需要用 <code>4</code> 个字节来表示的繁体字，那么代码单元数就会小于代码点数，而想要获取代码点数量，可以通过其他方法获取，获取方式如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">String name = <span class="string">&quot;𤭢&quot;</span>;<span class="comment">//\uD852\uDF62</span></span><br><span class="line">System.out.println(name.length());<span class="comment">//代码单元数，输出2</span></span><br><span class="line">System.out.println(name.codePointCount(<span class="number">0</span>, name.length()));<span class="comment">//代码点数，输出1</span></span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/04/08/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/" data-id="cl1zs7vsm000dzwaq4qy0c3cu" data-title="编码" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Linux/ubuntu的ufw与iptables" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/04/07/Linux/ubuntu%E7%9A%84ufw%E4%B8%8Eiptables/" class="article-date">
@@ -587,256 +880,6 @@
 
 
   
-    <article id="post-MySQL/事务实现原理" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/03/27/MySQL/%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" class="article-date">
-  <time class="dt-published" datetime="2022-03-27T09:39:41.000Z" itemprop="datePublished">2022-03-27</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/03/27/MySQL/%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">事务实现原理</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>MySQL 默认开启事务自动提交模式，即除非显式的开启事务（BEGIN 或 START TRANSACTION），否则每条 SOL 语句都会被当做一个单独的事务自动执行。</p>
-<p>在 MySQL 中，可以使用 SET autocommit 语句设置事务的自动提交模式，语法格式如下：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SET</span> autocommit <span class="operator">=</span> <span class="number">0</span><span class="operator">|</span><span class="number">1</span><span class="operator">|</span><span class="keyword">ON</span><span class="operator">|</span>OFF;</span><br></pre></td></tr></table></figure>
-
-<p>对取值的说明：</p>
-<ul>
-<li>值为 0 和值为 OFF：关闭事务自动提交。如果关闭自动提交，用户将会一直处于某个事务中，只有提交或回滚后才会结束当前事务，重新开始一个新事务。</li>
-<li>值为 1 和值为 ON：开启事务自动提交。如果开启自动提交，则每执行一条 SQL 语句，事务都会提交一次。</li>
-</ul>
-<p>事务想要做到可靠性以及并发处理。</p>
-<h2 id="1、redo-log-与-undo-log"><a href="#1、redo-log-与-undo-log" class="headerlink" title="1、redo log 与 undo log"></a>1、redo log 与 undo log</h2><h3 id="1-1、redo-log"><a href="#1-1、redo-log" class="headerlink" title="1.1、redo log"></a>1.1、redo log</h3><p>mysql 为了提升性能不会把每次的修改都实时同步到磁盘，而是会先存到Boffer Pool(缓冲池)里头，把这个当作缓存来用。然后使用后台线程去做<strong>缓冲池和磁盘之间的同步</strong>。</p>
-<p>那么问题来了，如果还没来的同步的时候宕机或断电了怎么办？还没来得及执行上面图中红色的操作。这样会导致丢部分已提交事务的修改信息！</p>
-<p>所以引入了redo log来记录已成功提交事务的修改信息，并且会把redo log持久化到磁盘，系统重启之后在读取redo log恢复最新数据。</p>
-<p>redo log在事务提交后就写入磁盘，不会等待后台程序执行。</p>
-<p><strong>总结：</strong> redo log是用来恢复数据的 用于保障，已提交事务的持久化特性。</p>
-<p>既然redo log也需要存储，也涉及磁盘IO为啥还用它？</p>
-<p>（1）redo log 的存储是顺序存储，而缓存同步是随机操作。</p>
-<p>（2）缓存同步是以数据页为单位的，每次传输的数据大小大于redo log。</p>
-<h3 id="1-2、undo-log"><a href="#1-2、undo-log" class="headerlink" title="1.2、undo log"></a>1.2、undo log</h3><p>undo log 叫做回滚日志，用于记录数据<strong>被修改前</strong>的信息。会记录执行的操作以及修改前的信息，这样根据操作记录做相反的操作即可恢复到事务执行前的状态。</p>
-<p>undo log 记录事务修改之前版本的数据信息，因此假如由于系统错误或者rollback操作而回滚的话可以根据undo log的信息来进行回滚到没被修改前的状态。</p>
-<p><strong>总结：</strong> undo log是用来回滚数据的用于保障 未提交事务的原子性</p>
-<h2 id="2、事务的实现"><a href="#2、事务的实现" class="headerlink" title="2、事务的实现"></a>2、事务的实现</h2><ul>
-<li>事务的原子性是通过 undo log 来实现的</li>
-<li>事务的持久性性是通过 redo log 来实现的</li>
-<li>事务的隔离性是通过 (读写锁+MVCC)来实现的</li>
-<li><strong>一致性</strong>是通过原子性，持久性，隔离性来实现的！！</li>
-</ul>
-<h3 id="2-1、原子性的实现"><a href="#2-1、原子性的实现" class="headerlink" title="2.1、原子性的实现"></a>2.1、原子性的实现</h3><p>一个事务必须被视为不可分割的最小工作单位，一个事务中的所有操作要么全部成功提交，要么全部失败回滚，对于一个事务来说不可能只执行其中的部分操作，这就是事务的原子性。</p>
-<p>1.每条数据变更(insert/update/delete)操作都伴随一条undo log的生成,并且回滚日志必须先于数据持久化到磁盘上 </p>
-<p>2.所谓的回滚就是根据回滚日志做逆向操作，比如delete的逆向操作为insert，insert的逆向操作为delete，update的逆向为update等。</p>
-<h3 id="2-2、持久性的实现"><a href="#2-2、持久性的实现" class="headerlink" title="2.2、持久性的实现"></a>2.2、持久性的实现</h3><p>事务一旦提交，其所作做的修改会永久保存到数据库中，此时即使系统崩溃修改的数据也不会丢失。</p>
-<p>既然redo log也需要存储，也涉及磁盘IO为啥还用它？</p>
-<p>（1）redo log 的存储是顺序存储，而缓存同步是随机操作。</p>
-<p>（2）缓存同步是以数据页为单位的，每次传输的数据大小大于redo log。</p>
-<h3 id="2-3、隔离性实现"><a href="#2-3、隔离性实现" class="headerlink" title="2.3、隔离性实现"></a>2.3、隔离性实现</h3><p><strong>隔离性是要管理多个并发读写请求的访问顺序。</strong> 这种顺序包括<strong>串行</strong>或者是<strong>并行</strong>。</p>
-<p>并发问题：</p>
-<ul>
-<li>脏读：事务1读到了事务2未提交的数据。若事务2回滚，则事务1读到的就是脏数据。</li>
-<li>不可重复读：事务2在事务1执行的过程中提交了数据。导致事务1前后两次读取的数据不一致。</li>
-<li>幻读：事务 1 对所有行执行了某操作，在提交之前，事务2添加了一行并提交，此时事务1发现还有一行没有执行相应操作，感觉出现了幻觉。</li>
-</ul>
-<p>级别越低的隔离级别可以执行越高的并发，但同时实现复杂度以及开销也越大。</p>
-<p>Mysql 隔离级别有以下四种（级别由低到高）：</p>
-<ul>
-<li><strong>READ UNCOMMITED</strong> (未提交读)</li>
-<li><strong>READ COMMITED</strong> (提交读)</li>
-<li><strong>REPEATABLE READ</strong> (可重复读) 【innodb 默认】</li>
-<li><strong>SERIALIZABLE</strong> (可重复读)</li>
-</ul>
-<h3 id="2-4、一致性的实现"><a href="#2-4、一致性的实现" class="headerlink" title="2.4、一致性的实现"></a>2.4、一致性的实现</h3><p>数据库总是从一个一致性的状态转移到另一个一致性的状态.</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/03/27/MySQL/%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-id="cl1alqgnt000a7caq790m3eue" data-title="事务实现原理" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-MySQL/MySQL小知识" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/03/27/MySQL/MySQL%E5%B0%8F%E7%9F%A5%E8%AF%86/" class="article-date">
-  <time class="dt-published" datetime="2022-03-27T09:39:41.000Z" itemprop="datePublished">2022-03-27</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/03/27/MySQL/MySQL%E5%B0%8F%E7%9F%A5%E8%AF%86/">MySQL小知识</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h3 id="1、or和union的区别"><a href="#1、or和union的区别" class="headerlink" title="1、or和union的区别"></a>1、or和union的区别</h3><p>对于单列来说，用or是没有任何问题的，但是or涉及到多个列的时候，每次select只能选取一个index，另一列需要进行table-scan，即全部扫描一遍，但是使用union就可以解决这个问题，分别使用各自列的index进行查询。 但是这里还会有一个问题就是，UNION会对结果进行排序去重，可能会降低一些performance。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/03/27/MySQL/MySQL%E5%B0%8F%E7%9F%A5%E8%AF%86/" data-id="cl2inu9c900002oaq42pr4jr8" data-title="MySQL小知识" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-求职/笔试总结" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/03/26/%E6%B1%82%E8%81%8C/%E7%AC%94%E8%AF%95%E6%80%BB%E7%BB%93/" class="article-date">
-  <time class="dt-published" datetime="2022-03-26T03:12:41.000Z" itemprop="datePublished">2022-03-26</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E6%B1%82%E8%81%8C/">求职</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/03/26/%E6%B1%82%E8%81%8C/%E7%AC%94%E8%AF%95%E6%80%BB%E7%BB%93/">笔试总结</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="1、总体注意事项"><a href="#1、总体注意事项" class="headerlink" title="1、总体注意事项"></a>1、总体注意事项</h2><h3 id="1-1、输入方式"><a href="#1-1、输入方式" class="headerlink" title="1.1、输入方式"></a>1.1、输入方式</h3><p>两种输入方式，对于绝大多数时候，均选择<code>Scanner</code>作为输入。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.Scanner;</span><br><span class="line"></span><br><span class="line">Scanner sc = <span class="keyword">new</span> Scanner(System.in);</span><br></pre></td></tr></table></figure>
-
-<p>当输入数据很大时，选择 <code>BufferedReader</code>，但其只能以行作为单位读取，需要分割为字符串数组，再解析为其他类型。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.io.BufferedReader;</span><br><span class="line"><span class="keyword">import</span> java.io.InputStreamReader;</span><br><span class="line"></span><br><span class="line">BufferedReader br = <span class="keyword">new</span> BufferedReader(<span class="keyword">new</span> InputStreamReader(System.in));</span><br></pre></td></tr></table></figure>
-
-<h3 id="1-2、读取"><a href="#1-2、读取" class="headerlink" title="1.2、读取"></a>1.2、读取</h3><p>有些题目会有共包含 T 组案例，每组案例内 *** 操作，这种只需按 T 建循环即可。但有些题目没有指明共有 T 组案例，却在案例中包含了多组案例，此使必须在所有代码的外面包裹一层 <code>while (sc.hasNext()) &#123;...&#125;</code>，否则会出现虽然自测通过，但提交时却通过 0 组。</p>
-<h3 id="1-3、审题"><a href="#1-3、审题" class="headerlink" title="1.3、审题"></a>1.3、审题</h3><ul>
-<li>当感觉找到一个比题目复杂度要求还低的方法时，一定要慎重考虑，这个方法真的对吗，能否覆盖所有情况，尽早换思路。</li>
-<li>遇到与数字相关的题目，先看能不能找规律或化简，将题目转化为简单的模型再做。</li>
-<li>与数字相关的题目，一定看是否为越界，注意用 long 和 double。</li>
-</ul>
-<h2 id="2、链表"><a href="#2、链表" class="headerlink" title="2、链表"></a>2、链表</h2><h3 id="2-1、链表反转"><a href="#2-1、链表反转" class="headerlink" title="2.1、链表反转"></a>2.1、链表反转</h3><p>如果空间复杂度允许 O(n) ，则直接使用栈来实现，但这种方式反转之后，必须将最后一个元素（即反转前的第一个元素）的 next 置为 null，否则会造成最后两个节点的循环。</p>
-<p>如果空间复杂度为 O(1)，则使用三指针反转或头插法。</p>
-<h3 id="2-2、LRU缓存"><a href="#2-2、LRU缓存" class="headerlink" title="2.2、LRU缓存"></a>2.2、LRU缓存</h3><p>方法一：LinkedHashMap。</p>
-<p>将 accessOrder 置为 true，并重写 removeEldestEntry 方法，LinkedHashMap 自动实现 LRU。但作为面试问题，这样做显然不行。</p>
-<p>方法二：HashMap + 双链表</p>
-<p><a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/lru-cache/solution/lruhuan-cun-ji-zhi-by-leetcode-solution/">https://leetcode-cn.com/problems/lru-cache/solution/lruhuan-cun-ji-zhi-by-leetcode-solution/</a></p>
-<h2 id="3、逆向思维"><a href="#3、逆向思维" class="headerlink" title="3、逆向思维"></a>3、逆向思维</h2><p>当遇到有两种变换方式的题目，从变换迭代中找规律，以逆向思维的方式从终点向起点反推。使用前提有以下两个：</p>
-<ul>
-<li>这两种变换都是向前推进的，如果有向后推进的变换，使用广度优先搜索。</li>
-<li>从终点的前一步到终点，这一步的变换是固定的，有且只有一个，从而可以一直向前迭代。</li>
-</ul>
-<p>下方题的两种变换分别是奇数和偶数，通过终点的奇偶可以唯一确定迭代路劲。</p>
-<p><a target="_blank" rel="noopener" href="https://www.nowcoder.com/questionTerminal/9d26441a396242a9a0f7d2106fc130c7">扭蛋机_哔哩哔哩笔试题_牛客网 (nowcoder.com)</a></p>
-<p>下方题的终点状态，较大值一定是最后一步变换所得，且变换方式固定。</p>
-<p><a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/reaching-points/">力扣 780 到达终点</a></p>
-<h2 id="4、树"><a href="#4、树" class="headerlink" title="4、树"></a>4、树</h2><h3 id="4-1、按Z字形打印二叉树"><a href="#4-1、按Z字形打印二叉树" class="headerlink" title="4.1、按Z字形打印二叉树"></a>4.1、按Z字形打印二叉树</h3><p>层序遍历 + 栈；注意节点放入的顺序。如果不是打印，是返回，把 sout 换成 ArrayList 即可。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 按Z字形打印二叉树</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> treeNode</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">printTree</span><span class="params">(TreeNode treeNode)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (treeNode != <span class="keyword">null</span>) &#123;</span><br><span class="line">        Stack&lt;TreeNode&gt; oddStack  = <span class="keyword">new</span> Stack&lt;TreeNode&gt;(); <span class="comment">// 奇数栈</span></span><br><span class="line">        Stack&lt;TreeNode&gt; evenStack  = <span class="keyword">new</span> Stack&lt;TreeNode&gt;(); <span class="comment">// 偶数栈</span></span><br><span class="line">		    </span><br><span class="line">        <span class="keyword">int</span> line = <span class="number">1</span>; <span class="comment">// 表示第一行</span></span><br><span class="line">			</span><br><span class="line">        oddStack.push(treeNode); <span class="comment">// 根节点算奇数行, 先把根节点入奇数栈</span></span><br><span class="line">				</span><br><span class="line">        TreeNode tempTreeNode = <span class="keyword">null</span>; <span class="comment">// 临时节点</span></span><br><span class="line">		    </span><br><span class="line">        <span class="keyword">while</span> (!oddStack.isEmpty() || !evenStack.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">if</span> (line%<span class="number">2</span> == <span class="number">1</span>) &#123; <span class="comment">// 奇数行</span></span><br><span class="line">					</span><br><span class="line">                <span class="keyword">while</span> (!oddStack.isEmpty()) &#123; <span class="comment">// 判断奇数栈是否为空</span></span><br><span class="line">                    tempTreeNode = oddStack.pop(); <span class="comment">// 奇数栈栈顶元素出栈</span></span><br><span class="line">                    System.out.print(tempTreeNode.value +<span class="string">&quot;, &quot;</span>);</span><br><span class="line">						</span><br><span class="line">                    <span class="keyword">if</span> (tempTreeNode.left != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        evenStack.push(tempTreeNode.left); <span class="comment">// 偶数行左子节点先进栈</span></span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (tempTreeNode.right != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        evenStack.push(tempTreeNode.right); <span class="comment">// 偶数行右子节点后进栈</span></span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123; <span class="comment">// 偶数行</span></span><br><span class="line">					</span><br><span class="line">                <span class="keyword">while</span> (!evenStack.isEmpty()) &#123; <span class="comment">// 判断偶数栈是否为空</span></span><br><span class="line">                    tempTreeNode = evenStack.pop(); <span class="comment">// 偶数栈栈顶元素出栈</span></span><br><span class="line">                    System.out.print(tempTreeNode.value +<span class="string">&quot;, &quot;</span>);</span><br><span class="line">								</span><br><span class="line">                    <span class="keyword">if</span> (tempTreeNode.right != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        oddStack.push(tempTreeNode.right); <span class="comment">// 奇数行右子节点先进栈</span></span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (tempTreeNode.left != <span class="keyword">null</span>) &#123; </span><br><span class="line">                        oddStack.push(tempTreeNode.left); <span class="comment">// 奇数行左子节点后进栈</span></span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            line++; <span class="comment">// 二叉树行加1</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="4-2、线段树"><a href="#4-2、线段树" class="headerlink" title="4.2、线段树"></a>4.2、线段树</h3><p>线段树是算法竞赛中常用的用来维护 <strong>区间信息</strong> 的数据结构。</p>
-<p>线段树 segmentTree 是一个二叉树，将每个长度不为 1 的区间划分成左右两个区间递归求解，把整个线段划分为一个树形结构，通过合并左右两区间信息来求得该区间的信息。这种数据结构可以方便的进行大部分的区间操作。</p>
-<p><a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/range-sum-query-mutable/solution/qu-yu-he-jian-suo-shu-zu-ke-xiu-gai-by-l-76xj/">https://leetcode-cn.com/problems/range-sum-query-mutable/solution/qu-yu-he-jian-suo-shu-zu-ke-xiu-gai-by-l-76xj/</a></p>
-<h3 id="4-3、字典树"><a href="#4-3、字典树" class="headerlink" title="4.3、字典树"></a>4.3、字典树</h3><p>Trie，又称前缀树或字典树，是一棵有根树，其每个节点包含以下字段：</p>
-<ul>
-<li>指向子节点的指针数组 children。</li>
-<li>布尔字段 isEnd，表示该节点是否为字符串的结尾。</li>
-</ul>
-<p><a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/implement-trie-prefix-tree/solution/shi-xian-trie-qian-zhui-shu-by-leetcode-ti500/">https://leetcode-cn.com/problems/implement-trie-prefix-tree/solution/shi-xian-trie-qian-zhui-shu-by-leetcode-ti500/</a></p>
-<h2 id="5、字符串"><a href="#5、字符串" class="headerlink" title="5、字符串"></a>5、字符串</h2><h3 id="5-1、最长回文子串"><a href="#5-1、最长回文子串" class="headerlink" title="5.1、最长回文子串"></a>5.1、最长回文子串</h3><p>中心扩展-》时间 O(n2),，空间O(1)。 Manacher 算法面试不做要求。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 该算法定义最小左和最大右是为了定位最长子串，如果只要求返回长度，则只定义一个 maxLenght 即可。</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getLongestPalindrome</span> <span class="params">(String A)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> minLeft = <span class="number">0</span>, maxRight = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">char</span>[] chs = A.toCharArray();</span><br><span class="line">        <span class="keyword">int</span> len = chs.length;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; len; i++) &#123;</span><br><span class="line">            <span class="keyword">int</span> left = i, right = i;</span><br><span class="line">            <span class="keyword">while</span> (left &gt;= <span class="number">0</span> &amp;&amp; chs[left] == chs[i]) left--;</span><br><span class="line">            <span class="keyword">while</span> (right &lt; len &amp;&amp; chs[right] == chs[i]) right++;</span><br><span class="line">            <span class="keyword">while</span> (left &gt;= <span class="number">0</span> &amp;&amp; right &lt; len &amp;&amp; chs[left] == chs[right]) &#123;</span><br><span class="line">                left--;</span><br><span class="line">                right++;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (right - left &gt; maxRight - minLeft) &#123;</span><br><span class="line">                maxRight = right;</span><br><span class="line">                minLeft = left;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> maxRight - minLeft - <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="5-2、O-1-比较俩字符串是否包含公共字符"><a href="#5-2、O-1-比较俩字符串是否包含公共字符" class="headerlink" title="5.2、O(1)比较俩字符串是否包含公共字符"></a>5.2、O(1)比较俩字符串是否包含公共字符</h3><p>用位计算。假设单词只包含小写字符，用 0 ~ 25 表示每个字符。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">String str1, str2;</span><br><span class="line"><span class="keyword">int</span> a, b;</span><br><span class="line"><span class="comment">// 如 1 &lt;&lt; 5 为 100000，即任意一个字符，它会在二进制中固定表示一个位置，最大值 1 &lt;&lt; 25 小于 32 位，即 int 能存储下。</span></span><br><span class="line"><span class="comment">// 逐个字符进行或运算，即 将每个字符表示的位置添加到结果中</span></span><br><span class="line"><span class="comment">// 因此，结果的二进制表示中哪个位置为 1，表示该位置映射的字符存在于该字符串中。</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">char</span> ch: str1.toCharArray()) a |= <span class="number">1</span> &lt;&lt; (ch - <span class="string">&#x27;a&#x27;</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">char</span> ch: str2.toCharArray()) b |= <span class="number">1</span> &lt;&lt; (ch - <span class="string">&#x27;a&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 逐位比较，若结果不为 0，表明一定有某个位置都为 1，即存在公共字符。</span></span><br><span class="line"><span class="keyword">if</span> (a &amp; b == <span class="number">0</span>) 则 str1 和 str2 一定不存在公共字符</span><br></pre></td></tr></table></figure>
-
-<h2 id="6、数组"><a href="#6、数组" class="headerlink" title="6、数组"></a>6、数组</h2><h3 id="6-1、排列组合"><a href="#6-1、排列组合" class="headerlink" title="6.1、排列组合"></a>6.1、排列组合</h3><p><code>labuladong</code>总结</p>
-<p>组合问题直接使用递归回溯方法，普通排列问题使用 next_permutation 算法，注意： next_permutation 算法对于有重复元素的不可复选全排列依然有效。特殊排列使用回溯，下方有。</p>
-<h4 id="6-1-1、元素无重复不可复选"><a href="#6-1-1、元素无重复不可复选" class="headerlink" title="6.1.1、元素无重复不可复选"></a>6.1.1、元素无重复不可复选</h4><p>子集：固定向前遍历</p>
-<p><a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/subsets/">力扣 78 题 子集</a></p>
-<p>组合：固定向前遍历，注意添加条件即可</p>
-<p><a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/combinations/">力扣 77 题 组合</a></p>
-<p>特殊排列：给定数组长度为 n，求元素个数为 k 的排列</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    List&lt;List&lt;Integer&gt;&gt; res = <span class="keyword">new</span> ArrayList&lt;List&lt;Integer&gt;&gt;();</span><br><span class="line">    Deque&lt;Integer&gt; track = <span class="keyword">new</span> ArrayDeque&lt;Integer&gt;();</span><br><span class="line">    <span class="keyword">boolean</span>[] used;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> List&lt;List&lt;Integer&gt;&gt; permute(<span class="keyword">int</span>[] nums, <span class="keyword">int</span> k) &#123;</span><br><span class="line">        used = <span class="keyword">new</span> <span class="keyword">boolean</span>[nums.length];</span><br><span class="line">        backtrack(<span class="number">0</span>, k);</span><br><span class="line">        <span class="keyword">return</span> res;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">backtrack</span><span class="params">(<span class="keyword">int</span>[] nums, <span class="keyword">int</span> k)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (track.size() == k) &#123;</span><br><span class="line">            res.add(<span class="keyword">new</span> ArrayList&lt;Integer&gt;(track));</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nums.length; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (used[i]) <span class="keyword">continue</span>;</span><br><span class="line">            used[i] = <span class="keyword">true</span>;</span><br><span class="line">            track.addLast(nums[i]);</span><br><span class="line">            backtrack(nums, k);</span><br><span class="line">            track.removeLast();</span><br><span class="line">            used[i] = <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="6-1-2、元素可重复不可复选"><a href="#6-1-2、元素可重复不可复选" class="headerlink" title="6.1.2、元素可重复不可复选"></a>6.1.2、元素可重复不可复选</h4><p>先排序，对重复元素直接跳过，注意为何这样能跳过。</p>
-<p><a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/subsets-ii/">力扣 90 题 子集2</a></p>
-<p><a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/combination-sum-ii/">力扣 40 题 组合总和2</a></p>
-<h4 id="6-1-3、元素无重复可以复选"><a href="#6-1-3、元素无重复可以复选" class="headerlink" title="6.1.3、元素无重复可以复选"></a>6.1.3、元素无重复可以复选</h4><p>6.1.1 中通过固定向前来排除复选的可能，这里可以原地停留的方式保留复选。即在递归的时候，参数无需向前加一。</p>
-<p><a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/combination-sum/">力扣 39 题 组合总和</a></p>
-<h4 id="6-1-4、简单组合的dp求解"><a href="#6-1-4、简单组合的dp求解" class="headerlink" title="6.1.4、简单组合的dp求解"></a>6.1.4、简单组合的dp求解</h4><p>从 n 个数中任意选 m 个数，有如下等式<br>$$<br>C^{m}<em>n = C^{m}</em>{n-1} + C^{m-1}_{n-1}<br>$$<br>因此，可以使用 dp 递推求得</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 数组需为 (n + 1) * (n + 1) ，因为有 Cnn 的情况，当然非要用 m，也可以在循环中限制 j 最大为 m</span></span><br><span class="line"><span class="keyword">int</span>[][] dp = <span class="keyword">new</span> <span class="keyword">int</span>[n + <span class="number">1</span>][n + <span class="number">1</span>];</span><br><span class="line"><span class="comment">// 边界条件：从 i 个数中选 0 个有一种方式</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt;= n; i++) &#123;</span><br><span class="line">    dp[i][<span class="number">0</span>] = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 运用上方公式递推</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= n; i++) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">1</span>; j &lt;= i; j++) &#123;</span><br><span class="line">        dp[i][j] = dp[i - <span class="number">1</span>][j] + dp[i - <span class="number">1</span>][j - <span class="number">1</span>];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="6-2、区间重叠问题"><a href="#6-2、区间重叠问题" class="headerlink" title="6.2、区间重叠问题"></a>6.2、区间重叠问题</h3><p>1、从重叠区间中找最大的不重叠的区间个数，使用贪心算法，先将数组按右端点升序排序，每次找满足条件且右端点最小的区间作为下一个合法区间即可。</p>
-<p>2、其他类型的区间重叠问题直接使用 O(n2)的暴力破解。如计算重叠区间中重叠点的个数。</p>
-<h2 id="7、单调栈"><a href="#7、单调栈" class="headerlink" title="7、单调栈"></a>7、单调栈</h2><p>单调栈即栈中存放的数据都是单调递增或单调递减的。</p>
-<ul>
-<li>站在楼顶能看到多少栋楼，矮楼会被高楼遮住</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">int</span>[] findBuilding (<span class="keyword">int</span>[] heights) &#123;</span><br><span class="line">    Stack&lt;Integer&gt; stack1 = <span class="keyword">new</span> Stack&lt;&gt;();</span><br><span class="line">    <span class="keyword">int</span> n = heights.length;</span><br><span class="line">    <span class="keyword">int</span>[] res = <span class="keyword">new</span> <span class="keyword">int</span>[n];</span><br><span class="line">    Arrays.fill(res,<span class="number">1</span>);       <span class="comment">//最起码能看到自己所在的这栋楼</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;n-<span class="number">1</span>;i++)&#123;   <span class="comment">//首先向左边看</span></span><br><span class="line">        <span class="comment">//只要当前楼大于等于前面遍历过的楼，就把前面的矮楼丢掉，因为我站在该楼右边是看不到的</span></span><br><span class="line">        <span class="keyword">while</span>(!stack1.isEmpty() &amp;&amp; heights[i]&gt;=stack1.peek())&#123;</span><br><span class="line">            stack1.pop();</span><br><span class="line">        &#125;</span><br><span class="line">        stack1.push(heights[i]);</span><br><span class="line">        <span class="comment">//这里i+1才是核心，因为我已经通过while循环把比当前楼矮的都去掉了，所以栈里剩下的都比当前楼高</span></span><br><span class="line">        <span class="comment">//也就是说当我站在该楼的右边一栋楼，栈里的楼我都能看到</span></span><br><span class="line">        res[i+<span class="number">1</span>]+=stack1.size();  </span><br><span class="line">    &#125;</span><br><span class="line">    Stack&lt;Integer&gt; stack2 = <span class="keyword">new</span> Stack&lt;&gt;();</span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i=n-<span class="number">1</span>;i&gt;<span class="number">0</span>;i--)&#123;   <span class="comment">//然后向右边看</span></span><br><span class="line">        <span class="keyword">while</span>(!stack2.isEmpty() &amp;&amp; heights[i]&gt;=stack2.peek())&#123;</span><br><span class="line">            stack2.pop();</span><br><span class="line">        &#125;</span><br><span class="line">        stack2.push(heights[i]);</span><br><span class="line">        res[i-<span class="number">1</span>]+=stack2.size();  <span class="comment">//同理</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="8、动态规划"><a href="#8、动态规划" class="headerlink" title="8、动态规划"></a>8、动态规划</h2><h3 id="8-1、数位dp"><a href="#8-1、数位dp" class="headerlink" title="8.1、数位dp"></a>8.1、数位dp</h3><p>太难了，暂时放弃。时间充裕了学习。</p>
-<h2 id="9、水塘抽样"><a href="#9、水塘抽样" class="headerlink" title="9、水塘抽样"></a>9、水塘抽样</h2><p><a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/random-pick-index/solution/sui-ji-shu-suo-yin-by-leetcode-solution-ofsq/">随机数索引</a></p>
-<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/29178293">水塘抽样</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/03/26/%E6%B1%82%E8%81%8C/%E7%AC%94%E8%AF%95%E6%80%BB%E7%BB%93/" data-id="cl1alqgnd00017caqb2j4bag6" data-title="笔试总结" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -880,23 +923,23 @@
       <ul>
         
           <li>
+            <a href="/2022/05/02/Redis/Redis%E9%9B%86%E7%BE%A4/">Redis集群</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/02/Redis/Redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/">Redis主从复制</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/02/Redis/Redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/">Redis哨兵机制</a>
+          </li>
+        
+          <li>
             <a href="/2022/05/01/Redis/Redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">Redis底层数据结构</a>
           </li>
         
           <li>
             <a href="/2022/04/28/Linux/Linux%E5%9F%BA%E7%A1%80/">Linux基础</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/26/%E6%B1%82%E8%81%8C/%E5%85%B6%E4%BB%96%E9%9D%A2%E7%BB%8F-%E5%AD%97%E8%8A%82/">其他面经-字节</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/25/Redis/Redis%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7/">Redis缓存一致性</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/16/Redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E3%80%81%E5%87%BB%E7%A9%BF%E3%80%81%E9%9B%AA%E5%B4%A9/">缓存穿透、击穿、雪崩</a>
           </li>
         
       </ul>

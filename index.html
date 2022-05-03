@@ -73,6 +73,255 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Redis/Redis集群" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/05/02/Redis/Redis%E9%9B%86%E7%BE%A4/" class="article-date">
+  <time class="dt-published" datetime="2022-05-02T13:39:41.000Z" itemprop="datePublished">2022-05-02</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Redis/">Redis</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/05/02/Redis/Redis%E9%9B%86%E7%BE%A4/">Redis集群</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>主从复制和哨兵机制保障了高可用，就读写分离而言虽然slave节点扩展了主从的读并发能力，但是<strong>写能力</strong>和<strong>存储能力</strong>是无法进行扩展，就只能是master节点能够承载的上限。如果面对海量数据那么必然需要构建master之间的集群，同时必然需要吸收高可用（主从复制和哨兵机制）能力，即每个master分片节点还需要有slave节点。这就是为社么要使用Redis集群。</p>
+<h2 id="1、概述"><a href="#1、概述" class="headerlink" title="1、概述"></a>1、概述</h2><p>Redis集群可以理解为n个主从架构组合在一起对外服务。Redis Cluster要求至少需要3个master才能组成一个集群，同时每个master至少需要有一个slave节点。</p>
+<p>如此，Redis集群的写能力和存储能力就是所有master之和了。</p>
+<p>虽然每个master下都挂载了一个slave节点，但是在Redis Cluster中的读、写请求其实都是在<strong>master</strong>上完成的。slave节点只是充当了一个数据备份的角色，当master发生了宕机，就会将对应的slave节点提拔为master，来重新对外提供服务。</p>
+<p><img src="redis-cluster.jpg" alt="redis-cluster"></p>
+<h2 id="2、-主要模块介绍"><a href="#2、-主要模块介绍" class="headerlink" title="2、 主要模块介绍"></a>2、 主要模块介绍</h2><h3 id="2-1、-哈希槽-Hash-Slot"><a href="#2-1、-哈希槽-Hash-Slot" class="headerlink" title="2.1、 哈希槽(Hash Slot)"></a>2.1、 哈希槽(Hash Slot)</h3><p>Redis-cluster没有使用一致性hash，而是引入了<strong>哈希槽</strong>的概念。Redis-cluster中有16384(即2的14次方）个哈希槽，每个key通过CRC16校验后对16383取模来决定放置哪个槽。Cluster中的每个节点负责一部分hash槽（hash slot）。</p>
+<p> 一个键的对应的哈希槽通过计算键的CRC16 哈希值，然后对16384进行取模得到：<code>HASH_SLOT=CRC16(key) modulo 16383</code>。读写操作都是先计算出键的哈希槽，再在负责该哈希槽的 master 上进行相应操作。</p>
+<h3 id="2-2、Cluster总线"><a href="#2-2、Cluster总线" class="headerlink" title="2.2、Cluster总线"></a>2.2、Cluster总线</h3><p>每个Redis Cluster节点有一个额外的TCP端口用来接受其他节点的连接。这个端口为普通 client 端口 + 10000。如普通 client 端口为6379，则总线端口为 16379。节点到节点的通讯只使用集群总线。</p>
+<h3 id="2-3、集群拓扑"><a href="#2-3、集群拓扑" class="headerlink" title="2.3、集群拓扑"></a>2.3、集群拓扑</h3><p>Redis Cluster是一张全网拓扑，节点与其他每个节点之间都保持着TCP连接。</p>
+<h3 id="2-4、节点握手"><a href="#2-4、节点握手" class="headerlink" title="2.4、节点握手"></a>2.4、节点握手</h3><p>节点认定其他节点是当前集群的一部分有两种方式：</p>
+<ol>
+<li><p>如果一个节点出现在了一条MEET消息中。meet消息会强制接收者接受一个节点作为集群的一部分。</p>
+</li>
+<li><p>从某个已信任的节点处获知某节点是集群的一部分，则当前节点也会将该节点当成集群的一部分。</p>
+</li>
+</ol>
+<h2 id="3、状态检测及维护"><a href="#3、状态检测及维护" class="headerlink" title="3、状态检测及维护"></a>3、状态检测及维护</h2><p>在集群模式下，所有的publish命令都会向所有节点（包括从节点）进行广播，加重了带宽负担，对于在有大量节点的集群中频繁使用pub，会严重消耗带宽，不建议使用。</p>
+<h3 id="3-1、Gossip协议"><a href="#3-1、Gossip协议" class="headerlink" title="3.1、Gossip协议"></a>3.1、Gossip协议</h3><p>gossip 协议是基于流行病传播方式的节点或者进程之间信息交换的协议。Gossip协议的最大的好处是，即使集群节点的数量增加，每个节点的负载也不会增加很多，几乎是恒定的。</p>
+<p>Gossip的特点：在一个有界网络中，每个节点都随机地与其他节点通信，经过一番杂乱无章的通信，最终所有节点的状态都会达成一致。每个节点可能知道所有其他节点，也可能仅知道几个邻居节点，只要这些节可以通过网络连通，最终他们的状态都是一致的。即Gossip协议是最终一致性，不是强一致性。</p>
+<h3 id="3-2、基于Gossip协议的故障检测"><a href="#3-2、基于Gossip协议的故障检测" class="headerlink" title="3.2、基于Gossip协议的故障检测"></a>3.2、基于Gossip协议的故障检测</h3><p>集群中的每个节点都会不定时地向集群中的其他节点发送PING消息，以此交换各个节点状态信息。</p>
+<p>当节点 1 向节点 3 发送PING消息后未在规定时间内收到节点 3 的PONG响应，则节点 1 认为节点 3 PFAIL（主观下线）。当节点1标记节点3为PFAIL后，节点1会通过Gossip消息把这个信息发送给其他节点，接收到信息的节点会进行节点3客观下线状态判定。当节点2接收到来自节点1关于节点3的状态判定信息之后，节点2首先会把节点1加入到节点3的下线报告列表(Fail Report)中。每个节点都会维护一个下线报告列表，主要维护一个节点被哪些节点报告处于下线状态。</p>
+<p>只有同样认为节点3处于PFAIL状态的节点才会去做客观下线状态判定，即只有节点2也曾向节点3发送ping且没有得到响应，节点2才会去做客观下线状态判定：如果自己维护的节点3的下线报告列表中包含<strong>一半以上的主节点</strong>（即超过半数的主节点认为节点3主观下线），则认为节点3 FAIL（客观下线）。</p>
+<p>一旦节点2认为节点3客观下线，就向集群广播节点3的FAIL消息，所有收到FAIL消息的节点都会立即将节点3的状态标记为已下线。</p>
+<p>疑问：节点2是否可以是从节点？即从节点是否参与故障检测，是否拥有下线报告列表，是否做客观下线判断，是否能发广播？</p>
+<h2 id="4、-故障恢复（Failover）"><a href="#4、-故障恢复（Failover）" class="headerlink" title="4、 故障恢复（Failover）"></a>4、 故障恢复（Failover）</h2><p>当slave发现自己的master变为FAIL状态时，便尝试进行Failover，以期成为新的master。由于挂掉的master可能会有多个slave。Failover的过程需要经过类Raft协议的过程在整个集群内达到一致， 其过程如下：</p>
+<ul>
+<li>slave发现自己的master变为FAIL</li>
+<li>长时间不与主节点通信的从节点不具备竞选资格</li>
+<li>所有竞选者随即休眠，唤醒后立即通过广播向所有节点拉票</li>
+<li>其他节点收到拉票请求，只有master响应，若本轮竞选中自己没投过票就投，否则不投票，即每个主节点只有一次投票机会</li>
+<li>从节点发现超过半数的主节点为自己投票就变成新Master：接替旧master 的slot，并让旧master与其他从节点成为自己的从节点</li>
+<li>广播Pong通知其他集群节点自己成为新的主节点</li>
+</ul>
+<p>易知，休眠时间最短的节点容易获得大部分投票。</p>
+<h2 id="5、扩容-amp-缩容"><a href="#5、扩容-amp-缩容" class="headerlink" title="5、扩容&amp;缩容"></a>5、扩容&amp;缩容</h2><h3 id="5-1、扩容"><a href="#5-1、扩容" class="headerlink" title="5.1、扩容"></a>5.1、扩容</h3><p>当集群出现容量限制或者其他一些原因需要扩容时，redis cluster提供了比较优雅的集群扩容方案。</p>
+<ol>
+<li>首先将新节点加入到集群中，可以通过在集群中任何一个客户端执行cluster meet 新节点ip:端口，或者通过redis-trib add node添加，新添加的节点默认在集群中都是主节点。</li>
+<li>迁移数据 迁移数据的大致流程是，首先需要确定哪些槽需要被迁移到目标节点，然后获取槽中key，将槽中的key全部迁移到目标节点，然后向集群所有主节点广播槽（数据）全部迁移到了目标节点。</li>
+</ol>
+<h3 id="5-2、缩容"><a href="#5-2、缩容" class="headerlink" title="5.2、缩容"></a>5.2、缩容</h3><p>缩容的大致过程与扩容一致，需要判断下线的节点是否是主节点，以及主节点上是否有槽，若主节点上有槽，需要将槽迁移到集群中其他主节点，槽迁移完成之后，需要向其他节点广播该节点准备下线（cluster forget nodeId）。最后需要将该下线主节点的从节点指向其他主节点，当然最好是先将从节点下线。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/05/02/Redis/Redis%E9%9B%86%E7%BE%A4/" data-id="cl2pky39f00040gaqdgo85zgh" data-title="Redis集群" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Redis/Redis主从复制" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/05/02/Redis/Redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/" class="article-date">
+  <time class="dt-published" datetime="2022-05-02T07:39:41.000Z" itemprop="datePublished">2022-05-02</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Redis/">Redis</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/05/02/Redis/Redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/">Redis主从复制</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="1、概述"><a href="#1、概述" class="headerlink" title="1、概述"></a>1、概述</h1><p>主从复制，是指将一台Redis服务器的数据，复制到其他的Redis服务器。前者称为主节点(master)，后者称为从节点(slave)；数据的复制是单向的，只能由主节点到从节点。</p>
+<p><strong>主从复制的作用</strong>主要包括：</p>
+<ul>
+<li><strong>数据冗余</strong>：主从复制实现了数据的热备份，是持久化之外的一种数据冗余方式。</li>
+<li><strong>故障恢复</strong>：当主节点出现问题时，可以由从节点提供服务，实现快速的故障恢复；实际上是一种服务的冗余。</li>
+<li><strong>负载均衡</strong>：在主从复制的基础上，配合读写分离，可以由主节点提供写服务，由从节点提供读服务。尤其是在写少读多的场景下，通过多个从节点分担读负载，可以大大提高Redis服务器的并发量。</li>
+<li><strong>高可用基石</strong>：除了上述作用以外，主从复制还是哨兵和集群能够实施的基础，因此说主从复制是Redis高可用的基础。</li>
+</ul>
+<p>主从库之间采用的是<strong>读写分离</strong>的方式。</p>
+<ul>
+<li>读操作：主库、从库都可以接收；</li>
+<li>写操作：首先到主库执行，然后，主库将写操作同步给从库。</li>
+</ul>
+<h1 id="2、原理"><a href="#2、原理" class="headerlink" title="2、原理"></a>2、原理</h1><ul>
+<li><code>全量（同步）复制</code>：主库的全部数据同步给从库</li>
+<li><code>增量（同步）复制</code>：只会把主从库网络断连期间主库收到的命令，同步给从库</li>
+</ul>
+<h2 id="2-1、全量复制"><a href="#2-1、全量复制" class="headerlink" title="2.1、全量复制"></a>2.1、全量复制</h2><p>当我们启动多个 Redis 实例的时候，它们相互之间就可以通过 replicaof（Redis 5.0 之前使用 slaveof）命令形成主库和从库的关系。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">replicaof <span class="number">172.16</span><span class="number">.19</span><span class="number">.3</span> <span class="number">6379</span>      <span class="comment">// 当前实例作为 172.16.19.3 6379 的从库</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>全量复制的三个阶段</strong></p>
+<ol>
+<li><p>第一阶段是主从库间建立连接、协商同步的过程：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 从库发出如下命令请求数据同步</span></span><br><span class="line">psync ？ <span class="number">-1</span></span><br><span class="line"><span class="comment">// 第一个参数为 runID ,唯一标识一个实例。由于第一次请求不知道主库的 runID ，故使用 ？</span></span><br><span class="line"><span class="comment">// 第二个参数为数据同步的偏移量 offset ，-1 表示从头开始同步。</span></span><br></pre></td></tr></table></figure>
+
+<p>主库收到请求后返回自己的 runID 和当前同步进度 offset，从库记录下来用于后续同步操作。</p>
+</li>
+<li><p>第二阶段，主库将所有数据同步给从库：主库执行 bgsave 命令，生成 RDB 文件，接着将文件发给从库。从库接收到 RDB 文件后，会先清空当前数据库，然后加载 RDB 文件。数据同步的过程中主库新接收的写操作记录在 replication buffer 中。</p>
+</li>
+<li><p>第三个阶段，主库会把第二阶段执行过程中新收到的写命令，再发送给从库：主库完成 RDB 文件发送后，就会把此时 replication buffer 中的修改操作发给从库，从库再重新执行这些操作。</p>
+</li>
+</ol>
+<h2 id="2-2、增量复制"><a href="#2-2、增量复制" class="headerlink" title="2.2、增量复制"></a>2.2、增量复制</h2><p>一旦主从库完成了全量复制，它们之间就会一直维护一个网络连接，主库会通过这个连接将后续陆续收到的命令操作再同步给从库，这个过程也称为基于长连接的命令传播，可以避免频繁建立连接的开销。</p>
+<p>如果主从库在命令传播时出现了网络闪断，若全量复制，开销太大，故采用增量复制的方式继续同步。</p>
+<p><strong>增量复制的流程</strong></p>
+<p>复制缓冲区（replication_buffer）：对主库而言，从库也是一个客户端。每个 client 连上Redis后，Redis都会分配一个client buffer，所有数据交互都是通过这个buffer进行的，因其在主从复制时仅用于命令传播，故叫做 replication_buffer。</p>
+<p>复制积压缓冲区（replication_backlog_buffer）：是一个环形缓冲区。在命令传播阶段，主节点除了将写命令发送给复制缓冲区，还会发送给复制积压缓冲区；复制积压缓冲区中还维护了其中的每个字节对应的复制偏移量(offset) 。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">slave 每次和 master 建立通信时，都会发送 psync 命令。</span><br></pre></td></tr></table></figure>
+
+<p>当主从库间网络断开，从库再次连接上主库时，向主库发送 psync 命令并带上自己的复制偏移量，主库将该复制偏移量与复制积压缓冲区中维护的复制偏移量做对比。若找到，则从该命令开始同步；若它比复制积压缓冲区中的最小偏移量还小，说明在断开连接期间已经有一部分命令丢失了，此时必须进行全量复制。</p>
+<h2 id="2-3、复制偏移量"><a href="#2-3、复制偏移量" class="headerlink" title="2.3、复制偏移量"></a>2.3、复制偏移量</h2><p>参与复制的主从节点都会维护自身复制偏移量。每当有一个写命令在主节点执行，主节点的复制偏移量就会累加上该命令的长度，然后主节点将该写命令通过 replication_buffer 传播到从节点，从节点执行后也将自己的复制偏移量累加上该命令的长度。</p>
+<p>从节点（slave）每秒钟上报自身的复制偏移量给主节点</p>
+<p>从节点的复制偏移量总是落后于主节点的复制偏移量。</p>
+<h1 id="3、主从复制流程"><a href="#3、主从复制流程" class="headerlink" title="3、主从复制流程"></a>3、主从复制流程</h1><ol>
+<li>各从库通过 <code>replicaof</code>与主库建立关系。</li>
+<li>开始全量复制，主库将 rdb 发送给从库，再将 replication_buffer 中的所有命令发送给从库。全量复制结束。</li>
+<li>进入命令传播阶段，每收到一个写命令，主库都将其写入 replication_buffer 和 replication_backlog_buffer。写入 replication_buffer 即表示发送给从库。</li>
+<li>在命令传播阶段，若从库断开连接，则再次连接后向主库发送 psync 命令，主库判断后进行增量复制或全量复制。</li>
+</ol>
+<h1 id="4、思考"><a href="#4、思考" class="headerlink" title="4、思考"></a>4、思考</h1><h3 id="4-1、若主库关闭持久化功能，则应该禁止自动重启"><a href="#4-1、若主库关闭持久化功能，则应该禁止自动重启" class="headerlink" title="4.1、若主库关闭持久化功能，则应该禁止自动重启"></a>4.1、若主库关闭持久化功能，则应该禁止自动重启</h3><p>原因：若主库故障自动重启，则变为空表，从库复制后全部变为空表。</p>
+<h3 id="4-2、-为什么全量复制使用RDB而不使用AOF？"><a href="#4-2、-为什么全量复制使用RDB而不使用AOF？" class="headerlink" title="4.2、 为什么全量复制使用RDB而不使用AOF？"></a>4.2、 为什么全量复制使用RDB而不使用AOF？</h3><ul>
+<li>RDB文件内容是经过压缩的二进制数据，文件很小，可以降低网络带宽消耗。</li>
+<li>RDB文件存储的都是二进制数据，从库直接按照RDB协议解析还原数据即可，速度会非常快。</li>
+</ul>
+<h3 id="4-3、从库的从库"><a href="#4-3、从库的从库" class="headerlink" title="4.3、从库的从库"></a>4.3、从库的从库</h3><p>一次全量复制中，对于主库来说，需要完成两个耗时的操作：<strong>生成 RDB 文件和传输 RDB 文件</strong>。</p>
+<p>fork 操作会阻塞主线程处理正常请求，传输 RDB 文件也会占用主库的网络带宽。因此可以主库只连接一个从库，其他从库连接这个从库，从而降低主库的复制压力。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/05/02/Redis/Redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/" data-id="cl2pky39500000gaq2jtxa9by" data-title="Redis主从复制" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Redis/Redis哨兵机制" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/05/02/Redis/Redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/" class="article-date">
+  <time class="dt-published" datetime="2022-05-02T07:39:41.000Z" itemprop="datePublished">2022-05-02</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Redis/">Redis</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/05/02/Redis/Redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/">Redis哨兵机制</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>哨兵的核心功能是主节点的自动故障转移。</p>
+<h2 id="1、哨兵集群的组建"><a href="#1、哨兵集群的组建" class="headerlink" title="1、哨兵集群的组建"></a>1、哨兵集群的组建</h2><p>哨兵实例之间可以相互发现，要归功于 Redis 提供的发布 / 订阅机制。</p>
+<ol>
+<li>首先主节点的信息配置在哨兵(Sentinel)的配置文件中</li>
+<li>哨兵节点会和配置的主节点建立起连接</li>
+<li>哨兵每10秒会向主节点发送info命令，主节点会返回自己的run_id和自己的从节点信息。</li>
+<li>哨兵会对这些从节点也建立连接。之后<strong>每10秒会向主节点和从节点都发送info命令</strong>以获取最新的拓扑结构。</li>
+<li>每个哨兵都订阅主节点的<code>_sentinel:hello</code>频道，且<strong>每2秒向该频道发布自己的信息</strong>，各哨兵由此与其他哨兵建立连接。</li>
+<li><strong>每隔1秒每个哨兵会向主节点、从节点、其他哨兵发送ping命令，做心跳检测。</strong></li>
+</ol>
+<p>上述 6 点中，加粗部分为每个哨兵的三个定时任务。</p>
+<h2 id="2、主库下线的判定"><a href="#2、主库下线的判定" class="headerlink" title="2、主库下线的判定"></a>2、主库下线的判定</h2><ul>
+<li><strong>主观下线</strong>：哨兵节点每隔1秒向各节点发送PING命令，如果在规定时间内没有收到有效响应，哨兵就会将该节点标记为主观下线。</li>
+<li><strong>客观下线</strong>：当某个哨兵判断主库主观下线后，就会给其他哨兵发起询问，其他哨兵会根据自己和主库的连接情况，做出赞成或反对的响应。如果赞成票数大于等于配置参数 <code>quorum</code> 的值, 则判定主库客观下线。</li>
+</ul>
+<h2 id="3、选举Leader哨兵"><a href="#3、选举Leader哨兵" class="headerlink" title="3、选举Leader哨兵"></a>3、选举Leader哨兵</h2><p>通过<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/32052223">Raft选举算法</a>来选举Leader哨兵： 选举的票数超过一半时，将成为领导者，如果没有超过，继续选举。</p>
+<p>若有超过一半的哨兵宕机，则无法完成Leader哨兵的选举。</p>
+<h2 id="4、新主库选取"><a href="#4、新主库选取" class="headerlink" title="4、新主库选取"></a>4、新主库选取</h2><p>根据以下规则选取新主库：</p>
+<ol>
+<li>通讯正常</li>
+<li>选择<code>salve-priority</code>从节点优先级最高的（redis.conf）</li>
+<li>优先级相同时选择复制偏移量最大的</li>
+</ol>
+<h2 id="5、故障转移"><a href="#5、故障转移" class="headerlink" title="5、故障转移"></a>5、故障转移</h2><ol>
+<li>通过 <code>slave of no one</code> 命令将 4 中选举的节点变为主节点。</li>
+<li>通过<code>replicaof</code>命令将其他从节点和旧的主节点都成为新主节点的从节点。</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/05/02/Redis/Redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/" data-id="cl2pky39900010gaq67q7cc1y" data-title="Redis哨兵机制" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Redis/Redis底层数据结构" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/05/01/Redis/Redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" class="article-date">
@@ -601,7 +850,7 @@
       
         <h2 id="1、Redis-核心主流程"><a href="#1、Redis-核心主流程" class="headerlink" title="1、Redis 核心主流程"></a>1、Redis 核心主流程</h2><p>AOF 和 RDB 的持久化过程中，有不少操作是在时间事件 serverCron 中被触发的。所以，这边有必要先了解下 Redis 中的事件核心流程。</p>
 <p>Redis 的服务器进程就是一个事件循环，最重要的有两个事件：文件事件和时间事件。Redis 在服务器初始化后，会无限循环，处理产生的文件事件和时间事件。</p>
-<p>文件事件常见的有：接受连接（accept）、读取（read）、写入（write）、关闭连接（close）等。</p>
+<p>文件事件常见的有：接受连接（accept）、读取（read）、写入（write）、关闭连接（close）等。使用 IO 多路复用处理。</p>
 <p>时间事件中常见的就是 serverCron，redis 核心流程中通常也只有这个时间事件。serverCron 默认配置下每100ms会被触发一次，在该时间事件中，会执行很多操作：清理过期键、AOF 后台重写、RDB 的 save point 的检查、将 aof_buf 内容写到磁盘上（flushAppendOnlyFile 函数）等等。</p>
 <h2 id="2、Redis持久化"><a href="#2、Redis持久化" class="headerlink" title="2、Redis持久化"></a>2、Redis持久化</h2><p>Redis是内存数据库，若不持久化到磁盘中，则redis进程一旦退出，数据就会丢失，因此需要持久化。</p>
 <p>Redis 的持久化机制有以下三种：</p>
@@ -715,299 +964,6 @@
 
 
   
-    <article id="post-Linux/linux创建子进程--fork()方法" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/" class="article-date">
-  <time class="dt-published" datetime="2022-04-09T11:42:15.000Z" itemprop="datePublished">2022-04-09</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Linux/">Linux</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/">linux创建子进程--fork()方法</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h3 id="1、fork-的定义"><a href="#1、fork-的定义" class="headerlink" title="1、fork()的定义"></a>1、fork()的定义</h3><p>fork()函数是Unix中派生新进程的唯一方法，子进程和父进程独立运行互不干扰。</p>
-<p>声明如下：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span> </span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">pid_t</span> <span class="title">fork</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br></pre></td></tr></table></figure>
-
-
-<p>调用一次fork()方法，该方法会返回两次。一次是在父进程中返回一次，返回值是新派生的进程的进程ID。一次是在子进程中返回，返回值是0，代表当前进程为子进程。如果返回值为-1的话，则代表在派生新进程的过程中出错。</p>
-<p>那么在程序中，我们就可以根据此返回值来判断当前进程是父进程还是子进程，来实现一些具体的操作。例如：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    <span class="keyword">pid_t</span> pid;  </span><br><span class="line">  </span><br><span class="line">    <span class="keyword">if</span>((pid = fork()) = <span class="number">0</span>)  </span><br><span class="line">    &#123;  </span><br><span class="line">        <span class="comment">// <span class="doctag">TODO:</span> 在子进程中实现具体操作  </span></span><br><span class="line">        <span class="comment">// ...  </span></span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>); <span class="comment">// 结束子进程  </span></span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> 在调用进程(父进程)实现具体操作  </span></span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
-
-<h3 id="2、getpid和getppid函数"><a href="#2、getpid和getppid函数" class="headerlink" title="2、getpid和getppid函数"></a>2、getpid和getppid函数</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">pid_t</span> <span class="title">getpid</span><span class="params">(<span class="keyword">void</span>)</span></span>; <span class="comment">// 获取当前进程的pid</span></span><br><span class="line"><span class="function"><span class="keyword">pid_t</span> <span class="title">getppid</span><span class="params">(<span class="keyword">void</span>)</span></span>; <span class="comment">// 获取当前进程父进程的pid</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="3、fork-原理"><a href="#3、fork-原理" class="headerlink" title="3、fork() 原理"></a>3、fork() 原理</h3><p>父进程中在调用fork()派生新进程，实际上相当于创建了进程的一个拷贝；即在fork()之前的进程拥有的资源会被复制到新的进程中去。</p>
-<p>​        （1）进程不同于程序是动态运行在内存中的实体，占用系统资源（CPU、内存等），而程序则是存放在磁盘中的静态的资源，占用磁盘空间而不占用系统资源。进程在内存中运行，由CPU分配资源。</p>
-<p>　　（2）与进程相关的两个内存：虚拟内存和物理内存。所谓虚拟内存就是我们程序员视角下的内存，比如int a = 10; &amp;a 所得的值就是虚拟内存，是给我们程序员看的连续的地址空间。（当我们在代码中连续定义几个local object时，通过&amp;可以观察到它们的地址是连续的）相对的，物理内存才是实实在在的存在于计算机硬件中的内存（比如买内存条时我们可以参考的4G、8G等容量参数），当执行 a = 20这条语句时，操作系统就会将 a 的虚拟地址送入 CPU的地址转换单元（MMU），如果a还没有实际的物理单元，则为a分配物理内存，写入20，反之直接将20写入a物理内存单元。</p>
-<p>　　（3）为什么会有虚拟内存？ 虚拟内存的产生源自物理内存的稀缺，买过SSD或者内存条的伙伴都知道，250G的SSD也就是250块左右，而仅仅8G的内存条就要250块，内存的小容量与高价格的反差促使猿们必须节省内存的开销。由此产生了虚拟内存技术，32位系统下，CPU会为每个进程分配4G的虚拟地址单元（地址编号为0-4G），分为用户空间（通常为0-3G）和内核（kernel）空间（3-4G），用户空间存放该进程的堆栈变量、全局变量等，kernel里存放该进程的进程控制块（<strong>PCB，唯一区分每一个进程</strong>）。虚拟内存单元只有在被进程访问后才会映射为物理内存单元（见（2）a=20的执行过程）。</p>
-<p>　　（4）内存使用的一大机制（虚拟内存能实现的原因）：缺页中断（见文章最后）。</p>
-<p>  　　3. fork()是如何产生子进程的？ 上面说了每一个进程都有自己0-4G的虚拟地址空间，因此，fork所做的动作就是在当前进程的基础上产生一个新进程：<strong>（1）复制父进程的0-3G的用户空间（2）创建新进程（子进程）的PCB</strong></p>
-<p>看一个例子吧：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="comment">//global variable</span></span><br><span class="line"><span class="keyword">int</span> globalVar = <span class="number">78</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">pid_t</span> pid = <span class="built_in">getpid</span>();</span><br><span class="line">    <span class="keyword">int</span> k = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; <span class="number">5</span>; ++i)&#123;</span><br><span class="line">        pid = fork();   <span class="comment">// 循环生成5个子进程</span></span><br><span class="line">        <span class="keyword">if</span>(<span class="number">-1</span> == pid)&#123;</span><br><span class="line">            <span class="built_in">perror</span>(<span class="string">&quot;FORK&quot;</span>);</span><br><span class="line">            <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 由于fork()返回两个值，该分支一定会被子进程执行，即每子进程都会跳出循环去执行下方代码，</span></span><br><span class="line">        <span class="comment">// 而父进程一直执行到循环结束，故每个子进程都会执行下方的if(i &lt; 5)，而父进程执行else</span></span><br><span class="line">        <span class="comment">// 所以下方图片输出可表明每个子进程写时都复制父进程的变量再修改，且不影响其他进程。</span></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span>(<span class="number">0</span> == pid)&#123;  </span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">sleep</span>(i); <span class="comment">// 保证父进程最后退出</span></span><br><span class="line">    <span class="keyword">if</span>(i &lt; <span class="number">5</span>)&#123;</span><br><span class="line">        ++k;  <span class="comment">// 写时复制</span></span><br><span class="line">        --globalVar; <span class="comment">//写时复制</span></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;I&#x27;m %dth child, pid = %d, parent is %d, k = %d, globalVar = %d\n&quot;</span>, i, <span class="built_in">getpid</span>(), <span class="built_in">getppid</span>(), k, globalVar);</span><br><span class="line">    &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        ++k;</span><br><span class="line">        --globalVar;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;I&#x27;m parent, pid = %d, k = %d, globalVar = %d\n&quot;</span>, <span class="built_in">getpid</span>(), k, globalVar);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://img2020.cnblogs.com/blog/1696980/202007/1696980-20200715102950625-1441570329.png" alt="img"></p>
-<h3 id="4、父子进程共享"><a href="#4、父子进程共享" class="headerlink" title="4、父子进程共享"></a>4、父子进程共享</h3><p>　　<strong>共享的定义是二者可以共同使用一件东西，前提是一件东西，而不是一个东西的两个副本。</strong></p>
-<p>　　fork()完成的动作是子进程拿到了父进程0-3G用户空间的副本而不是原件，因此严格来说父子进程之间是不共享的，那为什么这里还要说到共享呢？前面说到，父进程的0-3G用户空间是虚拟内存空间，<strong>只有我们访问了某个单元时，才会真正在物理内存上分配一份地址空间</strong>，也就是说，这些虚拟内存里总会有一部分被真正的映射到了物理内存中，但是为了节省内存开销，fork在复制0-3G的虚拟内存空间时并不会将父进程中已经映射到物理内存的内存单元再复制一份到物理内存中，而是遵循“<strong>读时共享，写时复制</strong>”的原则，即仅复制虚拟地址空间。</p>
-<p>　　因此这里说的“共享”更大意义上存在于 父子进程共同访问一块内存空间的过程0，比如fork产生的子进程要输出父进程中变量a的值，那么子进程只需要共享父进程提供的变量a的物理单元，取出20这个值输出即可，如果子进程不单要输出a，还要对a执行+1操作，这个时候子进程才会将父进程中变量a的物理内存单元复制一份并执行+1操作，执行完后父进程中的变量a值仍为20，子进程a值为21。</p>
-<p>　　因此可以说fork后父子进程的用户空间是相同的，kernel空间是不同的。</p>
-<p>　　但是fork后父子进程的用户空间遵循的是“读时共享，写时复制”的原则，类似于“父子进程共享栈变量、全局变量”的说法都是不准确的。</p>
-<h3 id="5、缺页中断"><a href="#5、缺页中断" class="headerlink" title="5、缺页中断"></a>5、缺页中断</h3><p>缺页中断：缺页中断的过程其实已经在1.（2）中描述了，缺页中断简单来说就是：先对 待访问数据的虚拟地址进行段表和页表的映射，试图访问其对应的物理内存单元， 然后——待访问的数据在物理内存中吗 ？ （在）访问/修改该物理内存单元 ： （不在）申请一段物理内存存放该数据并完成与虚拟地址的映射，然后访问/修改该内存单元。 （段表和页表是段页式内存管理中记录虚拟地址与物理地址映射关系的表）</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/" data-id="cl1zs7vs10001zwaq2xa7bza2" data-title="linux创建子进程--fork()方法" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-Linux/IO" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/04/09/Linux/IO/" class="article-date">
-  <time class="dt-published" datetime="2022-04-09T11:42:15.000Z" itemprop="datePublished">2022-04-09</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Linux/">Linux</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/04/09/Linux/IO/">IO 多路复用</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="1、概念"><a href="#1、概念" class="headerlink" title="1、概念"></a>1、概念</h2><p><strong>IO多路复用</strong>是一种同步IO模型，实现一个线程可以监视多个文件描述符；一旦某个文件描述符就绪，就能够通知应用程序进行相应的读写操作；没有文件描述符就绪时会阻塞应用程序，交出cpu。多路是指网络连接，复用指的是同一个线程。</p>
-<p>**<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/143847169">文件描述符</a>**：Linux 中一切都可以看作文件，包括普通文件、链接文件、Socket  以及设备驱动等，对其进行相关操作时，都可能会创建对应的文件描述符。文件描述符（file  descriptor）是内核为了高效管理已被打开的文件所创建的索引，用于指代被打开的文件，对文件所有 I/O  操作相关的系统调用都需要通过文件描述符。</p>
-<p>**<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/234806787">Socket</a>**：在Linux 中，Socket 也是文件，发送端将数据写进发送方的 Socket ，再通过网卡、路由到接收方的 Socket ，接收方程序将数据从接收方 Socket 中读出来使用。一个 Socket 由&lt;协议、发送方 IP、发送方 Port、接收方 IP、接收方 Port&gt; 五元组描述。总之，Socket 就是一个文件，同样可以进行读写。</p>
-<h2 id="2、Linux-IO模型"><a href="#2、Linux-IO模型" class="headerlink" title="2、Linux IO模型"></a>2、Linux IO模型</h2><p>目前Linux系统中提供了5种IO处理模型</p>
-<ol>
-<li>阻塞IO</li>
-<li>非阻塞IO</li>
-<li>IO多路复用</li>
-<li>信号驱动IO</li>
-<li>异步IO</li>
-</ol>
-<h4 id="阻塞IO"><a href="#阻塞IO" class="headerlink" title="阻塞IO"></a>阻塞IO</h4><p>阻塞IO意味着当我们发起一次IO操作后一直等待成功或失败之后才返回，在这期间程序不能做其它的事情。阻塞IO操作只能对单个文件描述符进行操作</p>
-<ul>
-<li>服务端采用单线程，当accept一个请求后，在recv或send调用阻塞时，将无法accept其他请求（必须等上一个请求处recv或send完），无法处理并发。</li>
-<li>服务器端采用多线程，当accept一个请求后，开启线程进行recv，可以完成并发处理，但随着请求数增加需要增加系统线程，大量的线程占用很大的内存空间，并且线程切换会带来很大的开销。</li>
-</ul>
-<h4 id="非阻塞IO"><a href="#非阻塞IO" class="headerlink" title="非阻塞IO"></a>非阻塞IO</h4><p>服务器端当accept一个请求后，加入fds集合，每次轮询一遍fds，若IO失败则返回错误，每次轮询所有fd（包括没有发生读写事件的fd）会很浪费cpu</p>
-<h4 id="IO多路复用"><a href="#IO多路复用" class="headerlink" title="IO多路复用"></a>IO多路复用</h4><p>服务器端采用单线程通过select/epoll等系统调用获取fd列表，遍历活跃（即有读写事件）的fd进行accept/recv/send，使其能支持更多的并发连接请求。</p>
-<h2 id="3、IO多路复用的实现"><a href="#3、IO多路复用的实现" class="headerlink" title="3、IO多路复用的实现"></a>3、IO多路复用的实现</h2><h3 id="3-1、select"><a href="#3-1、select" class="headerlink" title="3.1、select"></a>3.1、select</h3><ul>
-<li><p>select 每个进程可同时监听的文件描述符数量最大为 1024，虽然可以设置，但是会降低网络效率。</p>
-</li>
-<li><p>每次调用select，都需要把fd集合从用户态拷贝到内核态，这个开销在fd很多时会很大</p>
-</li>
-<li><p>对socket扫描时是线性扫描，采用轮询的方法，效率较低（高并发时）</p>
-</li>
-</ul>
-<p>后面的不重要</p>
-<p>数据结构：<code>fd_set</code>简单地理解为一个长度是1024的比特位，每个比特位表示一个需要处理的FD，如果是1，那么表示这个FD有需要处理的I/O事件，否则没有。</p>
-<p>select 在调用期间会一直阻塞。</p>
-<p>select将监听的文件描述符分为三组，分别是：read_fds是需要进行读操作的文件描述符，write_fds是需要进行写操作的文件描述符，except_fds是需要进行异常事件处理的文件描述符。</p>
-<h3 id="3-2、poll"><a href="#3-2、poll" class="headerlink" title="3.2、poll"></a>3.2、poll</h3><p>poll 仅仅时取消了 1024 的限制，其他和 select 一样，不分为三组。poll 是 fd 数组。</p>
-<h3 id="3-3、epoll"><a href="#3-3、epoll" class="headerlink" title="3.3、epoll"></a>3.3、epoll</h3><p>epoll 底层是红黑树 + 链表。红黑树存储所有需要监听的 fd（文件描述符），链表存储活跃（有读写事件）的fd。</p>
-<p>使用 epoll 主要是使用如下三个系统调用</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建一个 epoll 实例</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_create</span><span class="params">(<span class="keyword">int</span> size)</span></span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">// epoll_ctl 负责把 fd 增加、删除到内核红黑树</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_ctl</span><span class="params">(<span class="keyword">int</span> epfd, <span class="keyword">int</span> op, <span class="keyword">int</span> fd, struct epoll_event *event)</span></span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">// epoll_wait 负责检测可读链表，没有可读 fd 则阻塞进程</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_wait</span><span class="params">(<span class="keyword">int</span> epfd, struct epoll_event * events, <span class="keyword">int</span> maxevents, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
-
-<p>不同于select和poll 的线性扫描，epoll 每次查询只需要看可读链表中是否有元素即可，是 O(1) 的时间复杂度。</p>
-<p><img src="io%E5%A4%8D%E7%94%A8%E5%8C%BA%E5%88%AB.png" alt="io复用区别"></p>
-<p><strong>事件</strong>：</p>
-<p>可读事件，当文件描述符关联的内核读缓冲区可读，则触发可读事件。 (可读：内核缓冲区非空，有数据可以读取)</p>
-<p>可写事件，当文件描述符关联的内核写缓冲区可写，则触发可写事件。 (可写：内核缓冲区不满，有空闲空间可以写入）</p>
-<h4 id="边沿触发vs水平触发"><a href="#边沿触发vs水平触发" class="headerlink" title="边沿触发vs水平触发"></a>边沿触发vs水平触发</h4><p><code>epoll</code>事件有两种模型，边沿触发：edge-triggered (ET)， 水平触发：level-triggered (LT)</p>
-<p><strong>水平触发(level-triggered)</strong></p>
-<ul>
-<li> socket接收缓冲区不为空 有数据可读 读事件一直触发</li>
-<li> socket发送缓冲区不满 可以继续写入数据 写事件一直触发</li>
-</ul>
-<p><strong>边沿触发(edge-triggered)</strong></p>
-<ul>
-<li>socket的接收缓冲区状态变化时触发读事件，即空的接收缓冲区刚接收到数据时触发读事件</li>
-<li>socket的发送缓冲区状态变化时触发写事件，即满的缓冲区刚空出空间时触发读事件</li>
-</ul>
-<p>边沿触发仅触发一次，水平触发会一直触发。</p>
-<p><code>libevent</code> 采用水平触发， <code>nginx</code>  采用边沿触发 </p>
-<p>JDK在Linux已经默认使用epoll方式，但是JDK的epoll采用的是水平触发，而Netty重新实现了epoll机制，采用边缘触发方式。</p>
-<h2 id="4、redis-使用的IO模型"><a href="#4、redis-使用的IO模型" class="headerlink" title="4、redis 使用的IO模型"></a>4、redis 使用的IO模型</h2><p>下面这篇文章可以对 非阻塞IO 与 IO多路复用 的作用解释的更通透。</p>
-<p><a target="_blank" rel="noopener" href="https://researchlab.github.io/2018/10/08/redis-11-redisio/">redis专题11 线程IO模型</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/04/09/Linux/IO/" data-id="cl2inu9cd00022oaq4hb23237" data-title="IO 多路复用" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-小碎片知识/编码" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/04/08/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/" class="article-date">
-  <time class="dt-published" datetime="2022-04-08T15:08:18.000Z" itemprop="datePublished">2022-04-08</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/04/08/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/">编码</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>本文摘自<a target="_blank" rel="noopener" href="https://www.cnblogs.com/lonely-wolf/p/14676335.html">为了彻底理解乱码问题，一怒之下我把字符集历史扒了个底朝天 - 双子孤狼 - 博客园 (cnblogs.com)</a></p>
-<h2 id="1、为什么使用编码"><a href="#1、为什么使用编码" class="headerlink" title="1、为什么使用编码"></a>1、为什么使用编码</h2><p>人类的语言并不适合计算机使用，所以就需要发明一种适合计算机的语言，这就是二进制。电脑读不懂人类语言，所以需要将人类语言转换为二进制语言，这就是编码；人类读不懂电脑的二进制语言，所以需要转换为人类语言，这就是解码。</p>
-<h2 id="2、为什么会乱码"><a href="#2、为什么会乱码" class="headerlink" title="2、为什么会乱码"></a>2、为什么会乱码</h2><p>编码与解码使用的规则不一样，就会乱码。即解码的时候，解码器不知道如何将当前的二进制转换为人类语言，就会乱码。</p>
-<h2 id="3、字符集的历史"><a href="#3、字符集的历史" class="headerlink" title="3、字符集的历史"></a>3、字符集的历史</h2><h3 id="3-1、百花齐放"><a href="#3-1、百花齐放" class="headerlink" title="3.1、百花齐放"></a>3.1、百花齐放</h3><p><code>ASCII</code> 码占用了 0~127，即一个字节中的后 7 位。</p>
-<p><code>IOS-8859-n</code> 编码家族占用了 128~255，即利用了 <code>ASCII</code> 码未使用的第 1 位，因此<code>IOS-8859-n</code> 编码家族兼容<code>ASCII</code> 码。</p>
-<hr>
-<p>至此一个字节的 8 位已全部占用，后来的编码必须使用多个字节。</p>
-<hr>
-<p><code>GB2312</code>：<code>GB2312</code> 并不兼容 <code>ISO-8859-n</code> 编码集，但是兼容 <code>ASCII</code> 编码。因为 <code>ASCII</code> 编码中的单字节字符一定是小于 <code>128</code> 的，所以最后我们就决定，中文的双字节字符都从 <code>128</code> 之后开始，也就是当发现字符连续两位都大于 <code>128</code> 时，就说明这是一个中文，指定了之后我们就把这种编码方式称之为 <code>GB2312</code> 编码。</p>
-<p><code>GB2312</code> 中收录的中文汉字都是简体字和常用字，对于一些生僻字以及繁体字没有收录，于是乎 <code>GBK</code> 出现了。</p>
-<p><code>GBK</code>： <code>GBK</code> 只要求第一位是大于 <code>128</code>，第二位可以小于 <code>128</code>，只要发现一个字节大于 <code>128</code>，那么紧随其后的一个字节就是和其作为一个整体作为中文字符。<code>GBK</code>兼容<code>GB2312</code>、<code>ASCII</code>，不兼容<code>IOS-8859-n</code> 。</p>
-<h3 id="3-2、Unicode"><a href="#3-2、Unicode" class="headerlink" title="3.2、Unicode"></a>3.2、Unicode</h3><p><code>Unicode</code> 不兼容以上任何编码。<code>Unicode</code> 字符最开始采用的是 <code>UCS-2</code> 标准，<code>UCS-2</code> 标准规定一个字符至少使用 <code>2</code> 个字节来表示。由于无法攘括全世界所有字符，后来又有了 <code>UCS-4</code> 标准，可以用 <code>4</code> 个字节来存储一个字符。</p>
-<p><code>Unicode</code> 编码只是定义了字符集，对于字符集具体应该如何存储并没有做要求。</p>
-<p><code>UTF</code> 系列编码就是对 <code>Unicode</code> 字符集的实现，只不过实现的方式有所区别，其中主要有：<code>UTF-8</code>，<code>UTF-16</code>，<code>UTF-32</code> 等类型。</p>
-<h4 id="3-2-1、UTF-32-编码"><a href="#3-2-1、UTF-32-编码" class="headerlink" title="3.2.1、UTF-32 编码"></a>3.2.1、UTF-32 编码</h4><p><code>UTF-32</code> 编码基本按照 <code>Unicode</code>字符集标准来实现，任何一个符号都占用 <code>4</code> 个字节。浪费严重。</p>
-<h4 id="3-2-2、UTF-16-编码"><a href="#3-2-2、UTF-16-编码" class="headerlink" title="3.2.2、UTF-16 编码"></a>3.2.2、UTF-16 编码</h4><p><code>UTF-16</code> 编码相比较 <code>UTF-32</code> 做了一点改进，其采用 <code>2</code> 个字节或者 <code>4</code> 个字节来存储。大部分情况下 <code>UTF-16</code> 编码都是采用 <code>2</code> 个字节来存储，而当 <code>2</code> 个字节存储时，<code>UTF-16</code> 编码会将 <code>Unicode</code> 字符直接转成二进制进行存储，对于另外一些生僻字或者使用较少的符号，<code>UTF-16</code> 编码会采用 <code>4</code> 个字节来存储，但是采用四个字节存储时需要做一次编码转换。</p>
-<p>下表就是 <code>UTF-16</code> 编码的存储格式：</p>
-<table>
-<thead>
-<tr>
-<th>Unicode 编码范围（16 进制）</th>
-<th>UTF-16 编码的二进制存储格式</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>0x0000 0000 - 0x0000 FFFF</td>
-<td>xxxxxxxx xxxxxxxx</td>
-</tr>
-<tr>
-<td>0x0001 0000 - 0x0010 FFFF</td>
-<td>110110xx xxxxxxxx 110111xx xxxxxxxx</td>
-</tr>
-</tbody></table>
-<p>即二字节存储时，直接存 <code>Unicode</code> 码，四字节时将 <code>Unicode</code> 码依次填充到表中的 x 处。</p>
-<p>java 采用 UTF-16 编码。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">一个汉字在 UTF-16 编码 中占 2 个或 4 个字节。</span><br></pre></td></tr></table></figure>
-
-<h4 id="3-2-3、UTF-8-编码"><a href="#3-2-3、UTF-8-编码" class="headerlink" title="3.2.3、UTF-8 编码"></a>3.2.3、UTF-8 编码</h4><p><code>UTF-8</code> 是一种变长的编码，兼容了 <code>ASCII</code> 编码，为了实现变长这个特性，那么就必须要有一个规范来规定存储格式，这样当程序读了 <code>2</code> 个或者多个字节时能解析出这到底是表示多个单字节字符还是一个多字节字符。</p>
-<p><code>UTF-8</code> 编码的存储规范如下表所示：</p>
-<table>
-<thead>
-<tr>
-<th>Unicode 编码范围（16 进制）</th>
-<th>UTF-8 编码的二进制存储格式</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>0x0000 0000 - 0x0000 007F</td>
-<td>0xxxxxxx</td>
-</tr>
-<tr>
-<td>0x0000 0080 - 0x0000 07FF</td>
-<td>110xxxxx 10xxxxxx</td>
-</tr>
-<tr>
-<td>0x0000 0800 - 0x0000 FFFF</td>
-<td>1110xxxx 10xxxxxx 10xxxxxx</td>
-</tr>
-<tr>
-<td>0x0001 0000 - 0x0010 FFFF</td>
-<td>11110xxx 10xxxxxx 10xxxxxx 10xxxxxx</td>
-</tr>
-</tbody></table>
-<p>接下来我们以 <code>双</code> 字为例来进行说明：</p>
-<p>双：对应的 <code>Unicode</code> 编码为 <code>\u53cc</code>，转成二进制就是：<code>101001111001100</code>，这时候表格中的第一行只有 <code>7</code> 位存不下去，第二列也只有 <code>11</code> 位，也不够存储，所以只能存储到第三列，第三列有 <code>16</code> 位，从后往前依次填补 <code>x</code> 的位置，填完之后还有一位空余，直接补 <code>0</code>，最终得到：<strong>1110</strong>0101 <strong>10</strong>001111 <strong>10</strong>001100，所以<code>双</code> 字就占用了 <code>3</code> 个字节，当然，有些生僻字会占用到四个字节。</p>
-<p>所以上面的 <code>UTF-16</code> 编码也是同理，如果当前字符采用的是两字节存储，那么直接转成二进制存储即可，位数不足直接补 <code>0</code> 即可，而当采用 <code>4</code> 个字节存储时，则需要和 <code>UTF-8</code> 一样进行一次转换，也就是说只能将其填充到 <code>x</code> 的位置，<code>x</code> 之外的是固定格式。</p>
-<p>需要注意的是：在 <code>UTF-16</code> 编码中，<code>2</code> 个字节也可能出现 <code>4</code> 字节中 <code>110110xx</code> 或者 <code>110111xx</code> 开头的格式，这两部分对应的区间分别是：<code>D800~DBFF</code> 和 <code>DC00~DFFF</code>，所以为了避免这种歧义的发生，这两部分区间是是专门空出来的，没有进行编码。</p>
-<p><code>UTF-8</code>存储中，若字节的第一位是 0，表示一个字节即一个<code>Unicode</code> 字符；否则字节开头 1 有几个，就表示该<code>Unicode</code> 字符由几个字节组成。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">一个汉字在 UTF-8 编码 中占 3 个或 4 个字节。</span><br></pre></td></tr></table></figure>
-
-<h2 id="4、为什么有时候乱码都是-号"><a href="#4、为什么有时候乱码都是-号" class="headerlink" title="4、为什么有时候乱码都是 ? 号"></a>4、为什么有时候乱码都是 ? 号</h2><p>在 <code>Java</code> 开发中，经常会碰到乱码显示为 <code>?</code> 号，比如下面这个例子：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">String name = <span class="string">&quot;双子孤狼&quot;</span>;</span><br><span class="line"><span class="keyword">byte</span>[] bytes = name.getBytes(StandardCharsets.ISO_8859_1);</span><br><span class="line">System.out.println(<span class="keyword">new</span> String(bytes));<span class="comment">//输出：????</span></span><br></pre></td></tr></table></figure>
-
-<p>这个输出结果的原因是中文无法用 <code>ISO_8859_1</code> 编码进行存储，而示例中却强制用 <code>ISO_8859_1</code> 编码进行解码。</p>
-<p>在 <code>Java</code> 中提供了一个 <code>ISO_8859_1</code> 类用来解码，解码时当发现当前字符转成十进制之后大于 <code>255</code> 时就会直接不进行解码，转而直接赋一个默认值 <code>63</code>，所以上面的示例中的 <code>byte</code> 数组结果就是 <code>63 63 63 63</code>，而<code>63</code> 在 <code>ASCII</code> 中就恰好就对应了 <code>?</code> 号。</p>
-<p>所以一般我们看到编码出现 <code>?</code> 基本就说明当前是采用 <code>ISO_8859_1</code> 进行的解码，而当前的字符又大于 <code>255</code>。</p>
-<h2 id="5、代码点和代码单元"><a href="#5、代码点和代码单元" class="headerlink" title="5、代码点和代码单元"></a>5、代码点和代码单元</h2><p>在 <code>Java</code> 中的字符串是由 <code>char</code> 序列组成，而 <code>char</code> 又是采用 <code>UTF-16</code> 表示的 <code>Unicode</code> 代码点的代码单元。</p>
-<ul>
-<li>代码点：一个代码点等同于一个 <code>Unicode</code> 字符。</li>
-<li>代码单元：在 <code>UTF-16</code> 中，两个字节表示一个代码单元，代码单元是最小的不可拆分的部分，所以如果在 <code>UTF-8</code> 中，一个代码单元就是一个字节，因为 <code>UTF-8</code> 中可以用一个字节表示一个字符。</li>
-</ul>
-<p>平常我们调用字符串的 <code>length()</code> 方法，返回的就是代码单元数量，而不是代码点数量，所有如果碰到一些需要用 <code>4</code> 个字节来表示的繁体字，那么代码单元数就会小于代码点数，而想要获取代码点数量，可以通过其他方法获取，获取方式如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">String name = <span class="string">&quot;𤭢&quot;</span>;<span class="comment">//\uD852\uDF62</span></span><br><span class="line">System.out.println(name.length());<span class="comment">//代码单元数，输出2</span></span><br><span class="line">System.out.println(name.codePointCount(<span class="number">0</span>, name.length()));<span class="comment">//代码点数，输出1</span></span><br></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/04/08/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/" data-id="cl1zs7vsm000dzwaq4qy0c3cu" data-title="编码" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -1051,23 +1007,23 @@
       <ul>
         
           <li>
+            <a href="/2022/05/02/Redis/Redis%E9%9B%86%E7%BE%A4/">Redis集群</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/02/Redis/Redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/">Redis主从复制</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/02/Redis/Redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/">Redis哨兵机制</a>
+          </li>
+        
+          <li>
             <a href="/2022/05/01/Redis/Redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">Redis底层数据结构</a>
           </li>
         
           <li>
             <a href="/2022/04/28/Linux/Linux%E5%9F%BA%E7%A1%80/">Linux基础</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/26/%E6%B1%82%E8%81%8C/%E5%85%B6%E4%BB%96%E9%9D%A2%E7%BB%8F-%E5%AD%97%E8%8A%82/">其他面经-字节</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/25/Redis/Redis%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7/">Redis缓存一致性</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/16/Redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E3%80%81%E5%87%BB%E7%A9%BF%E3%80%81%E9%9B%AA%E5%B4%A9/">缓存穿透、击穿、雪崩</a>
           </li>
         
       </ul>
