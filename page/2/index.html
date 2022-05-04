@@ -73,6 +73,210 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Redis/Redis分布式锁" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/12/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" class="article-date">
+  <time class="dt-published" datetime="2022-04-12T14:39:41.000Z" itemprop="datePublished">2022-04-12</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Redis/">Redis</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/04/12/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">Redis分布式锁</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="1、什么是分布式锁"><a href="#1、什么是分布式锁" class="headerlink" title="1、什么是分布式锁"></a>1、什么是分布式锁</h2><p>分布式锁，顾名思义，就是分布式项目开发中用到的锁，可以用来控制分布式系统之间同步访问共享资源，一般来说，分布式锁需要满足的特性有这么几点：</p>
+<p>1、互斥性：在任何时刻，对于同一条数据，只有一台应用可以获取到分布式锁；</p>
+<p>2、高可用性：在分布式场景下，一小部分服务器宕机不影响正常使用，这种情况就需要将提供分布式锁的服务以集群的方式部署；</p>
+<p>3、防止锁超时：如果客户端没有主动释放锁，服务器会在一段时间之后自动释放锁，防止客户端宕机或者网络不可达时产生死锁；</p>
+<p>4、独占性：加锁解锁必须由同一台服务器进行，也就是锁的持有者才可以释放锁，不能出现你加的锁，别人给你解锁了；</p>
+<h2 id="2、实现分布式锁"><a href="#2、实现分布式锁" class="headerlink" title="2、实现分布式锁"></a>2、实现分布式锁</h2><p><code>Redis</code>分布式锁主要是通过<code>SETNX</code>和<code>SETEX</code>这两个命令实现的。这两个命令都是原子操作。</p>
+<p>核心思想就是每次想要获取锁的时候，就对一个固定的 key 值以 <code>SETNX</code>的方式存放，如果成功，就说明获取锁成功，否则以自旋的方式持续获取锁，直到超时获取失败。</p>
+<p>解锁通过 LUA 代码实现，LUA是原子性的。</p>
+<p>注：下方代码只体现实现锁的思想，不能实际使用。实际开发中使用 Redisson 。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 代码通过 Jedis 编写，已经过时，重要的是实现方式，不是具体代码实现</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedisLock</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 竞争该 key 值</span></span><br><span class="line">    <span class="keyword">private</span> String LOCK_KEY = <span class="string">&quot;redis_lock&quot;</span>;`</span><br><span class="line">    <span class="comment">// key的持有时间，5ms`</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> EXPIRE_TIME = <span class="number">5</span>;`</span><br><span class="line">    <span class="comment">// 等待超时时间，1s`</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> TIME_OUT = <span class="number">1000</span>;`</span><br><span class="line">    <span class="comment">// redis命令参数，相当于nx和px的命令合集`</span></span><br><span class="line">    <span class="keyword">private</span> SetParams params = SetParams.setParams().nx().px(EXPIRE_TIME);`</span><br><span class="line">    <span class="comment">// redis连接池，连的是本地的redis客户端`</span></span><br><span class="line">    JedisPool jedisPool = <span class="keyword">new</span> JedisPool(<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">6379</span>);`</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 加锁</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">lock</span><span class="params">(String id)</span> </span>&#123;</span><br><span class="line">        Long start = System.currentTimeMillis();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">for</span> (; ; ) &#123;</span><br><span class="line">                <span class="comment">//SET命令返回OK ，则证明获取锁成功</span></span><br><span class="line">                String lock = jedis.set(LOCK_KEY, id, params);</span><br><span class="line">                <span class="keyword">if</span> (<span class="string">&quot;OK&quot;</span>.equals(lock)) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//否则循环等待，在timeout时间内仍未获取到锁，则获取失败</span></span><br><span class="line">                <span class="keyword">long</span> l = System.currentTimeMillis() - start;</span><br><span class="line">                <span class="keyword">if</span> (l &gt;= timeout) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    Thread.sleep(<span class="number">100</span>);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            jedis.close();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 解锁</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">unlock</span><span class="params">(String id)</span> </span>&#123;</span><br><span class="line">        String script =</span><br><span class="line">            <span class="comment">// KEYS[1] 就是 LOCK_KEY，ARGV[1] 就是锁拥有者设置的值，表明只有锁拥有者才能解锁</span></span><br><span class="line">                <span class="string">&quot;if redis.call(&#x27;get&#x27;,KEYS[1]) == ARGV[1] then&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;   return redis.call(&#x27;del&#x27;,KEYS[1]) &quot;</span> +</span><br><span class="line">                        <span class="string">&quot;else&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;   return 0 &quot;</span> +</span><br><span class="line">                        <span class="string">&quot;end&quot;</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            String result = jedis.eval(script, Collections.singletonList(LOCK_KEY), </span><br><span class="line">                                       Collections.singletonList(id)).toString();</span><br><span class="line">            <span class="keyword">return</span> <span class="string">&quot;1&quot;</span>.equals(result) ? <span class="keyword">true</span> : <span class="keyword">false</span>;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            jedis.close();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3、分布式锁的缺陷"><a href="#3、分布式锁的缺陷" class="headerlink" title="3、分布式锁的缺陷"></a>3、分布式锁的缺陷</h2><p>一、客户端长时间阻塞导致锁失效问题</p>
+<p>客户端1得到了锁，因为网络问题或者GC等原因导致长时间阻塞，然后业务程序还没执行完锁就过期了，这时候客户端2也能正常拿到锁，可能会导致线程安全的问题。</p>
+<p>二、redis服务器时钟漂移问题</p>
+<p>如果redis服务器的机器时钟发生了向前跳跃，就会导致这个key过早超时失效，比如说客户端1拿到锁后，key的过期时间是12:02分，但redis服务器本身的时钟比客户端快了2分钟，导致key在12:00的时候就失效了，这时候，如果客户端1还没有释放锁的话，就可能导致多个客户端同时持有同一把锁的问题。</p>
+<p>三、单点实例安全问题</p>
+<p>如果redis是单master模式的，当这台机宕机的时候，那么所有的客户端都获取不到锁了，为了提高可用性，可能就会给这个master加一个slave，但是因为redis的主从同步是异步进行的，可能会出现客户端1设置完锁后，master挂掉，slave提升为master，因为异步复制的特性，客户端1设置的锁丢失了，这时候客户端2设置锁也能够成功，导致客户端1和客户端2同时拥有锁。</p>
+<p>针对上述问题，官方推出了 RedLock 算法，但是依然无法完全解决。</p>
+<p>对此只能说，鱼和熊掌不可兼得，我们之所以用Redis作为分布式锁的工具，很大程度上是因为Redis本身效率高且单进程的特点，即使在高并发的情况下也能很好的保证性能，但很多时候，性能和安全不能完全兼顾，如果你一定要保证锁的安全性的话，可以用其他的中间件如db、zookeeper来做控制，这些工具能很好的保证锁的安全，但性能方面只能说是差强人意，否则大家早就用上了。</p>
+<p>本文摘自<a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000038988087">面试官：你真的了解Redis分布式锁吗？ - SegmentFault 思否</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/04/12/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" data-id="cl1zs7vsi0007zwaq21zv7um7" data-title="Redis分布式锁" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Redis/Redis持久化" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/09/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/" class="article-date">
+  <time class="dt-published" datetime="2022-04-09T15:39:41.000Z" itemprop="datePublished">2022-04-09</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Redis/">Redis</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/04/09/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/">Redis持久化</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="1、Redis-核心主流程"><a href="#1、Redis-核心主流程" class="headerlink" title="1、Redis 核心主流程"></a>1、Redis 核心主流程</h2><p>AOF 和 RDB 的持久化过程中，有不少操作是在时间事件 serverCron 中被触发的。所以，这边有必要先了解下 Redis 中的事件核心流程。</p>
+<p>Redis 的服务器进程就是一个事件循环，最重要的有两个事件：文件事件和时间事件。Redis 在服务器初始化后，会无限循环，处理产生的文件事件和时间事件。</p>
+<p>文件事件常见的有：接受连接（accept）、读取（read）、写入（write）、关闭连接（close）等。使用 IO 多路复用处理。</p>
+<p>时间事件中常见的就是 serverCron，redis 核心流程中通常也只有这个时间事件。serverCron 默认配置下每100ms会被触发一次，在该时间事件中，会执行很多操作：清理过期键、AOF 后台重写、RDB 的 save point 的检查、将 aof_buf 内容写到磁盘上（flushAppendOnlyFile 函数）等等。</p>
+<h2 id="2、Redis持久化"><a href="#2、Redis持久化" class="headerlink" title="2、Redis持久化"></a>2、Redis持久化</h2><p>Redis是内存数据库，若不持久化到磁盘中，则redis进程一旦退出，数据就会丢失，因此需要持久化。</p>
+<p>Redis 的持久化机制有以下三种：</p>
+<ul>
+<li>RDB</li>
+<li>AOF</li>
+<li>混合持久化（redis4.0引入）</li>
+</ul>
+<h3 id="2-1、RDB-Redis-DataBase"><a href="#2-1、RDB-Redis-DataBase" class="headerlink" title="2.1、RDB(Redis DataBase)"></a>2.1、RDB(Redis DataBase)</h3><p>描述：类似于快照。在某个时间点，将 Redis 在内存中的数据保存到磁盘里面。RDB 持久化功能生成的 RDB 文件是经过压缩的二进制文件。恢复时将快照文件直接读入内存。</p>
+<p>rdb保存的文件是dump.rdb。同样可以在redis.conf中修改</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">在redis.conf中对自动保存的间隔进行设置</span><br><span class="line"><span class="comment"># save 3600 1        After 3600 seconds (an hour) if at least 1 key changed</span></span><br><span class="line"><span class="comment"># save 300 100       After 300 seconds (5 minutes) if at least 100 keys changed</span></span><br><span class="line"><span class="comment"># save 60 10000      After 60 seconds if at least 10000 keys changed</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-1-1、触发条件"><a href="#2-1-1、触发条件" class="headerlink" title="2.1.1、触发条件"></a>2.1.1、触发条件</h4><p><strong>自动触发</strong>（全部是BGSAVE）</p>
+<ul>
+<li><p>满足上方save的规则</p>
+</li>
+<li><p>执行flushall，生成的 dump.rdb 为空。</p>
+</li>
+<li><p>退出reids</p>
+</li>
+</ul>
+<p><strong>手动触发</strong></p>
+<ul>
+<li>SAVE：生成 RDB 快照文件，但是会阻塞主进程，服务器将无法处理客户端发来的命令请求，所以通常不会直接使用该命令。</li>
+<li>BGSAVE：fork 子进程来生成 RDB 快照文件，阻塞只会发生在 fork 子进程的时候，之后主进程可以正常处理请求。会先将数据保存进一个临时文件中，待持久化过程结束了，再将这个临时文件替换上次持久化的文件。</li>
+</ul>
+<h4 id="2-1-2、恢复rdb文件"><a href="#2-1-2、恢复rdb文件" class="headerlink" title="2.1.2、恢复rdb文件"></a>2.1.2、恢复rdb文件</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 若rdb文件在下方目录下，则启动时会自动回复其中的数据</span></span><br><span class="line">127.0.0.1:6379&gt; CONFIG GET dir</span><br><span class="line">1) <span class="string">&quot;dir&quot;</span></span><br><span class="line">2) <span class="string">&quot;/usr/local/bin&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-1-3、RDB-的优缺点"><a href="#2-1-3、RDB-的优缺点" class="headerlink" title="2.1.3、RDB 的优缺点"></a>2.1.3、RDB 的优缺点</h4><p><strong>RDB 的优点：</strong></p>
+<ul>
+<li>RDB 文件是是经过压缩的二进制文件，占用空间很小，它保存了 Redis 某个时间点的数据集，很适合用于做备份。 </li>
+<li>RDB 非常适用于灾难恢复：它只有一个文件，并且内容都非常紧凑，可以（在加密后）将它传送到别的数据中心。</li>
+<li>RDB 可以最大化 redis 的性能。父进程在保存 RDB 文件时唯一要做的就是 fork 出一个子进程，然后这个子进程就会处理接下来的所有保存工作，父进程无须执行任何磁盘 I/O 操作。</li>
+<li>RDB 在恢复大数据集时的速度比 AOF 的恢复速度要快。</li>
+</ul>
+<p><strong>RDB 的缺点：</strong></p>
+<ul>
+<li><p>RDB 在服务器故障时容易造成数据的丢失。RDB 允许我们通过修改 save point 配置来控制持久化的频率。但是，因为 RDB 文件需要保存整个数据集的状态， 所以它是一个比较重的操作，如果频率太频繁，可能会对 Redis 性能产生影响。所以通常可能设置至少5分钟才保存一次快照，这时如果 Redis 出现宕机等情况，则意味着最多可能丢失5分钟数据。</p>
+</li>
+<li><p>RDB 保存时使用 fork 子进程进行数据的持久化，如果数据比较大的话，fork 可能会非常耗时，造成 Redis 停止处理服务N毫秒。如果数据集很大且 CPU 比较繁忙的时候，停止服务的时间甚至会到一秒。</p>
+</li>
+<li><p>Linux fork 子进程采用的是 copy-on-write 的方式。在 Redis 执行 RDB 持久化期间，如果 client 写入数据很频繁，那么将增加 Redis 占用的内存，最坏情况下，内存的占用将达到原先的2倍。刚 fork 时，主进程和子进程共享内存，但是随着主进程需要处理写操作，主进程需要将修改的页面拷贝一份出来，然后进行修改。极端情况下，如果所有的页面都被修改，则此时的内存占用是原先的2倍。</p>
+</li>
+</ul>
+<h3 id="2-2、AOF-Append-Only-File"><a href="#2-2、AOF-Append-Only-File" class="headerlink" title="2.2、AOF(Append Only File)"></a>2.2、AOF(Append Only File)</h3><p>将所有写命令都记录到文件中，恢复时把该文件再执行一遍，只允许追加该记录文件，不允许修改。该记录文件的名字为<code>appendonly.aof</code>。该功能默认不开启，可以通过配置：appendonly yes 开启， appendonly no 关闭。</p>
+<h4 id="2-2-1、AOF的实现"><a href="#2-2-1、AOF的实现" class="headerlink" title="2.2.1、AOF的实现"></a>2.2.1、AOF的实现</h4><p>AOF 持久化功能的实现可以分为三个步骤：命令追加、文件写入、文件同步。</p>
+<p>命令追加：当 AOF 持久化功能打开时，服务器在执行完一个写命令之后，会将被执行的写命令追加到服务器状态的 aof 缓冲区（aof_buf）的末尾。</p>
+<p>文件写入：将 aof_buf 的内容写到页缓存</p>
+<p>文件同步：将页缓存刷盘到硬盘</p>
+<p> serverCron 时间事件中会触发 flushAppendOnlyFile 函数，该函数会根据服务器配置的 appendfsync 参数值，来决定是否将 aof_buf 缓冲区的内容写入和保存到 AOF 文件。</p>
+<p><strong>appendfsync 参数有三个选项：</strong></p>
+<ul>
+<li><p>always：每个命令都刷盘。</p>
+</li>
+<li><p>everysec：每秒刷盘1次，这个操作是异步的，由一个后台线程专门负责执行。</p>
+</li>
+<li><p>no：不执行刷盘，让操作系统自己执行刷盘。</p>
+</li>
+</ul>
+<h4 id="2-2-2、AOF-的优缺点"><a href="#2-2-2、AOF-的优缺点" class="headerlink" title="2.2.2、AOF 的优缺点"></a>2.2.2、AOF 的优缺点</h4><p><strong>AOF 的优点</strong></p>
+<ul>
+<li><p>AOF 比 RDB可靠。可以设置不同的 fsync 策略：no、everysec 和 always。默认是 everysec，在这种配置下，redis 仍然可以保持良好的性能，并且就算发生故障停机，也最多只会丢失一秒钟的数据。</p>
+</li>
+<li><p>AOF文件是一个纯追加的日志文件。即使日志因为某些原因而包含了未写入完整的命令（比如写入时磁盘已满，写入中途停机等等）， 我们也可以使用 redis-check-aof 工具也可以轻易地修复这种问题。</p>
+</li>
+<li><p>当 AOF文件太大时，Redis 会自动在后台进行重写：重写后的新 AOF 文件包含了恢复当前数据集所需的最小命令集合。整个重写是绝对安全，因为重写是在一个新的文件上进行，同时 Redis 会继续往旧的文件追加数据。当新文件重写完毕，Redis 会把新旧文件进行切换，然后开始把数据写到新文件上。</p>
+</li>
+<li><p>易读</p>
+</li>
+</ul>
+<p><strong>AOF 的缺点</strong></p>
+<ul>
+<li><p>对于相同的数据集，AOF 文件的大小一般会比 RDB 文件大。</p>
+</li>
+<li><p>根据所使用的 fsync 策略，AOF 的速度可能会比 RDB 慢。通常 fsync 设置为每秒一次就能获得比较高的性能，而关闭 fsync 可以让 AOF 的速度和 RDB 一样快。</p>
+</li>
+<li><p>AOF 在过去曾经发生过这样的 bug ：因为个别命令的原因，导致 AOF 文件在重新载入时，无法将数据集恢复成保存时的原样。（举个例子，阻塞命令 BRPOPLPUSH 就曾经引起过这样的 bug ） 。</p>
+</li>
+</ul>
+<h3 id="2-3、混合持久化"><a href="#2-3、混合持久化" class="headerlink" title="2.3、混合持久化"></a>2.3、混合持久化</h3><p>混合持久化只发生于 AOF 重写过程。使用了混合持久化，重写后的新 AOF 文件前半段是 RDB 格式的全量数据，后半段是 AOF 格式的增量数据。</p>
+<p>混合持久化本质是通过 AOF 后台重写（bgrewriteaof 命令）完成的，不同的是当开启混合持久化时，fork 出的子进程先将当前全量数据以 RDB 方式写入新的 AOF 文件，然后再将 AOF 重写缓冲区（aof_rewrite_buf_blocks）的增量命令以 AOF 方式写入到文件，写入完成后通知主进程将新的含有 RDB 格式和 AOF 格式的 AOF 文件替换旧的的 AOF 文件。</p>
+<p>优点：结合 RDB 和 AOF 的优点, 更快的重写和恢复。</p>
+<p>缺点：AOF 文件里面的 RDB 部分不再是 AOF 格式，可读性差。</p>
+<h2 id="3、AOF重写"><a href="#3、AOF重写" class="headerlink" title="3、AOF重写"></a>3、AOF重写</h2><h3 id="3-1、为什么需要-AOF-重写"><a href="#3-1、为什么需要-AOF-重写" class="headerlink" title="3.1、为什么需要 AOF 重写"></a>3.1、为什么需要 AOF 重写</h3><p>AOF 持久化是通过保存被执行的写命令来记录数据库状态的，随着写入命令的不断增加，AOF 文件中的内容会越来越多，文件的体积也会越来越大。</p>
+<p>如果不加以控制，体积过大的 AOF 文件可能会对 Redis 服务器、甚至整个宿主机造成影响，并且 AOF 文件的体积越大，使用 AOF 文件来进行数据还原所需的时间就越多。</p>
+<h3 id="3-2、AOF-重写"><a href="#3-2、AOF-重写" class="headerlink" title="3.2、AOF 重写"></a>3.2、AOF 重写</h3><p>Redis 生成新的 AOF 文件来代替旧 AOF 文件，这个新的 AOF 文件包含重建当前数据集所需的最少命令。具体过程是遍历所有数据库的所有键，从数据库读取键现在的值，然后用一条命令去记录键值对，代替之前记录这个键值对的多条命令。</p>
+<h3 id="3-3、AOF-后台重写一致性问题"><a href="#3-3、AOF-后台重写一致性问题" class="headerlink" title="3.3、AOF 后台重写一致性问题"></a>3.3、AOF 后台重写一致性问题</h3><p>AOF 后台重写使用子进程进行从写，解决了主进程阻塞的问题，但是仍然存在另一个问题：子进程在进行 AOF 重写期间，服务器主进程还需要继续处理命令请求，新的命令可能会对现有的数据库状态进行修改，从而使得当前的数据库状态和重写后的 AOF 文件保存的数据库状态不一致。</p>
+<p>为了解决上述问题，Redis 引入了 AOF 重写缓冲区（aof_rewrite_buf_blocks），这个缓冲区在服务器创建子进程之后开始使用，当 Redis 服务器执行完一个写命令之后，它会同时将这个写命令追加到 AOF 缓冲区和 AOF 重写缓冲区。</p>
+<p>这样，当子进程完成 AOF 重写工作后，父进程会在 serverCron 中检测到子进程已经重写结束，则会执行以下工作：</p>
+<p>1、将 AOF 重写缓冲区中的所有内容写入到新 AOF 文件中，这时新 AOF 文件所保存的数据库状态将和服务器当前的数据库状态一致。</p>
+<p>2、对新的 AOF 文件进行改名，原子的覆盖现有的 AOF 文件，完成新旧两个 AOF 文件的替换。</p>
+<h3 id="3-4、AOF-重写缓冲区内容过多"><a href="#3-4、AOF-重写缓冲区内容过多" class="headerlink" title="3.4、AOF 重写缓冲区内容过多"></a>3.4、AOF 重写缓冲区内容过多</h3><p>将 AOF 重写缓冲区的内容追加到新 AOF 文件的工作是由主进程完成的，所以这一过程会导致主进程无法处理请求，如果内容过多，可能会使得阻塞时间过长，显然是无法接受的。</p>
+<p>Redis 中已经针对这种情况进行了优化：</p>
+<p>1、在进行 AOF 后台重写时，Redis 会创建一组用于父子进程间通信的管道，同时会新增一个文件事件，该文件事件会将写入 AOF 重写缓冲区的内容通过该管道发送到子进程。</p>
+<p>2、在重写结束后，子进程会通过该管道尽量从父进程读取更多的数据，每次等待可读取事件1ms，如果一直能读取到数据，则这个过程最多执行1000次，也就是1秒。如果连续20次没有读取到数据，则结束这个过程。</p>
+<p>通过这些优化，Redis 尽量让 AOF 重写缓冲区的内容更少，以减少主进程阻塞的时间。</p>
+<p>本文摘自<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/340082703">面试必问的 Redis：RDB、AOF、混合持久化 - 知乎 (zhihu.com)</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/04/09/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/" data-id="cl1zs7vse0004zwaqf04g52tn" data-title="Redis持久化" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Linux/linux创建子进程--fork()方法" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/" class="article-date">
@@ -699,187 +903,6 @@
 
 
   
-    <article id="post-MySQL/InnoDB锁" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/03/27/MySQL/InnoDB%E9%94%81/" class="article-date">
-  <time class="dt-published" datetime="2022-03-27T09:39:41.000Z" itemprop="datePublished">2022-03-27</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/03/27/MySQL/InnoDB%E9%94%81/">InnoDB锁</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>锁机制用于管理对共享资源的并发访问。</p>
-<h2 id="1、锁粒度"><a href="#1、锁粒度" class="headerlink" title="1、锁粒度"></a>1、锁粒度</h2><h3 id="表锁"><a href="#表锁" class="headerlink" title="表锁"></a>表锁</h3><p>表锁是MySQL中最大粒度的锁定机制，会锁定整张表，可以很好的避免死锁，是 MySQL 中最大颗粒度的锁定机制。</p>
-<p>表锁由 MySQL Server 实现，一般在执行 DDL 语句时会对整个表进行加锁，比如说<code>ALTER TABLE</code>等操作。在执行 DML 语句时，也可以通过<code>LOCK TABLES</code>显式指定对某个表进行加锁。</p>
-<h3 id="页锁"><a href="#页锁" class="headerlink" title="页锁"></a>页锁</h3><p>页级锁是 MySQL 中比较独特的一种锁定级别，在其他数据库管理软件中并不常见。</p>
-<p>页级锁的颗粒度介于行级锁与表级锁之间，所以获取锁定所需要的资源开销，以及所能提供的并发处理能力同样也是介于上面二者之间。另外，页级锁和行级锁一样，会发生死锁。</p>
-<p>页级锁主要应用于 BDB 存储引擎。</p>
-<h3 id="行锁"><a href="#行锁" class="headerlink" title="行锁"></a>行锁</h3><p>行级锁的锁定颗粒度在 MySQL 中是最小的，只针对操作的当前行进行加锁，所以行级锁发生锁定资源争用的概率也最小。</p>
-<p>InnoDB 默认使用行级锁。</p>
-<h2 id="2、行锁详解"><a href="#2、行锁详解" class="headerlink" title="2、行锁详解"></a>2、行锁详解</h2><p>InnoDB默认使用行锁，实现了两种标准的行锁——共享锁与排他锁；</p>
-<p><img src="%E5%85%B1%E4%BA%AB%E9%94%81%E4%B8%8E%E6%8E%92%E4%BB%96%E9%94%81.png" alt="共享锁与排他锁"></p>
-<p>1、除了显式加锁的情况，其他情况下的加锁与解锁都无需人工干预。<br>2、InnoDB所有的行锁算法都是基于索引实现的，锁定的也都是索引或索引区间</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 加锁方式：共享锁</span></span><br><span class="line">SELECT...LOCK <span class="keyword">IN</span> SHARE MODE</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 加锁方式：排它锁</span></span><br><span class="line">SELECT...FOR UPDATE </span><br></pre></td></tr></table></figure>
-
-<h2 id="3、当前读与快照读"><a href="#3、当前读与快照读" class="headerlink" title="3、当前读与快照读"></a>3、当前读与快照读</h2><p><strong>1、当前读：</strong>即加锁读，读取记录的最新版本，会加锁保证其他并发事务不能修改当前记录，直至获取锁的事务释放锁；</p>
-<p>使用当前读的操作主要包括：显式加锁的读操作与插入/更新/删除等写操作，如下所示：</p>
-<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ? <span class="keyword">lock</span> <span class="keyword">in</span> <span class="keyword">share mode</span>;</span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ? <span class="keyword">for</span> <span class="keyword">update</span>;</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> <span class="keyword">table</span> <span class="keyword">values</span> (…);</span><br><span class="line"><span class="keyword">update</span> <span class="keyword">table</span> <span class="keyword">set</span> ? <span class="keyword">where</span> ?;</span><br><span class="line"><span class="keyword">delete</span> <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ?;</span><br></pre></td></tr></table></figure>
-
-<p>注：当Update SQL被发给MySQL后，MySQL Server会根据where条件，读取第一条满足条件的记录，然后InnoDB引擎会将第一条记录返回，并加锁，待MySQL Server收到这条加锁的记录之后，会再发起一个Update请求，更新这条记录。一条记录操作完成，再读取下一条记录，直至没有满足条件的记录为止。因此，Update操作内部，就包含了当前读。同理，Delete操作也一样。Insert操作会稍微有些不同，简单来说，就是Insert操作可能会触发Unique Key的冲突检查，也会进行一个当前读。</p>
-<p><strong>2、快照读</strong>：即不加锁读，读取记录的快照版本而非最新版本，通过MVCC实现；</p>
-<p>InnoDB默认的RR事务隔离级别下，不显式加『lock in share mode』与『for update』的『select』操作都属于快照读，保证事务执行过程中只有第一次读之前提交的修改和自己的修改可见，其他的均不可见；</p>
-<h2 id="4、MVCC"><a href="#4、MVCC" class="headerlink" title="4、MVCC"></a>4、MVCC</h2><p>MVCC『多版本并发控制』，与之对应的是『基于锁的并发控制』；</p>
-<p>MVCC的最大好处：读不加任何锁，读写不冲突，对于读操作多于写操作的应用，极大的增加了系统的并发性能；</p>
-<p><img src="mvcc.png" alt="mvcc"></p>
-<h2 id="5、锁算法"><a href="#5、锁算法" class="headerlink" title="5、锁算法"></a>5、锁算法</h2><p>InnoDB主要实现了三种行锁算法：</p>
-<p><img src="%E4%B8%89%E7%A7%8D%E8%A1%8C%E9%94%81%E7%AE%97%E6%B3%95.png" alt="三种行锁算法"></p>
-<p><strong>记录锁、间隙锁、临键锁都是排它锁</strong></p>
-<h3 id="5-1、记录锁"><a href="#5-1、记录锁" class="headerlink" title="5.1、记录锁"></a>5.1、记录锁</h3><p><code>记录锁(Record Locks)</code>也称为行锁，顾名思义，表示对某一行记录加锁。</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> test <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">1</span> <span class="keyword">FOR</span> UPDATE;</span><br></pre></td></tr></table></figure>
-
-<p>它会在 id=1 的记录上加上记录锁，以阻止其他事务插入，更新，删除 id=1 这一行。</p>
-<p>记录锁总是锁定索引记录（SELECT和UPDATE都会加锁），即使表没有定义索引。对于这种情况， InnoDB创建一个隐藏的聚集索引并使用该索引进行记录锁定。</p>
-<h3 id="5-2、间隙锁"><a href="#5-2、间隙锁" class="headerlink" title="5.2、间隙锁"></a>5.2、间隙锁</h3><p>Gap锁，锁定的是索引记录之间的间隙，是防止幻读的关键；并发事务插入新数据前会先检测间隙中是否已被加锁，防止幻读的出现；</p>
-<p>注意！间隙锁锁住的是一个区间，而不仅仅是这个区间中目前仅存在的数据行。</p>
-<ul>
-<li><code>插入意向锁(Insert Intention Locks)</code>是在插入一条记录行前，由 <code>INSERT</code> 操作产生的一种<code>间隙锁</code>。该锁用以表示插入意向，当多个事务在同一区间插入位置不同的多条数据时，事务之间不需要互相等待。假设存在两条值分别为 4 和 7 的记录，两个不同的事务分别试图插入值为 5 和 6 的两条记录，每个事务在获取插入行上独占的（排他）锁前，都会获取（4，7）之间的间隙锁，但是因为数据行之间并不冲突，所以两个事务之间并不会产生冲突（阻塞等待）。</li>
-</ul>
-<h3 id="5-3、临键锁"><a href="#5-3、临键锁" class="headerlink" title="5.3、临键锁"></a>5.3、临键锁</h3><p><strong>临键锁</strong>，是<strong>记录锁与间隙锁的组合</strong>，它的封锁范围，既包含索引记录，又包含索引区间。通过临键锁可以解决幻读的问题。</p>
-<h2 id="6、表级锁"><a href="#6、表级锁" class="headerlink" title="6、表级锁"></a>6、表级锁</h2><h3 id="6-1、意向锁"><a href="#6-1、意向锁" class="headerlink" title="6.1、意向锁"></a>6.1、意向锁</h3><p><code>意向锁（Intention Locks）</code>是<strong>表级锁</strong>，指示事务稍后需要对表中的行使用哪种类型的锁（共享锁或独占锁）。</p>
-<p>意向锁有两种类型：</p>
-<ul>
-<li>意向共享锁（IS）：一个事务在获取（任何一行/或者全表）S锁之前，一定会先在所在的表上加IS锁。</li>
-<li>意向排它锁（IX）：一个事务在获取（任何一行/或者全表）X锁之前，一定会先在所在的表上加IX锁。</li>
-</ul>
-<p>意图锁定协议如下：</p>
-<ul>
-<li>在事务可以获取表中行的共享锁之前，它必须首先获取<code>IS</code>表上的锁或更强的锁。</li>
-<li>在事务获得表中行的排他锁之前，它必须首先获得<code>IX</code> 表的锁。</li>
-</ul>
-<h3 id="6-2、自增锁"><a href="#6-2、自增锁" class="headerlink" title="6.2、自增锁"></a>6.2、自增锁</h3><p><code>自增锁(auto-inc Locks)</code>是一种特殊的表级锁，主要用于事务中插入自增字段，也就是我们最常用的自增主键id。在最简单的情况下，如果一个事务正在向表中插入值，则任何其他事务都必须等待自己插入到该表中，以便第一个事务插入的行接收连续的主键值。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/03/27/MySQL/InnoDB%E9%94%81/" data-id="cl1alqgnf00027caq4zfy6c90" data-title="InnoDB锁" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-MySQL/MySQL索引" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/03/27/MySQL/MySQL%E7%B4%A2%E5%BC%95/" class="article-date">
-  <time class="dt-published" datetime="2022-03-27T09:39:41.000Z" itemprop="datePublished">2022-03-27</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/03/27/MySQL/MySQL%E7%B4%A2%E5%BC%95/">MySQL索引</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>索引对于InnoDB（对索引支持行级锁）非常重要，因为它可以让查询锁更少的元组。</p>
-<h2 id="1、索引类型"><a href="#1、索引类型" class="headerlink" title="1、索引类型"></a>1、索引类型</h2><ul>
-<li>普通索引：最基本的索引，可以在任意一列或多列的组合上加普通索引。允许存在重复值以及空值。</li>
-<li>唯一索引：与普通索引不同的是，索引列的值必须唯一，但允许有空值。如果是组合索引，则列值的组合必须唯一。</li>
-<li>主键索引：与唯一索引不同的是，不允许有空值。</li>
-<li>组合索引：组合索引与单列索引相对应，只包含一个字段的索引叫做单列索引，包含两个或以上字段的索引叫做复合索引（或组合索引）。上述三种索引既可以是单列索引也可以是组合索引。</li>
-</ul>
-<h2 id="2、聚集索引"><a href="#2、聚集索引" class="headerlink" title="2、聚集索引"></a>2、聚集索引</h2><p><strong>聚簇索引</strong>的叶子节点就是数据节点，而<strong>非聚簇索引</strong>的叶子节点仍然是索引节点，只不过有指向对应数据块的指针。</p>
-<p>怎么理解呢？</p>
-<p><strong>聚簇索引的顺序，就是数据在硬盘上的物理顺序。一般情况下主键就是默认的聚簇索引。</strong></p>
-<p>一张表<strong>只允许存在一个</strong>聚簇索引，因为真实数据的物理顺序只能有一种。如果一张表上还没有聚簇索引，为它新创建聚簇索引时，就需要对已有数据重新进行排序，所以对表进行修改速度较慢是聚簇索引的缺点，对于<strong>经常更新的列不宜建立聚簇索引</strong>。</p>
-<p>聚簇索引性能最好，因为一旦具有第一个索引值的记录被找到，具有连续索引值的记录也一定物理地紧跟其后。一张表只能有一个聚簇索引，所以非常珍贵，必须慎重设置，一般要根据这个表最常用的SQL查询方式选择某个（或多个）字段作为聚簇索引（<strong>或复合聚簇索引</strong>）。</p>
-<ol>
-<li>InnoDB对主键建立聚簇索引。</li>
-<li>如果你不指定主键，InnoDB会用一个具有唯一且非空值的索引来代替。</li>
-<li>如果不存在这样的索引，InnoDB会定义一个隐藏的主键，然后对其建立聚簇索引。</li>
-</ol>
-<h2 id="3、索引的最左匹配"><a href="#3、索引的最左匹配" class="headerlink" title="3、索引的最左匹配"></a>3、索引的最左匹配</h2><p>最左前缀匹配原则，非常重要的原则，建立一个索引，对于索引中的字段，mysql会一直向右匹配直到遇到范围查询(&gt;、&lt;、between、like)就停止匹配，比如a = 1 and b = 2 and c &gt; 3 and d = 4 如果建立(a,b,c,d)顺序的索引，d是用不到索引的，如果建立(a,b,d,c)的索引则都可以用到，a,b,d的顺序可以任意调整。<br>=和in可以乱序，比如a = 1 and b = 2 and c = 3 建立(a,b,c)索引可以任意顺序，mysql的查询优化器会帮你优化成索引可以识别的形式。</p>
-<p>mysql创建复合索引的规则是首先会对复合索引的最左边的，也就是第一个name字段的数据进行排序，在第一个字段的排序基础上，然后再对后面第二个的cid字段进行排序。其实就相当于实现了类似 order by name cid这样一种排序规则。<br>所以：第一个name字段是绝对有序的，而第二字段就是无序的了。所以通常情况下，直接使用第二个cid字段进行条件判断是用不到索引的。</p>
-<p>在第一个值等值匹配的前提下，第二个值是有序的，因此mysql索引规则中要求复合索引要想使用第二个索引，必须先使用第一个索引的原因。（而且第一个索引必须是<strong>等值匹配</strong>）。</p>
-<h2 id="4、InnoDB-的-B-Tree"><a href="#4、InnoDB-的-B-Tree" class="headerlink" title="4、InnoDB 的 B+Tree"></a>4、InnoDB 的 B+Tree</h2><p>B-Tree 和 B+Tree 的区别在于：</p>
-<ol>
-<li>B-Tree 中，所有节点都会带有指向具体记录的指针；B+Tree 中只有叶子结点会带有指向具体记录的指针。</li>
-<li>B-Tree 中不同的叶子之间没有连在一起；B+Tree 中所有的叶子结点通过指针连接在一起。</li>
-<li>B-Tree 中可能在非叶子结点就拿到了指向具体记录的指针，搜索效率不稳定；B+Tree 中，一定要到叶子结点中才可以获取到具体记录的指针，搜索效率稳定。</li>
-</ol>
-<p>基于上面分析，可以得出如下结论：</p>
-<ol>
-<li>B+Tree 中，由于非叶子结点不带有指向具体记录的指针，所以非叶子结点中可以存储更多的索引项，这样就可以有效降低树的高度，进而提高搜索的效率。</li>
-<li>B+Tree 中，叶子结点通过指针连接在一起，这样如果有范围扫描的需求，那么实现起来将非常容易，而对于 B-Tree，范围扫描则需要不停的在叶子结点和非叶子结点之间移动。</li>
-</ol>
-<figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">计算机在存储数据的时候，最小存储单元是扇区，一个扇区的大小是 512 字节，而文件系统（例如 XFS/EXT4）最小单元是块，一个块的大小是 4KB。InnoDB 引擎存储数据的时候，是以页为单位的，每个数据页的大小默认是 16KB，即四个块。</span><br></pre></td></tr></table></figure>
-
-<p><strong>非叶子结点存储的是主键值+指针</strong></p>
-<p>由于一页存储一个非叶子节点，主键值为 4 或 8 字节，InnoDB 的指针为 6 字节，因此，一个非叶子节点约可以指向 1000+ 个页。若按一条数据 1 KB 计算，则一个三层的b+树约可以存储 2100 万条数据。</p>
-<p>在 InnoDB 存储引擎中，B+Tree 的高度一般为 2-4 层，这就可以满足千万级的数据的存储，查找数据的时候，一次页的查找代表一次 IO，那我们通过主键索引查询的时候，其实最多只需要 2-4 次 IO 操作就可以了。</p>
-<h2 id="5、回表"><a href="#5、回表" class="headerlink" title="5、回表"></a>5、回表</h2><h3 id="5-1、回表"><a href="#5-1、回表" class="headerlink" title="5.1、回表"></a>5.1、回表</h3><ol>
-<li>如果是通过主键索引来查询数据，只需要搜索主键索引的 B+Tree 就可以找到数据。</li>
-<li>如果是通过非主键索引来查询数据，例如 <code>select * from user where username=&#39;javaboy&#39;</code>，那么此时需要先搜索 username 这一列索引的 B+Tree，搜索完成后得到主键的值，然后再去搜索主键索引的 B+Tree，就可以获取到一行完整的数据。</li>
-</ol>
-<p>对于第二种查询方式而言，一共搜索了两棵 B+Tree，<strong>第一次搜索 B+Tree 拿到主键值后再去搜索主键索引的 B+Tree，这个过程就是所谓的回表。</strong></p>
-<h3 id="5-2、覆盖索引"><a href="#5-2、覆盖索引" class="headerlink" title="5.2、覆盖索引"></a>5.2、覆盖索引</h3><p><strong>但不使用主键索引不一定需要回表</strong>：覆盖索引</p>
-<p>如果辅助索引上已经存在我们需要的数据,那么引擎就不会去主键上去搜索数据了。 —- 这个就是所谓的”<strong>覆盖索引</strong>“</p>
-<p>普通索引、唯一索引、组合索引都可以是覆盖索引，只要满足所查询的字段全部都在辅助索引就行，这样就无需回表。</p>
-<h3 id="5-3、为什么数据库中建议使用自增主键"><a href="#5-3、为什么数据库中建议使用自增主键" class="headerlink" title="5.3、为什么数据库中建议使用自增主键"></a>5.3、为什么数据库中建议使用自增主键</h3><ol>
-<li>自增主键往往占用空间比较小，int 占 4 个字节，bigint 占 8 个字节。由于二级索引的叶子节点存储的就是主键，所以如果主键占用空间小，意味着二级索引的叶子节点将来占用的空间小（间接降低 B+Tree 的高度，提高搜索效率）。</li>
-<li>自增主键插入的时候比较快，直接插入即可，不会涉及到叶子节点分裂等问题（不需要挪动其他记录）；而其他非自增主键插入的时候，可能要插入到两个已有的数据中间，就有可能导致叶子节点分裂等问题，插入效率低（要挪动其他记录）。</li>
-</ol>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/03/27/MySQL/MySQL%E7%B4%A2%E5%BC%95/" data-id="cl1alqgns00097caqdvk55h5b" data-title="MySQL索引" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -895,7 +918,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/C-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">C# 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Go 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">JavaWeb系列学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">常见问题及解决方法</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B1%82%E8%81%8C/">求职</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/C-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">C# 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Go 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">JavaWeb系列学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">常见问题及解决方法</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B1%82%E8%81%8C/">求职</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li></ul>
     </div>
   </div>
 
@@ -923,6 +946,14 @@
       <ul>
         
           <li>
+            <a href="/2022/05/04/MySQL/MySQL%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">MySQL数据类型</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/03/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/%E5%9F%BA%E7%A1%80%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB/">基础网络攻击</a>
+          </li>
+        
+          <li>
             <a href="/2022/05/02/Redis/Redis%E9%9B%86%E7%BE%A4/">Redis集群</a>
           </li>
         
@@ -932,14 +963,6 @@
         
           <li>
             <a href="/2022/05/02/Redis/Redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/">Redis哨兵机制</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/01/Redis/Redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">Redis底层数据结构</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/28/Linux/Linux%E5%9F%BA%E7%A1%80/">Linux基础</a>
           </li>
         
       </ul>

@@ -73,6 +73,152 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-MySQL/MySQL数据类型" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/05/04/MySQL/MySQL%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" class="article-date">
+  <time class="dt-published" datetime="2022-05-04T04:39:41.000Z" itemprop="datePublished">2022-05-04</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/05/04/MySQL/MySQL%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">MySQL数据类型</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="1、整型"><a href="#1、整型" class="headerlink" title="1、整型"></a>1、整型</h3><p><img src="int%E7%B1%BB%E5%9E%8B.png" alt="int类型"></p>
+<p>**int(11)*<em>：括号中的 11 表示</em>字符的显示宽度*，它不影响存储，即它所能存储的数据还是在上图 int 的范围内。</p>
+<p>那它什么时候起作用：</p>
+<p>只有 int 字段类型设置为无符号且填充零（UNSIGNED  ZEROFILL）时，当数值位数未达到设置的显示宽度时，会在数值前面补充零直到满足设定的显示宽度，为什么会有无符号的限制呢，是因为  ZEROFILL 属性会隐式地将数值转为无符号型，因此不能存储负的数值。</p>
+<p>详见<a target="_blank" rel="noopener" href="https://www.cnblogs.com/chenmingjun/p/10556206.html">https://www.cnblogs.com/chenmingjun/p/10556206.html</a></p>
+<h3 id="2、浮点类型"><a href="#2、浮点类型" class="headerlink" title="2、浮点类型"></a>2、浮点类型</h3><p>MySQL中使用浮点数和定点数来表示小数。</p>
+<p> 浮点类型有两种，分别是单精度浮点数（<strong>FLOAT</strong>）和双精度浮点数（<strong>DOUBLE</strong>）；定点类型只有一种，就是 <strong>DECIMAL</strong>。</p>
+<p> 浮点类型和定点类型都可以用<code>(M, D)</code>来表示，其中<code>M</code>称为精度，表示总共的位数；<code>D</code>称为标度，表示小数的位数。</p>
+<p>CPU 原生支持浮点运算，但是不支持 DECIMAl 类型的计算，因此 DECIMAL 的计算比浮点类型需要更高的代价。</p>
+<h3 id="3、字符串"><a href="#3、字符串" class="headerlink" title="3、字符串"></a>3、字符串</h3><p>主要有 CHAR 和 VARCHAR 两种类型，一种是定长的，一种是变长的。</p>
+<h4 id="3-1、varchar-n"><a href="#3-1、varchar-n" class="headerlink" title="3.1、varchar(n)"></a>3.1、varchar(n)</h4><p>varchar是动态字符串（跟上面的int不一样）长度是在括号里面指定的，即只能存储小于等于指定长度的字符串，以 varchar(255)举例，该字段最多只能存储255个字符。</p>
+<h4 id="3-2、varchar-255"><a href="#3-2、varchar-255" class="headerlink" title="3.2、varchar(255)"></a>3.2、varchar(255)</h4><p>那为什么会经常性设置成varchar(255)呢？</p>
+<p>首先我们要知道一个概念：InnoDB存储引擎的表索引的前缀长度最长是767字节(bytes)，前缀长度意思就是索引中数据的长度，即若给一个varchar类型的字段建索引，则该varchar中最长的字符长度不能超过767字节。</p>
+<p>utf8编码时 255*3=765bytes ,恰恰是能建索引情况下的最大值。（255是字符的长度，3是utf8一个字符占用3个字节）</p>
+<p>如果使用的是utf8mb4编码，默认字符长度则应该是 767除以4向下取整，也就是191。</p>
+<h4 id="3-3、字符集"><a href="#3-3、字符集" class="headerlink" title="3.3、字符集"></a>3.3、字符集</h4><p>varchar(n)占用几个字节跟字符集有关系：</p>
+<ul>
+<li>字符类型若为gbk，每个字符占用2个字节，</li>
+<li>字符类型若为utf8，每个字符最多占用3个字节</li>
+<li>字符类型若为utf8mb4，每个字符最多占用4个字节</li>
+</ul>
+<h4 id="3-4、前缀索引"><a href="#3-4、前缀索引" class="headerlink" title="3.4、前缀索引"></a>3.4、前缀索引</h4><p>如果要为三个 varchar 字段建立联合索引，但是三个字段的长度之和加起来超过了767字节，该怎么办？</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">UNIQUE KEY &#96;uniq_code&#96; (&#96;nick_name&#96;(20),&#96;account&#96;(20),&#96;city&#96;(20))</span><br></pre></td></tr></table></figure>
+
+<p>每个字段取前20字符建立索引，这样的话就是长度就不会超出，这个就是<code>前缀索引</code></p>
+<h4 id="3-5、varchar（20）-和varchar（255）的开销"><a href="#3-5、varchar（20）-和varchar（255）的开销" class="headerlink" title="3.5、varchar（20） 和varchar（255）的开销"></a>3.5、varchar（20） 和varchar（255）的开销</h4><p>如果要存储<code>&#39;hello12345&#39;</code>这个字符串，使用<code>varchar(10)</code>和<code>varchar(100)</code>存储，占用的磁盘空间是一样的，但是内存消耗不一样。</p>
+<ul>
+<li>MySQL建立索引时如果没有限制索引的大小，索引长度会默认采用的该字段的长度。因此，加载索引信息时用varchar(255)类型会占用更多的内存。</li>
+<li>由于MySQL通常会分配固定大小的内存块来保存内部值，因此当使用临时表进行排序等操作时会消耗更多的内存。</li>
+</ul>
+<h4 id="3-6、varchar-与-char"><a href="#3-6、varchar-与-char" class="headerlink" title="3.6、varchar 与 char"></a>3.6、varchar 与 char</h4><p>VARCHAR 会保留字符串末尾的空格，而 CHAR 会删除。即对于 <code>“a    ”</code>，varchar 存储的是 <code>“a    ”</code>，而char存储的是<code>“a”</code></p>
+<p>VARCHAR 合适场景：字符串的最大长度比平均长度大很多；使用了像UTF-8这样的字符集，每个字符都使用不同的字节数进行存储。</p>
+<p>CHAR适合存储很短的字符串，或者所有值都接近同一个长度，如密码的MD5值。</p>
+<h3 id="4、-时间和日期"><a href="#4、-时间和日期" class="headerlink" title="4、 时间和日期"></a>4、 时间和日期</h3><p>MySQL 提供了两种相似的日期时间类型: DATETIME 和 TIMESTAMP。</p>
+<h4 id="4-1、DATETIME"><a href="#4-1、DATETIME" class="headerlink" title="4.1、DATETIME"></a>4.1、DATETIME</h4><p>能够保存从 1001 年到 9999 年的日期和时间，精度为秒，使用 8 字节的存储空间。它与时区无关。</p>
+<h4 id="4-2-TIMESTAMP"><a href="#4-2-TIMESTAMP" class="headerlink" title="4.2. TIMESTAMP"></a>4.2. TIMESTAMP</h4><p>和 UNIX 时间戳相同，保存从 1970 年 1 月 1 日午夜(格林威治时间)以来的秒数，使用 4 个字节，只能表示从 1970 年 到 2038 年。</p>
+<p>它和时区有关，也就是说一个时间戳在不同的时区所代表的具体时间是不同的。</p>
+<h3 id="5、BLOB-和-TEXT"><a href="#5、BLOB-和-TEXT" class="headerlink" title="5、BLOB 和 TEXT"></a>5、BLOB 和 TEXT</h3><p>BLOB和TEXT都是为存储很大的数据而设计的数据类型，分别采用二进制和字符方式存储。</p>
+<p>与其他类型不同，MySQL把每个BLOB和TEXT值当做一个独立的对象去处理。当BLOB和TEXT值太大时，InnoDB会使用专门的“外部”存储区域来进行存储，此时每个值在行内需要1~4个字节存储一个指针，然后在外部存储区域存储实际的值。</p>
+<p>MySQL对BLOB和TEXT列进行排序与其他类型是不同的：它只对每个列的最前max_sort_length个字节而不是整个字符串做排序。同样的，MySQL也不能将BLOB或TEXT列全部长度的字符串进行索引（前缀索引）。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/05/04/MySQL/MySQL%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" data-id="cl2rm3dld00008caqdvy6anwm" data-title="MySQL数据类型" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-计算机网络/基础网络攻击" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/05/03/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/%E5%9F%BA%E7%A1%80%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB/" class="article-date">
+  <time class="dt-published" datetime="2022-05-03T14:39:41.000Z" itemprop="datePublished">2022-05-03</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/05/03/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/%E5%9F%BA%E7%A1%80%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB/">基础网络攻击</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="1、SYN洪泛攻击"><a href="#1、SYN洪泛攻击" class="headerlink" title="1、SYN洪泛攻击"></a>1、SYN洪泛攻击</h2><h3 id="1-1、产生原理"><a href="#1-1、产生原理" class="headerlink" title="1.1、产生原理"></a>1.1、产生原理</h3><p>服务器在收到连接请求报文段后，如同意建立连接，就向客户机发回确认，并在OS内核中为该TCP连接分配TCP缓存和变量。除此之外标识该tcp连接的tcb也会占用内存资源。</p>
+<h3 id="1-2、防御手段"><a href="#1-2、防御手段" class="headerlink" title="1.2、防御手段"></a>1.2、防御手段</h3><p><code>SYN cookie 方法</code></p>
+<p>在服务器收到客户端的第一次请求之后，不立马分配资源，而是将</p>
+<ol>
+<li>SYN报文的源和目的IP与端口号</li>
+<li>仅仅有服务器知道的密钥</li>
+</ol>
+<p>塞入一个哈希函数，生成一个认证码；这个认证码也叫cookie；将cookie作为初始序列号，发送给客户端。如果客户端真实存在，则客户端将会带着cookie+1作为ack响应。而服务器可以再次执行上述过程，比较与ack-1是否相同。如果相同，则建立连接。如果客户端不存在，则服务器没有为其消耗任何资源。</p>
+<h3 id="1-3、TCP的相关细节"><a href="#1-3、TCP的相关细节" class="headerlink" title="1.3、TCP的相关细节"></a>1.3、TCP的相关细节</h3><p>TCB：包含 socket 、指向收发缓冲区的指针、数据包序列号等。</p>
+<p>客户端的TCB在发起连接之前就创建并赋好值；服务端的TCB也在收到连接之前就创建好，但是由于不知道谁会连接自己，故将TCB都初始化为0，当接收到第一次握手的连接请求后，为该tcp分配缓存等资源，并赋值给TCB。因此，在第二次握手时，服务端已经为该tcp连接分配了一部分资源。</p>
+<p><strong>若第三次握手的ack包丢失会怎样？</strong></p>
+<p>或许由于第二次握手的包丢失，客户端不会发起第三次握手；或者客户端的第三次握手的包丢失。总之，服务端在接收不到第三次握手包时会执行如下操作：</p>
+<ol>
+<li>没有收到来自客户端的任何包：根据 TCP的超时重传机制，重新发送第二次握手包，若重发指定次数之后，仍然未收到响应，就会发送reset包，关闭连接，释放资源。</li>
+<li>收到了后续的数据包：由于第三次握手的关键就是其ack，而数据包中也有ack，故连接正常建立并进行通信。</li>
+</ol>
+<h2 id="2、DNS-劫持"><a href="#2、DNS-劫持" class="headerlink" title="2、DNS 劫持"></a>2、DNS 劫持</h2><p>某些网络运营商为了某些目的，对DNS进行了某些操作，导致用户无法通过域名取得正确的IP地址。</p>
+<p>运营商会利用 DNS 劫持 投放小广告等。DNS污染则让域名直接无法访问了。</p>
+<p>遇到DNS污染只能更换域名服务器或使用第三方域名解析服务。</p>
+<h2 id="3、中间人攻击"><a href="#3、中间人攻击" class="headerlink" title="3、中间人攻击"></a>3、中间人攻击</h2><p>前置知识：机器对于 ARP 包是信任的，不做任何安全校验。</p>
+<p>当客户端发起连接请求时，攻击者向客户端发送大量 ARP 包谎称自己是网关，然后客户端就会将所有请求都发送给攻击者。攻击者收到请求后返回自己的数字证书，并向服务端发送真实的请求。如果客户端不对证书校验，则客户端就会向攻击者发送对称加密密钥并进行后续的加密通信，而攻击者和服务器建立的是正规的安全连接。如此，中间人攻击就成功了，后续攻击者可以对请求和响应进行转发，并动一些手脚。</p>
+<p>使用 SSL 身份认证即可防御中间人攻击。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/05/03/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/%E5%9F%BA%E7%A1%80%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB/" data-id="cl2rm3dlj00028caq7isa2rwa" data-title="基础网络攻击" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Redis/Redis集群" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/05/02/Redis/Redis%E9%9B%86%E7%BE%A4/" class="article-date">
@@ -348,8 +494,8 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h1 id="1、压缩列表-ZipList"><a href="#1、压缩列表-ZipList" class="headerlink" title="1、压缩列表 - ZipList"></a>1、压缩列表 - ZipList</h1><p>Redis是基于内存的nosql，有些场景下为了节省内存redis会用“时间”换“空间”。ziplist就是很典型的例子。</p>
-<h2 id="1-1、整体布局"><a href="#1-1、整体布局" class="headerlink" title="1.1、整体布局"></a>1.1、整体布局</h2><p>ziplist是为了<strong>节省内存空间</strong>而设计的由一系列特殊编码的<strong>连续内存块</strong>组成的<strong>顺序存储</strong>结构，类似于数组，ziplist在内存中是连续存储的，但是不同于数组，为了节省内存 ziplist的每个元素所占的内存大小可以不同（数组中叫元素，ziplist叫节点<strong>entry</strong>），每个节点可以用来存储一个整数或者一个字符串。存储整数时是采用整数的二进制而不是字符串形式存储。</p>
+        <h2 id="1、压缩列表-ZipList"><a href="#1、压缩列表-ZipList" class="headerlink" title="1、压缩列表 - ZipList"></a>1、压缩列表 - ZipList</h2><p>Redis是基于内存的nosql，有些场景下为了节省内存redis会用“时间”换“空间”。ziplist就是很典型的例子。</p>
+<h3 id="1-1、整体布局"><a href="#1-1、整体布局" class="headerlink" title="1.1、整体布局"></a>1.1、整体布局</h3><p>ziplist是为了<strong>节省内存空间</strong>而设计的由一系列特殊编码的<strong>连续内存块</strong>组成的<strong>顺序存储</strong>结构，类似于数组，ziplist在内存中是连续存储的，但是不同于数组，为了节省内存 ziplist的每个元素所占的内存大小可以不同（数组中叫元素，ziplist叫节点<strong>entry</strong>），每个节点可以用来存储一个整数或者一个字符串。存储整数时是采用整数的二进制而不是字符串形式存储。</p>
 <p><img src="ziplist%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80.png" alt="ziplist内存布局"></p>
 <ul>
 <li>zlbytes: ziplist的长度（单位: 字节)，是一个32位无符号整数</li>
@@ -358,7 +504,7 @@
 <li>entry: 节点</li>
 <li>zlend: 值为0xFF，用于标记ziplist的结尾</li>
 </ul>
-<h2 id="1-2、节点的布局-entry"><a href="#1-2、节点的布局-entry" class="headerlink" title="1.2、节点的布局(entry)"></a>1.2、节点的布局(entry)</h2><p>每个节点由三部分组成：prevlength、encoding、data</p>
+<h3 id="1-2、节点的布局-entry"><a href="#1-2、节点的布局-entry" class="headerlink" title="1.2、节点的布局(entry)"></a>1.2、节点的布局(entry)</h3><p>每个节点由三部分组成：prevlength、encoding、data</p>
 <ul>
 <li>prevlengh: 记录上一个节点的长度，为了方便反向遍历ziplist</li>
 <li>encoding: 当前节点的编码规则</li>
@@ -372,22 +518,22 @@
 </ul>
 <p>根据当前节点存储的数据类型及长度，可以将ziplist节点分为9类：</p>
 <p>当 encoding 的高两位为 11 时表明是整数节点，否则表明是字符串节点。其中整数节点共有 6 中类型（int16、int32、int64等），字符串节点共有3中类型（3种类型的字符串长度不同）。</p>
-<h2 id="1-3、复杂度"><a href="#1-3、复杂度" class="headerlink" title="1.3、复杂度"></a>1.3、复杂度</h2><ul>
+<h3 id="1-3、复杂度"><a href="#1-3、复杂度" class="headerlink" title="1.3、复杂度"></a>1.3、复杂度</h3><ul>
 <li>新建 ZipList：O(1)</li>
 <li>查找：O(n)</li>
 <li>插入：O(n)</li>
 <li>删除：O(n)</li>
 </ul>
-<h2 id="1-4、总结"><a href="#1-4、总结" class="headerlink" title="1.4、总结"></a>1.4、总结</h2><ul>
+<h3 id="1-4、总结"><a href="#1-4、总结" class="headerlink" title="1.4、总结"></a>1.4、总结</h3><ul>
 <li>ziplist是为节省内存空间而生的。让每个元素按照实际的内容大小存储，不浪费空间。</li>
 <li>ziplist是一个为Redis专门提供的底层数据结构之一，本身可以有序也可以无序。当作为<strong>list</strong>和<strong>hash</strong>的底层实现时，节点之间没有顺序；当作为<strong>zset</strong>的底层实现时，节点之间会按照大小顺序排列。</li>
 </ul>
-<h1 id="2、快表-QuickList"><a href="#2、快表-QuickList" class="headerlink" title="2、快表 - QuickList"></a>2、快表 - QuickList</h1><p>在Redis的早期版本中，存储list列表结构时，如果元素少则使用压缩列表ziplist，否则使用双向链表linkedlist。</p>
+<h2 id="2、快表-QuickList"><a href="#2、快表-QuickList" class="headerlink" title="2、快表 - QuickList"></a>2、快表 - QuickList</h2><p>在Redis的早期版本中，存储list列表结构时，如果元素少则使用压缩列表ziplist，否则使用双向链表linkedlist。</p>
 <p>但是考虑到链表的每个节点都要有两个指针，prev 和 next 指针要占去 16 个字节 (64bit 系统的指针是 8 个字节)。因此Redis3.2版本开始使用 quicklist 代替了 ziplist 和 linkedlist。</p>
 <p>quicklist 实际上是 zipList 和 linkedList 的混合体，它将 linkedList 中的多个节点并为一个 quicklistNode，使用 zipList 来紧凑存储，多个 zipList 之间使用双向指针串接起来。</p>
 <p><img src="quicklist%E5%B8%83%E5%B1%80.png" alt="quicklist布局"></p>
 <p>QuickList 内部默认定义的每个 quicklistNode 中的 ziplist 的大小为 8k 字节。当其大小为 1 时快表退化为链表；当其大小为无穷大时退化为压缩列表。</p>
-<h1 id="3、字典-哈希表-Dict"><a href="#3、字典-哈希表-Dict" class="headerlink" title="3、字典/哈希表 - Dict"></a>3、字典/哈希表 - Dict</h1><p>本质上就是哈希表, 这个在很多语言中都有。</p>
+<h2 id="3、字典-哈希表-Dict"><a href="#3、字典-哈希表-Dict" class="headerlink" title="3、字典/哈希表 - Dict"></a>3、字典/哈希表 - Dict</h2><p>本质上就是哈希表, 这个在很多语言中都有。</p>
 <p>和引入红黑树之前的 java 的 HashMap 相同，使用数组加链表的结构。</p>
 <p>一些要点：</p>
 <ul>
@@ -412,17 +558,17 @@
 <p>什么叫渐进式 rehash？也就是说扩容和收缩操作不是一次性、集中式完成的，而是分多次、渐进式完成的。因为数据量大时集中式的扩容会导致长时间STW。所以Redis采用渐进式 rehash,这样在进行渐进式rehash期间，字典的删除查找更新等操作可能会在两个哈希表上进行，第一个哈希表没有找到，就会去第二个哈希表上进行查找。但是进行增加操作，一定是在新的哈希表上进行的。</p>
 </li>
 </ul>
-<h1 id="4、整数集-IntSet"><a href="#4、整数集-IntSet" class="headerlink" title="4、整数集 - IntSet"></a>4、整数集 - IntSet</h1><p>intset是一个由整数组成的有序集合，从而便于进行二分查找，用于快速地判断一个元素是否属于这个集合。它在内存分配上与 ziplist 有些类似，是连续的一整块内存空间，而且对于大整数和小整数（按绝对值）采取了不同的编码，尽量对内存的使用进行了优化。</p>
+<h2 id="4、整数集-IntSet"><a href="#4、整数集-IntSet" class="headerlink" title="4、整数集 - IntSet"></a>4、整数集 - IntSet</h2><p>intset是一个由整数组成的有序集合，从而便于进行二分查找，用于快速地判断一个元素是否属于这个集合。它在内存分配上与 ziplist 有些类似，是连续的一整块内存空间，而且对于大整数和小整数（按绝对值）采取了不同的编码，尽量对内存的使用进行了优化。</p>
 <p>下图为整数集合的实际组成，包括三个部分，分别是编码格式encoding，元素数量length，保存元素的数组contents。</p>
 <p><img src="intset%E5%B8%83%E5%B1%80.png" alt="intset布局"></p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//整数集合结构体</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">intset</span> &#123;</span></span><br><span class="line">    <span class="keyword">uint32_t</span> encoding;  <span class="comment">//编码格式，有如下三种格式，初始值默认为INTSET_ENC_INT16</span></span><br><span class="line">    <span class="keyword">uint32_t</span> length;    <span class="comment">//集合元素数量</span></span><br><span class="line">    <span class="keyword">int8_t</span> contents[];  <span class="comment">//保存元素的数组，元素类型并不一定是ini8_t类型，数组中的元素从小到大排列。</span></span><br><span class="line">&#125; intset;               </span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> INTSET_ENC_INT16 (sizeof(int16_t))   <span class="comment">//16位，2个字节</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> INTSET_ENC_INT32 (sizeof(int32_t))   <span class="comment">//32位，4个字节</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> INTSET_ENC_INT64 (sizeof(int64_t))   <span class="comment">//64位，8个字节</span></span></span><br></pre></td></tr></table></figure>
 
 <p>因为插入的数据的大小是不一样的，为了尽可能的<strong>节约内存</strong>，所以需要使用不同的类型来存储数据。</p>
-<h2 id="整数集合的升级"><a href="#整数集合的升级" class="headerlink" title="整数集合的升级"></a>整数集合的升级</h2><p><code>contents</code> 数组的长度始终是 <code>encoding * length</code>，初始<code>encoding</code>为 <code>int16</code>，存储 1、2、3、4。但若突然来了一个123456789，此时已超出 <code>int16</code>的编码范围，必须使用<code>int32</code>，因此要升级。</p>
+<h3 id="整数集合的升级"><a href="#整数集合的升级" class="headerlink" title="整数集合的升级"></a>整数集合的升级</h3><p><code>contents</code> 数组的长度始终是 <code>encoding * length</code>，初始<code>encoding</code>为 <code>int16</code>，存储 1、2、3、4。但若突然来了一个123456789，此时已超出 <code>int16</code>的编码范围，必须使用<code>int32</code>，因此要升级。</p>
 <p>原始<code>contents</code> 数组的长度为 16 * 4 = 64，升级后的长度为 32 * 5 = 160。在 0~160的空间中从后往前依次将 123456789、4、3、2、1移动到正确位置。从后往前的目的是为了防止值覆盖。</p>
 <p>只支持升级不支持降级，即若此时把123456789删了，encoding 还是 32 位。</p>
-<h1 id="5、跳表-ZSkipList"><a href="#5、跳表-ZSkipList" class="headerlink" title="5、跳表 - ZSkipList"></a>5、跳表 - ZSkipList</h1><p>跳表是一种可以进行二分查找的有序链表，采用空间换时间的设计思路，跳表在原有的有序链表上面增加了多级索引（例如每两个节点就提取一个节点到上一级），通过索引来实现快速查找。</p>
-<h2 id="5-1、查找数据"><a href="#5-1、查找数据" class="headerlink" title="5.1、查找数据"></a>5.1、查找数据</h2><p>原始链表，查找复杂度为O(n)</p>
+<h2 id="5、跳表-ZSkipList"><a href="#5、跳表-ZSkipList" class="headerlink" title="5、跳表 - ZSkipList"></a>5、跳表 - ZSkipList</h2><p>跳表是一种可以进行二分查找的有序链表，采用空间换时间的设计思路，跳表在原有的有序链表上面增加了多级索引（例如每两个节点就提取一个节点到上一级），通过索引来实现快速查找。</p>
+<h3 id="5-1、查找数据"><a href="#5-1、查找数据" class="headerlink" title="5.1、查找数据"></a>5.1、查找数据</h3><p>原始链表，查找复杂度为O(n)</p>
 <p><img src="%E8%B7%B3%E8%A1%A8_%E5%8E%9F%E5%A7%8B%E9%93%BE%E8%A1%A8.jpeg" alt="跳表_原始链表"></p>
 <p>每隔两个节点抽取一个出来作为一级索引，查找复杂度为O(n/2) -&gt; O(n)</p>
 <p><img src="%E8%B7%B3%E8%A1%A8_%E4%B8%80%E7%BA%A7%E7%B4%A2%E5%BC%95.jpeg" alt="跳表_一级索引"></p>
@@ -433,10 +579,10 @@
 <p>跳表的总高度 h = log2n</p>
 <p>假如原始链表包含 n 个元素，则一级索引元素个数为 n/2、二级索引元素个数为 n/4、三级索引元素个数为 n/8 以此类推。所以，索引节点的总和是：n/2 + n/4 + n/8 + … + 8 + 4 + 2 = n-2，**空间复杂度是 O(n)**。</p>
 <p>可以每 3 个节点或更多节点抽取一个作为索引，这样能节省空间。</p>
-<h2 id="5-2、插入数据"><a href="#5-2、插入数据" class="headerlink" title="5.2、插入数据"></a>5.2、插入数据</h2><p>实际索引不是绝对均匀地每两个节点抽取一个索引，而是每层随机选取 n/2 个节点作为索引，当数据量很大时接近均匀。</p>
+<h3 id="5-2、插入数据"><a href="#5-2、插入数据" class="headerlink" title="5.2、插入数据"></a>5.2、插入数据</h3><p>实际索引不是绝对均匀地每两个节点抽取一个索引，而是每层随机选取 n/2 个节点作为索引，当数据量很大时接近均匀。</p>
 <p>插入数据时，先按查找的方法找到数据应该在的位置，然后插入。再通过 <code>randomLevel()</code>函数确定该节点应该建立几级索引，该函数会确保有 1/2 概率创建一级索引，1/4概率创建二级索引，1/8概率创建三级索引…..等，创建二级索引时同时会创建一级索引，创建三级索引时同时会创建一级和二级索引….等。插入的时间复杂度是 O(logn)</p>
-<h2 id="5-3、删除数据"><a href="#5-3、删除数据" class="headerlink" title="5.3、删除数据"></a>5.3、删除数据</h2><p>找到，删掉，若该元素有索引则将其所有索引也删掉。删除元素的时间复杂度为 O(logn)。</p>
-<h2 id="5-4、总结"><a href="#5-4、总结" class="headerlink" title="5.4、总结"></a>5.4、总结</h2><ul>
+<h3 id="5-3、删除数据"><a href="#5-3、删除数据" class="headerlink" title="5.3、删除数据"></a>5.3、删除数据</h3><p>找到，删掉，若该元素有索引则将其所有索引也删掉。删除元素的时间复杂度为 O(logn)。</p>
+<h3 id="5-4、总结"><a href="#5-4、总结" class="headerlink" title="5.4、总结"></a>5.4、总结</h3><ul>
 <li>跳表是可以实现二分查找的有序链表；</li>
 <li>每个元素插入时随机生成它的level；</li>
 <li>最底层包含所有的元素；</li>
@@ -454,7 +600,14 @@
 </ol>
 <p>其中，前四个操作红黑树也可以完成，且时间复杂度跟跳表是一样的。但是，按照区间来查找数据这个操作，红黑树的效率没有跳表高。按照区间查找数据时，跳表可以做到 O(logn) 的时间复杂度定位区间的起点，然后在原始链表中顺序往后遍历就可以了，非常高效。</p>
 <p>本节摘自<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/9d8296562806">Skip List–跳表（全网最详细的跳表文章没有之一）</a></p>
-<h1 id="6、redisObject"><a href="#6、redisObject" class="headerlink" title="6、redisObject"></a>6、redisObject</h1><p>redis 就是 key-value 类型的 nosql 数据库，redis 内部使用一个 dict 来表示这种 key-value 的映射，其中 key 固定使用 sds 存储，但是值却有多种类型，为了在同一个dict内能够存储不同类型的value，这就需要一个通用的数据结构，这个通用的数据结构就是redisObject。</p>
+<h2 id="6、简单动态字符串-sds"><a href="#6、简单动态字符串-sds" class="headerlink" title="6、简单动态字符串 - sds"></a>6、简单动态字符串 - sds</h2><p>sds 中用<code>len</code> 保存了字符串的长度，用一个数组保存了字符串的每个元素。</p>
+<p>与 c 语言的字符串相比有以下好处：</p>
+<ul>
+<li>常数复杂度获取字符串长度：由于保存了 len，复杂度为O(1)，而c语言遍历为O(n)</li>
+<li>杜绝缓冲区溢出：sds 在进行字符修改时会根据len判断是否需要扩容，若需要会在扩容后操作，不出现缓冲区溢出问题。</li>
+<li>二进制安全：C字符串以空字符作为字符串结束的标识，而对于一些二进制文件（如图片等），内容可能包括空字符串，因此C字符串无法正确存取；而 sds 根据len判断是否结束。</li>
+</ul>
+<h2 id="7、redisObject"><a href="#7、redisObject" class="headerlink" title="7、redisObject"></a>7、redisObject</h2><p>redis 就是 key-value 类型的 nosql 数据库，redis 内部使用一个 dict 来表示这种 key-value 的映射，其中 key 固定使用 sds 存储，但是值却有多种类型，为了在同一个dict内能够存储不同类型的value，这就需要一个通用的数据结构，这个通用的数据结构就是redisObject。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">redisObject</span> &#123;</span></span><br><span class="line">    <span class="keyword">unsigned</span> type:<span class="number">4</span>;           <span class="comment">// 类型：五大基本类型</span></span><br><span class="line">    <span class="keyword">unsigned</span> encoding:<span class="number">4</span>;       <span class="comment">// 编码：integer、hash table、ziplist、skiplist、sds等</span></span><br><span class="line">    <span class="keyword">unsigned</span> lru:LRU_BITS;     <span class="comment">// 不重要--- // 当 redis 打开 maxmemory 选项后，会根据 LRU 回收内存</span></span><br><span class="line">    <span class="keyword">int</span> refcount;              <span class="comment">// 不重要--- // 引用计数：计数为 0 则回收对象</span></span><br><span class="line">    <span class="keyword">void</span> *ptr;                 <span class="comment">// 数据指针。指向真正的数据结构，如快表、跳表等。</span></span><br><span class="line">&#125; robj;</span><br></pre></td></tr></table></figure>
 
 <p>对于同一个type，还可能对应不同的encoding，这说明同样的一个数据类型，可能存在不同的内部表示方式。而不同的内部表示，在内存占用和查找性能上会有所不同。</p>
@@ -465,7 +618,7 @@
 <li>为多种数据类型提供一种统一的表示方式。</li>
 <li>允许同一类型的数据采用不同的内部表示，从而在某些情况下尽量节省内存。</li>
 </ul>
-<h1 id="7、基本类型底层"><a href="#7、基本类型底层" class="headerlink" title="7、基本类型底层"></a>7、基本类型底层</h1><h2 id="7-1、String"><a href="#7-1、String" class="headerlink" title="7.1、String"></a>7.1、String</h2><p>sds 或 long。</p>
+<h2 id="8、基本类型底层"><a href="#8、基本类型底层" class="headerlink" title="8、基本类型底层"></a>8、基本类型底层</h2><h3 id="8-1、String"><a href="#8-1、String" class="headerlink" title="8.1、String"></a>8.1、String</h3><p>sds 或 long。</p>
 <p>String的内部存储结构一般是sds（Simple Dynamic String，可以动态扩展内存），但是如果一个String类型的value的值是数字，那么Redis内部会把它转成long类型来存储，从而减少内存的使用。</p>
 <ul>
 <li>在对string进行incr, decr等操作的时候，如果它内部是OBJ_ENCODING_INT编码，那么可以直接进行加减操作；如果它内部是OBJ_ENCODING_RAW或OBJ_ENCODING_EMBSTR编码，那么Redis会先试图把sds存储的字符串转成long型，如果能转成功，再进行加减操作。</li>
@@ -475,17 +628,17 @@
 <p>OBJ_STRING类型的字符串对象的编码和解码过程在Redis里非常重要，应用广泛。</p>
 <p>当我们执行Redis的set命令的时候，Redis首先将接收到的value值（string类型）表示成一个<code>type = OBJ_STRING</code>并且<code>encoding = OBJ_ENCODING_RAW</code>的robj对象，然后在存入内部存储之前先执行一个编码过程，试图将它表示成另一种更节省内存的encoding方式。</p>
 <p>当我们需要获取字符串的值，比如执行get命令的时候，我们需要执行与前面讲的编码过程相反的操作——解码。</p>
-<h2 id="7-2、Hash"><a href="#7-2、Hash" class="headerlink" title="7.2、Hash"></a>7.2、Hash</h2><p>压缩列表ziplist 或者 字典dict。</p>
+<h3 id="8-2、Hash"><a href="#8-2、Hash" class="headerlink" title="8.2、Hash"></a>8.2、Hash</h3><p>压缩列表ziplist 或者 字典dict。</p>
 <p>当Hash中数据项比较少的情况下，Hash底层才用压缩列表ziplist进行存储数据，随着数据的增加，底层的ziplist就可能会转成dict。</p>
-<h2 id="7-3、List"><a href="#7-3、List" class="headerlink" title="7.3、List"></a>7.3、List</h2><p>quicklist</p>
-<h2 id="7-4、Set"><a href="#7-4、Set" class="headerlink" title="7.4、Set"></a>7.4、Set</h2><p>有序整数集合intset 或者 字典dict</p>
+<h3 id="8-3、List"><a href="#8-3、List" class="headerlink" title="8.3、List"></a>8.3、List</h3><p>quicklist</p>
+<h3 id="8-4、Set"><a href="#8-4、Set" class="headerlink" title="8.4、Set"></a>8.4、Set</h3><p>有序整数集合intset 或者 字典dict</p>
 <p>当存储的数据同时满足下面这样两个条件的时候，Redis 就采用整数集合intset来实现set这种数据类型：</p>
 <ul>
 <li>存储的数据都是整数</li>
 <li>存储的数据元素个数小于512个</li>
 </ul>
 <p>当不能同时满足这两个条件的时候，Redis 就使用dict来存储集合中的数据</p>
-<h2 id="7-5、Sorted-Set"><a href="#7-5、Sorted-Set" class="headerlink" title="7.5、Sorted Set"></a>7.5、Sorted Set</h2><p>压缩列表ziplist 或者 zset</p>
+<h3 id="8-5、Sorted-Set"><a href="#8-5、Sorted-Set" class="headerlink" title="8.5、Sorted Set"></a>8.5、Sorted Set</h3><p>压缩列表ziplist 或者 zset</p>
 <p>当存储的数据同时满足下面这两个条件的时候，Redis就使用压缩列表 ziplist</p>
 <ul>
 <li>集合中每个数据的大小都要小于 64 字节</li>
@@ -760,210 +913,6 @@
 
 
   
-    <article id="post-Redis/Redis分布式锁" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/04/12/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" class="article-date">
-  <time class="dt-published" datetime="2022-04-12T14:39:41.000Z" itemprop="datePublished">2022-04-12</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Redis/">Redis</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/04/12/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">Redis分布式锁</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="1、什么是分布式锁"><a href="#1、什么是分布式锁" class="headerlink" title="1、什么是分布式锁"></a>1、什么是分布式锁</h2><p>分布式锁，顾名思义，就是分布式项目开发中用到的锁，可以用来控制分布式系统之间同步访问共享资源，一般来说，分布式锁需要满足的特性有这么几点：</p>
-<p>1、互斥性：在任何时刻，对于同一条数据，只有一台应用可以获取到分布式锁；</p>
-<p>2、高可用性：在分布式场景下，一小部分服务器宕机不影响正常使用，这种情况就需要将提供分布式锁的服务以集群的方式部署；</p>
-<p>3、防止锁超时：如果客户端没有主动释放锁，服务器会在一段时间之后自动释放锁，防止客户端宕机或者网络不可达时产生死锁；</p>
-<p>4、独占性：加锁解锁必须由同一台服务器进行，也就是锁的持有者才可以释放锁，不能出现你加的锁，别人给你解锁了；</p>
-<h2 id="2、实现分布式锁"><a href="#2、实现分布式锁" class="headerlink" title="2、实现分布式锁"></a>2、实现分布式锁</h2><p><code>Redis</code>分布式锁主要是通过<code>SETNX</code>和<code>SETEX</code>这两个命令实现的。这两个命令都是原子操作。</p>
-<p>核心思想就是每次想要获取锁的时候，就对一个固定的 key 值以 <code>SETNX</code>的方式存放，如果成功，就说明获取锁成功，否则以自旋的方式持续获取锁，直到超时获取失败。</p>
-<p>解锁通过 LUA 代码实现，LUA是原子性的。</p>
-<p>注：下方代码只体现实现锁的思想，不能实际使用。实际开发中使用 Redisson 。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 代码通过 Jedis 编写，已经过时，重要的是实现方式，不是具体代码实现</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedisLock</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 竞争该 key 值</span></span><br><span class="line">    <span class="keyword">private</span> String LOCK_KEY = <span class="string">&quot;redis_lock&quot;</span>;`</span><br><span class="line">    <span class="comment">// key的持有时间，5ms`</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> EXPIRE_TIME = <span class="number">5</span>;`</span><br><span class="line">    <span class="comment">// 等待超时时间，1s`</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> TIME_OUT = <span class="number">1000</span>;`</span><br><span class="line">    <span class="comment">// redis命令参数，相当于nx和px的命令合集`</span></span><br><span class="line">    <span class="keyword">private</span> SetParams params = SetParams.setParams().nx().px(EXPIRE_TIME);`</span><br><span class="line">    <span class="comment">// redis连接池，连的是本地的redis客户端`</span></span><br><span class="line">    JedisPool jedisPool = <span class="keyword">new</span> JedisPool(<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">6379</span>);`</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 加锁</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">lock</span><span class="params">(String id)</span> </span>&#123;</span><br><span class="line">        Long start = System.currentTimeMillis();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">for</span> (; ; ) &#123;</span><br><span class="line">                <span class="comment">//SET命令返回OK ，则证明获取锁成功</span></span><br><span class="line">                String lock = jedis.set(LOCK_KEY, id, params);</span><br><span class="line">                <span class="keyword">if</span> (<span class="string">&quot;OK&quot;</span>.equals(lock)) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//否则循环等待，在timeout时间内仍未获取到锁，则获取失败</span></span><br><span class="line">                <span class="keyword">long</span> l = System.currentTimeMillis() - start;</span><br><span class="line">                <span class="keyword">if</span> (l &gt;= timeout) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    Thread.sleep(<span class="number">100</span>);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            jedis.close();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 解锁</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">unlock</span><span class="params">(String id)</span> </span>&#123;</span><br><span class="line">        String script =</span><br><span class="line">            <span class="comment">// KEYS[1] 就是 LOCK_KEY，ARGV[1] 就是锁拥有者设置的值，表明只有锁拥有者才能解锁</span></span><br><span class="line">                <span class="string">&quot;if redis.call(&#x27;get&#x27;,KEYS[1]) == ARGV[1] then&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;   return redis.call(&#x27;del&#x27;,KEYS[1]) &quot;</span> +</span><br><span class="line">                        <span class="string">&quot;else&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;   return 0 &quot;</span> +</span><br><span class="line">                        <span class="string">&quot;end&quot;</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            String result = jedis.eval(script, Collections.singletonList(LOCK_KEY), </span><br><span class="line">                                       Collections.singletonList(id)).toString();</span><br><span class="line">            <span class="keyword">return</span> <span class="string">&quot;1&quot;</span>.equals(result) ? <span class="keyword">true</span> : <span class="keyword">false</span>;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            jedis.close();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="3、分布式锁的缺陷"><a href="#3、分布式锁的缺陷" class="headerlink" title="3、分布式锁的缺陷"></a>3、分布式锁的缺陷</h2><p>一、客户端长时间阻塞导致锁失效问题</p>
-<p>客户端1得到了锁，因为网络问题或者GC等原因导致长时间阻塞，然后业务程序还没执行完锁就过期了，这时候客户端2也能正常拿到锁，可能会导致线程安全的问题。</p>
-<p>二、redis服务器时钟漂移问题</p>
-<p>如果redis服务器的机器时钟发生了向前跳跃，就会导致这个key过早超时失效，比如说客户端1拿到锁后，key的过期时间是12:02分，但redis服务器本身的时钟比客户端快了2分钟，导致key在12:00的时候就失效了，这时候，如果客户端1还没有释放锁的话，就可能导致多个客户端同时持有同一把锁的问题。</p>
-<p>三、单点实例安全问题</p>
-<p>如果redis是单master模式的，当这台机宕机的时候，那么所有的客户端都获取不到锁了，为了提高可用性，可能就会给这个master加一个slave，但是因为redis的主从同步是异步进行的，可能会出现客户端1设置完锁后，master挂掉，slave提升为master，因为异步复制的特性，客户端1设置的锁丢失了，这时候客户端2设置锁也能够成功，导致客户端1和客户端2同时拥有锁。</p>
-<p>针对上述问题，官方推出了 RedLock 算法，但是依然无法完全解决。</p>
-<p>对此只能说，鱼和熊掌不可兼得，我们之所以用Redis作为分布式锁的工具，很大程度上是因为Redis本身效率高且单进程的特点，即使在高并发的情况下也能很好的保证性能，但很多时候，性能和安全不能完全兼顾，如果你一定要保证锁的安全性的话，可以用其他的中间件如db、zookeeper来做控制，这些工具能很好的保证锁的安全，但性能方面只能说是差强人意，否则大家早就用上了。</p>
-<p>本文摘自<a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000038988087">面试官：你真的了解Redis分布式锁吗？ - SegmentFault 思否</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/04/12/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" data-id="cl1zs7vsi0007zwaq21zv7um7" data-title="Redis分布式锁" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-Redis/Redis持久化" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/04/09/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/" class="article-date">
-  <time class="dt-published" datetime="2022-04-09T15:39:41.000Z" itemprop="datePublished">2022-04-09</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Redis/">Redis</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/04/09/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/">Redis持久化</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="1、Redis-核心主流程"><a href="#1、Redis-核心主流程" class="headerlink" title="1、Redis 核心主流程"></a>1、Redis 核心主流程</h2><p>AOF 和 RDB 的持久化过程中，有不少操作是在时间事件 serverCron 中被触发的。所以，这边有必要先了解下 Redis 中的事件核心流程。</p>
-<p>Redis 的服务器进程就是一个事件循环，最重要的有两个事件：文件事件和时间事件。Redis 在服务器初始化后，会无限循环，处理产生的文件事件和时间事件。</p>
-<p>文件事件常见的有：接受连接（accept）、读取（read）、写入（write）、关闭连接（close）等。使用 IO 多路复用处理。</p>
-<p>时间事件中常见的就是 serverCron，redis 核心流程中通常也只有这个时间事件。serverCron 默认配置下每100ms会被触发一次，在该时间事件中，会执行很多操作：清理过期键、AOF 后台重写、RDB 的 save point 的检查、将 aof_buf 内容写到磁盘上（flushAppendOnlyFile 函数）等等。</p>
-<h2 id="2、Redis持久化"><a href="#2、Redis持久化" class="headerlink" title="2、Redis持久化"></a>2、Redis持久化</h2><p>Redis是内存数据库，若不持久化到磁盘中，则redis进程一旦退出，数据就会丢失，因此需要持久化。</p>
-<p>Redis 的持久化机制有以下三种：</p>
-<ul>
-<li>RDB</li>
-<li>AOF</li>
-<li>混合持久化（redis4.0引入）</li>
-</ul>
-<h3 id="2-1、RDB-Redis-DataBase"><a href="#2-1、RDB-Redis-DataBase" class="headerlink" title="2.1、RDB(Redis DataBase)"></a>2.1、RDB(Redis DataBase)</h3><p>描述：类似于快照。在某个时间点，将 Redis 在内存中的数据保存到磁盘里面。RDB 持久化功能生成的 RDB 文件是经过压缩的二进制文件。恢复时将快照文件直接读入内存。</p>
-<p>rdb保存的文件是dump.rdb。同样可以在redis.conf中修改</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">在redis.conf中对自动保存的间隔进行设置</span><br><span class="line"><span class="comment"># save 3600 1        After 3600 seconds (an hour) if at least 1 key changed</span></span><br><span class="line"><span class="comment"># save 300 100       After 300 seconds (5 minutes) if at least 100 keys changed</span></span><br><span class="line"><span class="comment"># save 60 10000      After 60 seconds if at least 10000 keys changed</span></span><br></pre></td></tr></table></figure>
-
-<h4 id="2-1-1、触发条件"><a href="#2-1-1、触发条件" class="headerlink" title="2.1.1、触发条件"></a>2.1.1、触发条件</h4><p><strong>自动触发</strong>（全部是BGSAVE）</p>
-<ul>
-<li><p>满足上方save的规则</p>
-</li>
-<li><p>执行flushall，生成的 dump.rdb 为空。</p>
-</li>
-<li><p>退出reids</p>
-</li>
-</ul>
-<p><strong>手动触发</strong></p>
-<ul>
-<li>SAVE：生成 RDB 快照文件，但是会阻塞主进程，服务器将无法处理客户端发来的命令请求，所以通常不会直接使用该命令。</li>
-<li>BGSAVE：fork 子进程来生成 RDB 快照文件，阻塞只会发生在 fork 子进程的时候，之后主进程可以正常处理请求。会先将数据保存进一个临时文件中，待持久化过程结束了，再将这个临时文件替换上次持久化的文件。</li>
-</ul>
-<h4 id="2-1-2、恢复rdb文件"><a href="#2-1-2、恢复rdb文件" class="headerlink" title="2.1.2、恢复rdb文件"></a>2.1.2、恢复rdb文件</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 若rdb文件在下方目录下，则启动时会自动回复其中的数据</span></span><br><span class="line">127.0.0.1:6379&gt; CONFIG GET dir</span><br><span class="line">1) <span class="string">&quot;dir&quot;</span></span><br><span class="line">2) <span class="string">&quot;/usr/local/bin&quot;</span></span><br></pre></td></tr></table></figure>
-
-<h4 id="2-1-3、RDB-的优缺点"><a href="#2-1-3、RDB-的优缺点" class="headerlink" title="2.1.3、RDB 的优缺点"></a>2.1.3、RDB 的优缺点</h4><p><strong>RDB 的优点：</strong></p>
-<ul>
-<li>RDB 文件是是经过压缩的二进制文件，占用空间很小，它保存了 Redis 某个时间点的数据集，很适合用于做备份。 </li>
-<li>RDB 非常适用于灾难恢复：它只有一个文件，并且内容都非常紧凑，可以（在加密后）将它传送到别的数据中心。</li>
-<li>RDB 可以最大化 redis 的性能。父进程在保存 RDB 文件时唯一要做的就是 fork 出一个子进程，然后这个子进程就会处理接下来的所有保存工作，父进程无须执行任何磁盘 I/O 操作。</li>
-<li>RDB 在恢复大数据集时的速度比 AOF 的恢复速度要快。</li>
-</ul>
-<p><strong>RDB 的缺点：</strong></p>
-<ul>
-<li><p>RDB 在服务器故障时容易造成数据的丢失。RDB 允许我们通过修改 save point 配置来控制持久化的频率。但是，因为 RDB 文件需要保存整个数据集的状态， 所以它是一个比较重的操作，如果频率太频繁，可能会对 Redis 性能产生影响。所以通常可能设置至少5分钟才保存一次快照，这时如果 Redis 出现宕机等情况，则意味着最多可能丢失5分钟数据。</p>
-</li>
-<li><p>RDB 保存时使用 fork 子进程进行数据的持久化，如果数据比较大的话，fork 可能会非常耗时，造成 Redis 停止处理服务N毫秒。如果数据集很大且 CPU 比较繁忙的时候，停止服务的时间甚至会到一秒。</p>
-</li>
-<li><p>Linux fork 子进程采用的是 copy-on-write 的方式。在 Redis 执行 RDB 持久化期间，如果 client 写入数据很频繁，那么将增加 Redis 占用的内存，最坏情况下，内存的占用将达到原先的2倍。刚 fork 时，主进程和子进程共享内存，但是随着主进程需要处理写操作，主进程需要将修改的页面拷贝一份出来，然后进行修改。极端情况下，如果所有的页面都被修改，则此时的内存占用是原先的2倍。</p>
-</li>
-</ul>
-<h3 id="2-2、AOF-Append-Only-File"><a href="#2-2、AOF-Append-Only-File" class="headerlink" title="2.2、AOF(Append Only File)"></a>2.2、AOF(Append Only File)</h3><p>将所有写命令都记录到文件中，恢复时把该文件再执行一遍，只允许追加该记录文件，不允许修改。该记录文件的名字为<code>appendonly.aof</code>。该功能默认不开启，可以通过配置：appendonly yes 开启， appendonly no 关闭。</p>
-<h4 id="2-2-1、AOF的实现"><a href="#2-2-1、AOF的实现" class="headerlink" title="2.2.1、AOF的实现"></a>2.2.1、AOF的实现</h4><p>AOF 持久化功能的实现可以分为三个步骤：命令追加、文件写入、文件同步。</p>
-<p>命令追加：当 AOF 持久化功能打开时，服务器在执行完一个写命令之后，会将被执行的写命令追加到服务器状态的 aof 缓冲区（aof_buf）的末尾。</p>
-<p>文件写入：将 aof_buf 的内容写到页缓存</p>
-<p>文件同步：将页缓存刷盘到硬盘</p>
-<p> serverCron 时间事件中会触发 flushAppendOnlyFile 函数，该函数会根据服务器配置的 appendfsync 参数值，来决定是否将 aof_buf 缓冲区的内容写入和保存到 AOF 文件。</p>
-<p><strong>appendfsync 参数有三个选项：</strong></p>
-<ul>
-<li><p>always：每个命令都刷盘。</p>
-</li>
-<li><p>everysec：每秒刷盘1次，这个操作是异步的，由一个后台线程专门负责执行。</p>
-</li>
-<li><p>no：不执行刷盘，让操作系统自己执行刷盘。</p>
-</li>
-</ul>
-<h4 id="2-2-2、AOF-的优缺点"><a href="#2-2-2、AOF-的优缺点" class="headerlink" title="2.2.2、AOF 的优缺点"></a>2.2.2、AOF 的优缺点</h4><p><strong>AOF 的优点</strong></p>
-<ul>
-<li><p>AOF 比 RDB可靠。可以设置不同的 fsync 策略：no、everysec 和 always。默认是 everysec，在这种配置下，redis 仍然可以保持良好的性能，并且就算发生故障停机，也最多只会丢失一秒钟的数据。</p>
-</li>
-<li><p>AOF文件是一个纯追加的日志文件。即使日志因为某些原因而包含了未写入完整的命令（比如写入时磁盘已满，写入中途停机等等）， 我们也可以使用 redis-check-aof 工具也可以轻易地修复这种问题。</p>
-</li>
-<li><p>当 AOF文件太大时，Redis 会自动在后台进行重写：重写后的新 AOF 文件包含了恢复当前数据集所需的最小命令集合。整个重写是绝对安全，因为重写是在一个新的文件上进行，同时 Redis 会继续往旧的文件追加数据。当新文件重写完毕，Redis 会把新旧文件进行切换，然后开始把数据写到新文件上。</p>
-</li>
-<li><p>易读</p>
-</li>
-</ul>
-<p><strong>AOF 的缺点</strong></p>
-<ul>
-<li><p>对于相同的数据集，AOF 文件的大小一般会比 RDB 文件大。</p>
-</li>
-<li><p>根据所使用的 fsync 策略，AOF 的速度可能会比 RDB 慢。通常 fsync 设置为每秒一次就能获得比较高的性能，而关闭 fsync 可以让 AOF 的速度和 RDB 一样快。</p>
-</li>
-<li><p>AOF 在过去曾经发生过这样的 bug ：因为个别命令的原因，导致 AOF 文件在重新载入时，无法将数据集恢复成保存时的原样。（举个例子，阻塞命令 BRPOPLPUSH 就曾经引起过这样的 bug ） 。</p>
-</li>
-</ul>
-<h3 id="2-3、混合持久化"><a href="#2-3、混合持久化" class="headerlink" title="2.3、混合持久化"></a>2.3、混合持久化</h3><p>混合持久化只发生于 AOF 重写过程。使用了混合持久化，重写后的新 AOF 文件前半段是 RDB 格式的全量数据，后半段是 AOF 格式的增量数据。</p>
-<p>混合持久化本质是通过 AOF 后台重写（bgrewriteaof 命令）完成的，不同的是当开启混合持久化时，fork 出的子进程先将当前全量数据以 RDB 方式写入新的 AOF 文件，然后再将 AOF 重写缓冲区（aof_rewrite_buf_blocks）的增量命令以 AOF 方式写入到文件，写入完成后通知主进程将新的含有 RDB 格式和 AOF 格式的 AOF 文件替换旧的的 AOF 文件。</p>
-<p>优点：结合 RDB 和 AOF 的优点, 更快的重写和恢复。</p>
-<p>缺点：AOF 文件里面的 RDB 部分不再是 AOF 格式，可读性差。</p>
-<h2 id="3、AOF重写"><a href="#3、AOF重写" class="headerlink" title="3、AOF重写"></a>3、AOF重写</h2><h3 id="3-1、为什么需要-AOF-重写"><a href="#3-1、为什么需要-AOF-重写" class="headerlink" title="3.1、为什么需要 AOF 重写"></a>3.1、为什么需要 AOF 重写</h3><p>AOF 持久化是通过保存被执行的写命令来记录数据库状态的，随着写入命令的不断增加，AOF 文件中的内容会越来越多，文件的体积也会越来越大。</p>
-<p>如果不加以控制，体积过大的 AOF 文件可能会对 Redis 服务器、甚至整个宿主机造成影响，并且 AOF 文件的体积越大，使用 AOF 文件来进行数据还原所需的时间就越多。</p>
-<h3 id="3-2、AOF-重写"><a href="#3-2、AOF-重写" class="headerlink" title="3.2、AOF 重写"></a>3.2、AOF 重写</h3><p>Redis 生成新的 AOF 文件来代替旧 AOF 文件，这个新的 AOF 文件包含重建当前数据集所需的最少命令。具体过程是遍历所有数据库的所有键，从数据库读取键现在的值，然后用一条命令去记录键值对，代替之前记录这个键值对的多条命令。</p>
-<h3 id="3-3、AOF-后台重写一致性问题"><a href="#3-3、AOF-后台重写一致性问题" class="headerlink" title="3.3、AOF 后台重写一致性问题"></a>3.3、AOF 后台重写一致性问题</h3><p>AOF 后台重写使用子进程进行从写，解决了主进程阻塞的问题，但是仍然存在另一个问题：子进程在进行 AOF 重写期间，服务器主进程还需要继续处理命令请求，新的命令可能会对现有的数据库状态进行修改，从而使得当前的数据库状态和重写后的 AOF 文件保存的数据库状态不一致。</p>
-<p>为了解决上述问题，Redis 引入了 AOF 重写缓冲区（aof_rewrite_buf_blocks），这个缓冲区在服务器创建子进程之后开始使用，当 Redis 服务器执行完一个写命令之后，它会同时将这个写命令追加到 AOF 缓冲区和 AOF 重写缓冲区。</p>
-<p>这样，当子进程完成 AOF 重写工作后，父进程会在 serverCron 中检测到子进程已经重写结束，则会执行以下工作：</p>
-<p>1、将 AOF 重写缓冲区中的所有内容写入到新 AOF 文件中，这时新 AOF 文件所保存的数据库状态将和服务器当前的数据库状态一致。</p>
-<p>2、对新的 AOF 文件进行改名，原子的覆盖现有的 AOF 文件，完成新旧两个 AOF 文件的替换。</p>
-<h3 id="3-4、AOF-重写缓冲区内容过多"><a href="#3-4、AOF-重写缓冲区内容过多" class="headerlink" title="3.4、AOF 重写缓冲区内容过多"></a>3.4、AOF 重写缓冲区内容过多</h3><p>将 AOF 重写缓冲区的内容追加到新 AOF 文件的工作是由主进程完成的，所以这一过程会导致主进程无法处理请求，如果内容过多，可能会使得阻塞时间过长，显然是无法接受的。</p>
-<p>Redis 中已经针对这种情况进行了优化：</p>
-<p>1、在进行 AOF 后台重写时，Redis 会创建一组用于父子进程间通信的管道，同时会新增一个文件事件，该文件事件会将写入 AOF 重写缓冲区的内容通过该管道发送到子进程。</p>
-<p>2、在重写结束后，子进程会通过该管道尽量从父进程读取更多的数据，每次等待可读取事件1ms，如果一直能读取到数据，则这个过程最多执行1000次，也就是1秒。如果连续20次没有读取到数据，则结束这个过程。</p>
-<p>通过这些优化，Redis 尽量让 AOF 重写缓冲区的内容更少，以减少主进程阻塞的时间。</p>
-<p>本文摘自<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/340082703">面试必问的 Redis：RDB、AOF、混合持久化 - 知乎 (zhihu.com)</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/04/09/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/" data-id="cl1zs7vse0004zwaqf04g52tn" data-title="Redis持久化" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -979,7 +928,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/C-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">C# 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Go 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">JavaWeb系列学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">常见问题及解决方法</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B1%82%E8%81%8C/">求职</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/C-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">C# 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Go 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">JavaWeb系列学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">常见问题及解决方法</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B1%82%E8%81%8C/">求职</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li></ul>
     </div>
   </div>
 
@@ -1007,6 +956,14 @@
       <ul>
         
           <li>
+            <a href="/2022/05/04/MySQL/MySQL%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">MySQL数据类型</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/03/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/%E5%9F%BA%E7%A1%80%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB/">基础网络攻击</a>
+          </li>
+        
+          <li>
             <a href="/2022/05/02/Redis/Redis%E9%9B%86%E7%BE%A4/">Redis集群</a>
           </li>
         
@@ -1016,14 +973,6 @@
         
           <li>
             <a href="/2022/05/02/Redis/Redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/">Redis哨兵机制</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/01/Redis/Redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">Redis底层数据结构</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/28/Linux/Linux%E5%9F%BA%E7%A1%80/">Linux基础</a>
           </li>
         
       </ul>

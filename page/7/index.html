@@ -73,6 +73,236 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-JavaWeb系列学习笔记/servlet笔记" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/04/21/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/servlet%E7%AC%94%E8%AE%B0/" class="article-date">
+  <time class="dt-published" datetime="2021-04-21T10:48:13.000Z" itemprop="datePublished">2021-04-21</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">JavaWeb系列学习笔记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/04/21/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/servlet%E7%AC%94%E8%AE%B0/">Servlet学习笔记</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="实现Servlet的主要方式"><a href="#实现Servlet的主要方式" class="headerlink" title="实现Servlet的主要方式"></a>实现Servlet的主要方式</h3><ul>
+<li><h4 id="程序实现Servlet接口（很少使用）"><a href="#程序实现Servlet接口（很少使用）" class="headerlink" title="程序实现Servlet接口（很少使用）"></a>程序实现Servlet接口（很少使用）</h4><ol>
+<li>编写类实现Servlet接口</li>
+<li>根据业务重写service方法</li>
+<li>到web.xml中配置Servlet程序的访问地址（基于注解时不需要）</li>
+</ol>
+</li>
+<li><h4 id="程序继承HttpServlet类（一般使用这种）"><a href="#程序继承HttpServlet类（一般使用这种）" class="headerlink" title="程序继承HttpServlet类（一般使用这种）"></a>程序继承HttpServlet类（一般使用这种）</h4><ol>
+<li>编写类继承HttpServlet类</li>
+<li>根据业务需要重写doGet或doPost方法</li>
+<li>到web.xml中配置Servlet程序的访问地址（基于注解时不需要）</li>
+</ol>
+</li>
+<li><h4 id="在IDEA中直接创建Servlet程序"><a href="#在IDEA中直接创建Servlet程序" class="headerlink" title="在IDEA中直接创建Servlet程序"></a>在IDEA中直接创建Servlet程序</h4>  实质上还是第二种方法，只是IDEA帮你做了一些通用的工作  </li>
+</ul>
+<hr>
+<h3 id="Servlet的生命周期"><a href="#Servlet的生命周期" class="headerlink" title="Servlet的生命周期"></a>Servlet的生命周期</h3><ol>
+<li>执行Servlet构造器方法，该方法在<u>初次访问</u>时调用一次。</li>
+<li>执行init初始化方法，该方法在<u>初次访问</u>时调用一次。</li>
+<li>执行service方法，该方法在<u>每次访问</u>时都会调用一次。</li>
+<li>执行destory方法，该方法在<u>web工程停止</u>时调用一次。  </li>
+</ol>
+<hr>
+<h3 id="Servlet接口的架构"><a href="#Servlet接口的架构" class="headerlink" title="Servlet接口的架构"></a>Servlet接口的架构</h3><p><img src="Servlet.jpg" alt="Servlet"></p>
+<hr>
+<h3 id="Servlet的域对象"><a href="#Servlet的域对象" class="headerlink" title="Servlet的域对象"></a>Servlet的域对象</h3><ul>
+<li>概念：可以在不同Servlet之间传递数据的对象，就是域对象。通俗的讲就是这个对象本身可以存储一定范围内的所有数据，通过它就能获取和存储数据。</li>
+<li>域对象共有的方法：<ul>
+<li><code>getAttribute(String name)</code> 获取对应的数据</li>
+<li><code>getAttributeNames()</code> 获取所有的key</li>
+<li><code>removeAttribute(String name)</code> 移除对应的数据</li>
+<li><code>setAttribute(String name, Object object)</code> 设置数据</li>
+</ul>
+</li>
+<li>Servlet的三大域对象分别为<strong>ServletRequest域</strong>、<strong>HttpSession域</strong>、<strong>ServletContext域</strong></li>
+<li>ServletRequest：<ul>
+<li>生命周期：请求开始到请求结束</li>
+<li>作用域：整个请求链（包括请求转发）</li>
+</ul>
+</li>
+<li>HttpSession：<ul>
+<li>生命周期：会话开始到会话结束，服务器会为每个浏览器创建一个供其独享的Session对象，当一段时间内，session没有被使用（默认是30分钟），服务器会销毁该session。</li>
+<li>作用域：一次会话</li>
+</ul>
+</li>
+<li>ServletContext：<ul>
+<li>生命周期：服务器开启到服务器关闭</li>
+<li>作用域：整个web应用</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="ServletConfig类"><a href="#ServletConfig类" class="headerlink" title="ServletConfig类"></a>ServletConfig类</h3><ul>
+<li>ServletConfig类是Servlet程序的配置信息类，里面封装了一些初始化配置的信息</li>
+<li>Servlet程序和ServletConfig对象都是由Tomcat负责创建，供我们使用。  </li>
+<li>每创建一次Servlet程序时，就创建一个ServletConfig对象。</li>
+<li>每个ServletConfig对象都只能获取自己的Servlet的信息，不能跨域获取</li>
+<li>重写init方法时要带上父类的init方法，如果不带上，则在使用ServletConfig相关方法时就会引发NullPointerException，这是因为父类GenericServlet的init方法中保存了ServletConfig对象，如果重写了init方法，该对象就会丢失，故而引发NullPointerException。</li>
+<li>作用：<ol>
+<li>获取Servlet程序的别名，即servlet-name的值<code>servletConfig.getServletName()</code></li>
+<li>获取初始化参数init-param<code>servletConfig.getInitParameter()</code></li>
+<li>获取ServletContext对象<code>servletConfig.getServletContext()</code></li>
+</ol>
+</li>
+</ul>
+<hr>
+<h3 id="ServletContext类"><a href="#ServletContext类" class="headerlink" title="ServletContext类"></a>ServletContext类</h3><ul>
+<li>ServletContext是接口，表示Servlet上下文对象</li>
+<li>一个web工程只有一个ServletContext对象实例，在web工程启动时创建，停止时销毁</li>
+<li>ServletContext对象是一个域对象<ul>
+<li>域对象是可以像map一样存取数据的对象，域指的是存取数据的操作范围  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">                存数据                  取数据                     删除数据  </span><br><span class="line">Map             put()                   get()                     remove()  </span><br><span class="line">域对象      serAttribute()          getAttribute()             removeAttribute()</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li>作用：<ol>
+<li>获取web.xml中配置的上下文参数context-param: <code>servletContext.getInitParameter()</code></li>
+<li>获取当前的工程路径，格式：/工程路径: <code>servletContext.getContextPath()</code></li>
+<li>获取工程部署后在服务器硬盘上的绝对路径: <code>servletContext.getRealPath(&quot;/&quot;)</code>其中/在服务器解析时，表示地址为：<code>http://ip:port/工程路径</code>映射到IDEA为web目录</li>
+<li>像map一样存储数据</li>
+</ol>
+</li>
+</ul>
+<hr>
+<h3 id="HttpServletRequest类"><a href="#HttpServletRequest类" class="headerlink" title="HttpServletRequest类"></a>HttpServletRequest类</h3><ul>
+<li>作用：每次只要有请求进入Tomcat服务器，Tomcat服务器就会把请求过来的HTTP协议信息解析好封装到Request对象中，然后传递到service方法（doGet和DoPost中给我们使用，我们可以通过HttpServletRequest对象，获取到所有请求的信息。（每次请求创建一个，请求完成即销毁）  </li>
+<li>常见API：<ul>
+<li><code>request.getRequestURI()</code> ：获取请求的资源路径</li>
+<li><code>request.getRequestURL()</code> ：获取请求的url</li>
+<li><code>request.getRemoteHost()</code> ：获取客户端ip地址</li>
+<li><code>request.getHeader(String key)</code> ：获取请求头中对应键的值</li>
+<li><code>request.getMethod()</code> ：获取请求方式</li>
+<li><code>request.getParameter(String key)</code> ：获取请求参数</li>
+<li><code>request.getParameterValues(String key)</code>: 获取请求参数，用于参数值有多个时</li>
+</ul>
+</li>
+<li>通常在doPost方法的第一行写<code>request.setCharacterEncoding(&quot;UTF-8&quot;);</code>用来解决post请求的中文乱码问题</li>
+<li>HttpServletRequest对象也是域对象。每个请求对应着唯一一个HttpServletRequest对象，而且在请求结束之前会一直存在，故在处理请求过程中可以使用<code>request.setAttribute(String name, Object o)</code>方法对该对象添加属性，用<code>request.getAttribute(String name)</code>获取该对象的属性，从而执行一些操作。</li>
+<li>请求转发：服务器收到请求后，从一个资源转到另一个资源的操作<ul>
+<li>特点：1、浏览器地址栏没有改变。2、属于一次请求：由多个servlet资源共同完成的同一个请求，故HttpServletRequest对象的作用域涵盖请求转发过程，从而这些servlet资源可以共享该对象中的数据。3、能访问WEB-INF中的资源。4、不可以访问当前工程以外的资源。 </li>
+<li><code>RequestDispatcher requestDispatcher = request.getRequestDispatcher(&quot;/目的资源名称&quot;);</code>请求转发必须以斜杠/开头，/表示<code>http://ip:port/工程路径</code>映射到IDEA为web目录</li>
+<li>base标签的作用：所有的相对路径都是以base标签中的地址为参照。在没有base标签时，所有路径都以当前地址栏中的地址为参照，这在某些情况下会出错（如请求转发时，地址栏中的地址不变，但页面改变，若此页面中有相对路径，则参考基准不再是当前页面，而是地址栏的地址，从而出错）。若在页面中引入base标签，则相对路径参考基准成为base标签的路径。base标签在HTML文档的head标签内，如<code>&lt;base herf=&quot;http://localhost:8080/project/a/b.html&gt;</code>。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="HttpServletResponse类"><a href="#HttpServletResponse类" class="headerlink" title="HttpServletResponse类"></a>HttpServletResponse类</h3><ul>
+<li>作用：HttpServletResponse类和HttpServletRequest类一样，每次请求进来，Tomcat服务器都会创建一个Response对象传递给Servlet程序去使用。HttpServletRequest表示请求过来的信息，HttpServletResponse表示所有响应的信息，如果需要设置返回给客户端的信息，都可以通过HttpServletResponse对象进行设置。</li>
+<li>输出流：HttpServletResponse类通过流将响应传递给客户端。<ol>
+<li>字节流 <code>getOutputStream();</code>  常用于下载（传递）二进制数据</li>
+<li>字符流 <code>getWriter();</code>    常用于回传字符串（常用）</li>
+</ol>
+<ul>
+<li>两个流只能互斥使用</li>
+</ul>
+</li>
+<li>中文乱码：HttpServletResponse响应的默认字符集为ISO-8859-1，所以会中文乱码，可以通过<code>response.setContentType(&quot;text/html; charset=UTF-8&quot;);</code>将服务器和浏览器的字符集以及响应头都设置为UTF-8，就能解决中文乱码问题。<strong>此方法必须在获取流对象之前调用才有效</strong></li>
+<li>请求重定向：<ul>
+<li>第一种方法：在下图的response1中写<code>response.setStatus(302)</code> 来设置响应状态码，<code>response.setHeader(&quot;Location&quot;, &quot;http://ip:port/工程路径/response2</code> 来设置响应头，告知新地址。 </li>
+<li>第二种方法（<strong>推荐使用</strong>）：在下图的response1中写<code>response.sendRedirect(http://ip:port/工程路径/response2</code>即可。</li>
+<li>请求重定向是两次独立的请求，只是第二次有浏览器代劳，不需要手动发起请求而已。</li>
+<li>特点：1、浏览器地址栏发生变化。2、属于两次请求。3、前后两个servlet资源不共享request域中的数据。4、不能访问WEB-INF中的资源。5、可以访问当前工程以外的资源。<br><img src="%E8%AF%B7%E6%B1%82%E9%87%8D%E5%AE%9A%E5%90%91.jpg" alt="请求重定向"></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="web中-的不同含义"><a href="#web中-的不同含义" class="headerlink" title="web中 / 的不同含义"></a>web中 / 的不同含义</h3><ul>
+<li>在web中 / 斜杠是一种<strong>绝对路径</strong></li>
+<li>/ 斜杠如果被浏览器解析，得到地址为：<code>http://ip:port/</code>，如html中的<code>&lt;a href=&quot;/&quot;&gt;斜杠&lt;/a&gt;</code></li>
+<li>/ 斜杠如果被服务器解析，得到地址为：<code>http://ip:port/工程路径</code>，如  <code>&lt;url-pattern&gt;/hello&lt;/url-pattern&gt;</code> 、<br><code>servletContext.getRealPath(&quot;/&quot;)</code> 、 <code>request.getRequestDispatcher(&quot;/&quot;)</code></li>
+<li>特殊情况：<code>response.sendRediect(&quot;/&quot;);</code>重定向，会将 / 斜杠发送给浏览器解析，得到<code>http://ip:port/</code></li>
+</ul>
+<hr>
+<h3 id="基于xml的方式"><a href="#基于xml的方式" class="headerlink" title="基于xml的方式"></a>基于xml的方式</h3><h4 id="Servlet中web-xml的配置"><a href="#Servlet中web-xml的配置" class="headerlink" title="Servlet中web.xml的配置"></a>Servlet中web.xml的配置</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">web-app</span> <span class="attr">xmlns</span>=<span class="string">&quot;http://xmlns.jcp.org/xml/ns/javaee&quot;</span></span></span><br><span class="line"><span class="tag">         <span class="attr">xmlns:xsi</span>=<span class="string">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span></span></span><br><span class="line"><span class="tag">         <span class="attr">xsi:schemaLocation</span>=<span class="string">&quot;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd&quot;</span></span></span><br><span class="line"><span class="tag">         <span class="attr">version</span>=<span class="string">&quot;4.0&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">&lt;!--servlet标签给Tomcat配置Servlet程序--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">servlet</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!--servlet-name标签：给Servlet程序起一个别名（一般是类名）--&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">servlet-name</span>&gt;</span>HiServlet<span class="tag">&lt;/<span class="name">servlet-name</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!--servlet-class是Servlet程序的全类名--&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">servlet-class</span>&gt;</span>com.example.tomcat.HiServlet<span class="tag">&lt;/<span class="name">servlet-class</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">servlet</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">&lt;!--servlet-mapping标签给Servlet程序配置访问地址--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">servlet-mapping</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!--servlet-name标签告诉服务器，我当前配置的地址给哪个Servlet程序使用--&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">servlet-name</span>&gt;</span>HiServlet<span class="tag">&lt;/<span class="name">servlet-name</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!--url-pattern标签配置访问地址</span></span><br><span class="line"><span class="comment">            /   斜杠在服务器解析时，表示地址为：http://ip:port/工程路径   本工程即为http://localhost:8080/tomcat_war_exploded/</span></span><br><span class="line"><span class="comment">            /hello  表示：http://ip:port/工程路径/hello    即http://localhost:8080/tomcat_war_exploded/hello</span></span><br><span class="line"><span class="comment">        --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/hello<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">servlet-mapping</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">web-app</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="从url定位到Servlet程序过程"><a href="#从url定位到Servlet程序过程" class="headerlink" title="从url定位到Servlet程序过程"></a>从url定位到Servlet程序过程</h4><p>对照上方的xml配置文件：当在地址栏输入<code>http://localhost:8080/tomcat_war_exploded/hello</code>时，由8080定位到Tomcat服务器，再由/tomcat_war_exploded定位到该工程，然后根据/hello定位到xml配置文件中<code>&lt;servlet-mapping&gt;</code>标签下的<code>&lt;url-pattern&gt;</code>标签，其对应的<code>&lt;servlet-name&gt;</code>标签值为HiServlet，再根据这个标识符找到相同名的<code>&lt;servlet&gt;</code>标签，根据其标签下<code>&lt;servlet-class&gt;</code>的值定位到类的位置，然后执行类中的service方法。  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2021/04/21/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/servlet%E7%AC%94%E8%AE%B0/" data-id="ckqkmyect000bs4aq5alob28h" data-title="Servlet学习笔记" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-JavaWeb系列学习笔记/tomcat笔记" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/04/20/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/" class="article-date">
+  <time class="dt-published" datetime="2021-04-20T12:39:32.000Z" itemprop="datePublished">2021-04-20</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">JavaWeb系列学习笔记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/04/20/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/">tomcat笔记</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="将工程部署到tomcat中"><a href="#将工程部署到tomcat中" class="headerlink" title="将工程部署到tomcat中"></a>将工程部署到tomcat中</h3><ol>
+<li>直接将工程拖拽到tomcat的webapps目录下即可访问</li>
+<li>在tomcat中的conf\Catalina\localhost下添加配置文件来配置工程，此时工程可以存放于机器的任何位置<ul>
+<li>配置文件的示例如下<ul>
+<li>  &lt;Context path=”/github_blog” docBase=”E:\programme_work\vscode_work\GitHubSite\public”/&gt;</li>
+<li><u>其中，Context表示一个工程上下文<br>path表示工程的访问路径。是该文件的映射，即在url中输入 <code>http://localhost:8080/github_blog/</code>，就会进入这个工程。<br>docBase表示工程目录的实际位置</u>  </li>
+</ul>
+</li>
+<li>一个配置文件对应于一个工程</li>
+</ul>
+</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2021/04/20/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/tomcat%E7%AC%94%E8%AE%B0/" data-id="ckqkmyecn0004s4aq8phdhvwf" data-title="tomcat笔记" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-常见问题及解决方法/hexo" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/hexo/" class="article-date">
@@ -213,51 +443,6 @@
     </div>
     <footer class="article-footer">
       <a data-url="https://ethereal-lu.github.io/2021/04/20/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring5%E7%AC%94%E8%AE%B0/" data-id="ckqkmyecx000is4aq8n0b2hid" data-title="Spring5学习笔记" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-常见问题及解决方法/StringBuilder数组引发NullPointerException" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/StringBuilder%E6%95%B0%E7%BB%84%E5%BC%95%E5%8F%91NullPointerException/" class="article-date">
-  <time class="dt-published" datetime="2021-04-20T01:57:45.000Z" itemprop="datePublished">2021-04-20</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">常见问题及解决方法</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/StringBuilder%E6%95%B0%E7%BB%84%E5%BC%95%E5%8F%91NullPointerException/">StringBuilder数组引发NullPointerException</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h3 id="创建StringBuilder数组时，直接使用会引发NullPointerException异常"><a href="#创建StringBuilder数组时，直接使用会引发NullPointerException异常" class="headerlink" title="创建StringBuilder数组时，直接使用会引发NullPointerException异常"></a>创建StringBuilder数组时，直接使用会引发NullPointerException异常</h3><p>原因：<u>只是创建了一个StringBuilder的容器，内部没有初始化，直接使用就会引发异常。</u></p>
-<p>解决：使用前为每个元素初始化</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">StringBuilder[] sbs = <span class="keyword">new</span> StringBuilder[nums];</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nums; i++) </span><br><span class="line">    sbs[i] = <span class="keyword">new</span> StringBuilder();</span><br></pre></td></tr></table></figure>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2021/04/20/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/StringBuilder%E6%95%B0%E7%BB%84%E5%BC%95%E5%8F%91NullPointerException/" data-id="cknsk3puk00048caqh15v8605" data-title="StringBuilder数组引发NullPointerException" class="article-share-link">分享</a>
       
       
       
@@ -602,7 +787,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/C-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">C# 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Go 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">JavaWeb系列学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">常见问题及解决方法</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B1%82%E8%81%8C/">求职</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/C-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">C# 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Go 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaWeb%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">JavaWeb系列学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">常见问题及解决方法</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B1%82%E8%81%8C/">求职</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li></ul>
     </div>
   </div>
 
@@ -630,6 +815,14 @@
       <ul>
         
           <li>
+            <a href="/2022/05/04/MySQL/MySQL%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">MySQL数据类型</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/03/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/%E5%9F%BA%E7%A1%80%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB/">基础网络攻击</a>
+          </li>
+        
+          <li>
             <a href="/2022/05/02/Redis/Redis%E9%9B%86%E7%BE%A4/">Redis集群</a>
           </li>
         
@@ -639,14 +832,6 @@
         
           <li>
             <a href="/2022/05/02/Redis/Redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/">Redis哨兵机制</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/01/Redis/Redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">Redis底层数据结构</a>
-          </li>
-        
-          <li>
-            <a href="/2022/04/28/Linux/Linux%E5%9F%BA%E7%A1%80/">Linux基础</a>
           </li>
         
       </ul>
