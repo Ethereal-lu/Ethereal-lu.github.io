@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>InnoDB锁 | 驯鹿非鹿</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="锁机制用于管理对共享资源的并发访问。 1、锁粒度表锁表锁是MySQL中最大粒度的锁定机制，会锁定整张表，可以很好的避免死锁，是 MySQL 中最大颗粒度的锁定机制。 表锁由 MySQL Server 实现，一般在执行 DDL 语句时会对整个表进行加锁，比如说ALTER TABLE等操作。在执行 DML 语句时，也可以通过LOCK TABLES显式指定对某个表进行加锁。 页锁页级锁是 MySQL 中">
+<meta property="og:type" content="article">
+<meta property="og:title" content="InnoDB锁">
+<meta property="og:url" content="https://ethereal-lu.github.io/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/InnoDB%E9%94%81/index.html">
+<meta property="og:site_name" content="驯鹿非鹿">
+<meta property="og:description" content="锁机制用于管理对共享资源的并发访问。 1、锁粒度表锁表锁是MySQL中最大粒度的锁定机制，会锁定整张表，可以很好的避免死锁，是 MySQL 中最大颗粒度的锁定机制。 表锁由 MySQL Server 实现，一般在执行 DDL 语句时会对整个表进行加锁，比如说ALTER TABLE等操作。在执行 DML 语句时，也可以通过LOCK TABLES显式指定对某个表进行加锁。 页锁页级锁是 MySQL 中">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://ethereal-lu.github.io/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/InnoDB%E9%94%81/%E5%85%B1%E4%BA%AB%E9%94%81%E4%B8%8E%E6%8E%92%E4%BB%96%E9%94%81.png">
+<meta property="og:image" content="https://ethereal-lu.github.io/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/InnoDB%E9%94%81/mvcc.png">
+<meta property="og:image" content="https://ethereal-lu.github.io/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/InnoDB%E9%94%81/%E4%B8%89%E7%A7%8D%E8%A1%8C%E9%94%81%E7%AE%97%E6%B3%95.png">
+<meta property="article:published_time" content="2022-03-27T09:39:41.000Z">
+<meta property="article:modified_time" content="2022-03-27T09:09:54.646Z">
+<meta property="article:author" content="驯鹿先生">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ethereal-lu.github.io/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/InnoDB%E9%94%81/%E5%85%B1%E4%BA%AB%E9%94%81%E4%B8%8E%E6%8E%92%E4%BB%96%E9%94%81.png">
+  
+    <link rel="alternate" href="/atom.xml" title="驯鹿非鹿" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">驯鹿非鹿</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS 订阅"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://Ethereal-lu.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-数据库/MySQL/InnoDB锁" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/InnoDB%E9%94%81/" class="article-date">
+  <time class="dt-published" datetime="2022-03-27T09:39:41.000Z" itemprop="datePublished">2022-03-27</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      InnoDB锁
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>锁机制用于管理对共享资源的并发访问。</p>
+<h2 id="1、锁粒度"><a href="#1、锁粒度" class="headerlink" title="1、锁粒度"></a>1、锁粒度</h2><h3 id="表锁"><a href="#表锁" class="headerlink" title="表锁"></a>表锁</h3><p>表锁是MySQL中最大粒度的锁定机制，会锁定整张表，可以很好的避免死锁，是 MySQL 中最大颗粒度的锁定机制。</p>
+<p>表锁由 MySQL Server 实现，一般在执行 DDL 语句时会对整个表进行加锁，比如说<code>ALTER TABLE</code>等操作。在执行 DML 语句时，也可以通过<code>LOCK TABLES</code>显式指定对某个表进行加锁。</p>
+<h3 id="页锁"><a href="#页锁" class="headerlink" title="页锁"></a>页锁</h3><p>页级锁是 MySQL 中比较独特的一种锁定级别，在其他数据库管理软件中并不常见。</p>
+<p>页级锁的颗粒度介于行级锁与表级锁之间，所以获取锁定所需要的资源开销，以及所能提供的并发处理能力同样也是介于上面二者之间。另外，页级锁和行级锁一样，会发生死锁。</p>
+<p>页级锁主要应用于 BDB 存储引擎。</p>
+<h3 id="行锁"><a href="#行锁" class="headerlink" title="行锁"></a>行锁</h3><p>行级锁的锁定颗粒度在 MySQL 中是最小的，只针对操作的当前行进行加锁，所以行级锁发生锁定资源争用的概率也最小。</p>
+<p>InnoDB 默认使用行级锁。</p>
+<h2 id="2、行锁详解"><a href="#2、行锁详解" class="headerlink" title="2、行锁详解"></a>2、行锁详解</h2><p>InnoDB默认使用行锁，实现了两种标准的行锁——共享锁与排他锁；</p>
+<p><img src="%E5%85%B1%E4%BA%AB%E9%94%81%E4%B8%8E%E6%8E%92%E4%BB%96%E9%94%81.png" alt="共享锁与排他锁"></p>
+<p>1、除了显式加锁的情况，其他情况下的加锁与解锁都无需人工干预。<br>2、InnoDB所有的行锁算法都是基于索引实现的，锁定的也都是索引或索引区间</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 加锁方式：共享锁</span></span><br><span class="line">SELECT...LOCK <span class="keyword">IN</span> SHARE MODE</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 加锁方式：排它锁</span></span><br><span class="line">SELECT...FOR UPDATE </span><br></pre></td></tr></table></figure>
+
+<h2 id="3、当前读与快照读"><a href="#3、当前读与快照读" class="headerlink" title="3、当前读与快照读"></a>3、当前读与快照读</h2><p><strong>1、当前读：</strong>即加锁读，读取记录的最新版本，会加锁保证其他并发事务不能修改当前记录，直至获取锁的事务释放锁；</p>
+<p>使用当前读的操作主要包括：显式加锁的读操作与插入/更新/删除等写操作，如下所示：</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ? <span class="keyword">lock</span> <span class="keyword">in</span> <span class="keyword">share mode</span>;</span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ? <span class="keyword">for</span> <span class="keyword">update</span>;</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> <span class="keyword">table</span> <span class="keyword">values</span> (…);</span><br><span class="line"><span class="keyword">update</span> <span class="keyword">table</span> <span class="keyword">set</span> ? <span class="keyword">where</span> ?;</span><br><span class="line"><span class="keyword">delete</span> <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ?;</span><br></pre></td></tr></table></figure>
+
+<p>注：当Update SQL被发给MySQL后，MySQL Server会根据where条件，读取第一条满足条件的记录，然后InnoDB引擎会将第一条记录返回，并加锁，待MySQL Server收到这条加锁的记录之后，会再发起一个Update请求，更新这条记录。一条记录操作完成，再读取下一条记录，直至没有满足条件的记录为止。因此，Update操作内部，就包含了当前读。同理，Delete操作也一样。Insert操作会稍微有些不同，简单来说，就是Insert操作可能会触发Unique Key的冲突检查，也会进行一个当前读。</p>
+<p><strong>2、快照读</strong>：即不加锁读，读取记录的快照版本而非最新版本，通过MVCC实现；</p>
+<p>InnoDB默认的RR事务隔离级别下，不显式加『lock in share mode』与『for update』的『select』操作都属于快照读，保证事务执行过程中只有第一次读之前提交的修改和自己的修改可见，其他的均不可见；</p>
+<h2 id="4、MVCC"><a href="#4、MVCC" class="headerlink" title="4、MVCC"></a>4、MVCC</h2><p>MVCC『多版本并发控制』，与之对应的是『基于锁的并发控制』；</p>
+<p>MVCC的最大好处：读不加任何锁，读写不冲突，对于读操作多于写操作的应用，极大的增加了系统的并发性能；</p>
+<p><img src="mvcc.png" alt="mvcc"></p>
+<h2 id="5、锁算法"><a href="#5、锁算法" class="headerlink" title="5、锁算法"></a>5、锁算法</h2><p>InnoDB主要实现了三种行锁算法：</p>
+<p><img src="%E4%B8%89%E7%A7%8D%E8%A1%8C%E9%94%81%E7%AE%97%E6%B3%95.png" alt="三种行锁算法"></p>
+<p><strong>记录锁、间隙锁、临键锁都是排它锁</strong></p>
+<h3 id="5-1、记录锁"><a href="#5-1、记录锁" class="headerlink" title="5.1、记录锁"></a>5.1、记录锁</h3><p><code>记录锁(Record Locks)</code>也称为行锁，顾名思义，表示对某一行记录加锁。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> test <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">1</span> <span class="keyword">FOR</span> UPDATE;</span><br></pre></td></tr></table></figure>
+
+<p>它会在 id=1 的记录上加上记录锁，以阻止其他事务插入，更新，删除 id=1 这一行。</p>
+<p>记录锁总是锁定索引记录（SELECT和UPDATE都会加锁），即使表没有定义索引。对于这种情况， InnoDB创建一个隐藏的聚集索引并使用该索引进行记录锁定。</p>
+<h3 id="5-2、间隙锁"><a href="#5-2、间隙锁" class="headerlink" title="5.2、间隙锁"></a>5.2、间隙锁</h3><p>Gap锁，锁定的是索引记录之间的间隙，是防止幻读的关键；并发事务插入新数据前会先检测间隙中是否已被加锁，防止幻读的出现；</p>
+<p>注意！间隙锁锁住的是一个区间，而不仅仅是这个区间中目前仅存在的数据行。</p>
+<ul>
+<li><code>插入意向锁(Insert Intention Locks)</code>是在插入一条记录行前，由 <code>INSERT</code> 操作产生的一种<code>间隙锁</code>。该锁用以表示插入意向，当多个事务在同一区间插入位置不同的多条数据时，事务之间不需要互相等待。假设存在两条值分别为 4 和 7 的记录，两个不同的事务分别试图插入值为 5 和 6 的两条记录，每个事务在获取插入行上独占的（排他）锁前，都会获取（4，7）之间的间隙锁，但是因为数据行之间并不冲突，所以两个事务之间并不会产生冲突（阻塞等待）。</li>
+</ul>
+<h3 id="5-3、临键锁"><a href="#5-3、临键锁" class="headerlink" title="5.3、临键锁"></a>5.3、临键锁</h3><p><strong>临键锁</strong>，是<strong>记录锁与间隙锁的组合</strong>，它的封锁范围，既包含索引记录，又包含索引区间。通过临键锁可以解决幻读的问题。</p>
+<h2 id="6、表级锁"><a href="#6、表级锁" class="headerlink" title="6、表级锁"></a>6、表级锁</h2><h3 id="6-1、意向锁"><a href="#6-1、意向锁" class="headerlink" title="6.1、意向锁"></a>6.1、意向锁</h3><p><code>意向锁（Intention Locks）</code>是<strong>表级锁</strong>，指示事务稍后需要对表中的行使用哪种类型的锁（共享锁或独占锁）。</p>
+<p>意向锁有两种类型：</p>
+<ul>
+<li>意向共享锁（IS）：一个事务在获取（任何一行/或者全表）S锁之前，一定会先在所在的表上加IS锁。</li>
+<li>意向排它锁（IX）：一个事务在获取（任何一行/或者全表）X锁之前，一定会先在所在的表上加IX锁。</li>
+</ul>
+<p>意图锁定协议如下：</p>
+<ul>
+<li>在事务可以获取表中行的共享锁之前，它必须首先获取<code>IS</code>表上的锁或更强的锁。</li>
+<li>在事务获得表中行的排他锁之前，它必须首先获得<code>IX</code> 表的锁。</li>
+</ul>
+<h3 id="6-2、自增锁"><a href="#6-2、自增锁" class="headerlink" title="6.2、自增锁"></a>6.2、自增锁</h3><p><code>自增锁(auto-inc Locks)</code>是一种特殊的表级锁，主要用于事务中插入自增字段，也就是我们最常用的自增主键id。在最简单的情况下，如果一个事务正在向表中插入值，则任何其他事务都必须等待自己插入到该表中，以便第一个事务插入的行接收连续的主键值。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/InnoDB%E9%94%81/" data-id="cl3ir9vv7001kkkaqf0vc7jax" data-title="InnoDB锁" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">前一篇</strong>
+      <div class="article-nav-title">
+        
+          MySQL主从复制
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E5%B0%8F%E7%9F%A5%E8%AF%86/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">后一篇</strong>
+      <div class="article-nav-title">MySQL小知识</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Go 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2022/05/22/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%9B%B6%E7%A2%8E%E7%AE%97%E6%B3%95/">零碎算法</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/19/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/">分布式事务</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/17/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E9%BB%98%E8%AE%A4%E6%95%B0%E6%8D%AE%E5%BA%93/">MySQL默认数据库</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/Zookeeper%E9%80%89%E4%B8%BE%E6%9C%BA%E5%88%B6/">Zookeeper选举机制</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Kafka/Kafka%E5%9F%BA%E7%A1%80/">Kafka基础</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2022 驯鹿先生<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

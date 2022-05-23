@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>SpringBoot学习笔记 | 驯鹿非鹿</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Spring Boot 是 Spring 的子项目，正如其名字，提供 Spring 的引导( Boot )的功能。 通过 Spring Boot ，开发者可以快速配置 Spring 项目，引入各种 Spring MVC、Spring Transaction、Spring AOP、等等框架，而无需不断重复编写繁重的 Spring 配置，降低了 Spring 的使用成本。 项目创建 新建 spring">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SpringBoot学习笔记">
+<meta property="og:url" content="https://ethereal-lu.github.io/2021/05/10/Java/SpringBoot%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="驯鹿非鹿">
+<meta property="og:description" content="Spring Boot 是 Spring 的子项目，正如其名字，提供 Spring 的引导( Boot )的功能。 通过 Spring Boot ，开发者可以快速配置 Spring 项目，引入各种 Spring MVC、Spring Transaction、Spring AOP、等等框架，而无需不断重复编写繁重的 Spring 配置，降低了 Spring 的使用成本。 项目创建 新建 spring">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-05-10T09:39:41.000Z">
+<meta property="article:modified_time" content="2022-05-23T13:27:16.082Z">
+<meta property="article:author" content="驯鹿先生">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="驯鹿非鹿" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">驯鹿非鹿</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS 订阅"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://Ethereal-lu.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-Java/SpringBoot笔记" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/05/10/Java/SpringBoot%E7%AC%94%E8%AE%B0/" class="article-date">
+  <time class="dt-published" datetime="2021-05-10T09:39:41.000Z" itemprop="datePublished">2021-05-10</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java/">Java</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      SpringBoot学习笔记
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p><a target="_blank" rel="noopener" href="https://github.com/spring-projects/spring-boot">Spring Boot</a> 是 Spring 的<strong>子项目</strong>，正如其名字，提供 Spring 的引导( <strong>Boot</strong> )的功能。</p>
+<p>通过 Spring Boot ，开发者可以快速配置 Spring 项目，引入各种 Spring MVC、Spring Transaction、Spring AOP、等等框架，而无需不断重复编写繁重的 Spring 配置，降低了 Spring 的使用成本。</p>
+<h3 id="项目创建"><a href="#项目创建" class="headerlink" title="项目创建"></a>项目创建</h3><ul>
+<li>新建 spring initializr 项目，在新建过程中引入 spring web 依赖</li>
+<li>将所有的controller、pojo、dao等包创建在Application类的同名目录下（约定大于配置），创建在其他目录下会报错</li>
+<li>在resources目录下创建banner.txt文件，可以在里面粘贴一些图片用于启动时展示</li>
+</ul>
+<hr>
+<h3 id="自动装配原理"><a href="#自动装配原理" class="headerlink" title="自动装配原理"></a>自动装配原理</h3><ul>
+<li><p>父工程 <code>spring-boot-dependencies</code> 对springboot的所有依赖进行管理，其中就有依赖的版本控制，因此我们在pom.xml中引入依赖时，不需要指定版本</p>
+</li>
+<li><p>启动器：启动器都以<code>spring-boot-starter</code>打头，就是springboot的启动场景，如<code>spring-boot-starter-web</code>，就会帮我们自动导入web环境所有的依赖。springboot会将所有的功能场景变为一个个的启动器。我们要使用什么功能，只需要找到相对应的启动器并导入即可</p>
+</li>
+<li><p>主程序：</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// @SpringBootApplication ：标注这个类是springboot的应用</span></span><br><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Springboot01HelloworldApplication</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 启动springboot</span></span><br><span class="line">        SpringApplication.run(Springboot01HelloworldApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  <code>@SpringBootApplication</code> 是复合注解，主要包括 **<code>@ComponentScan</code>, <code>@EnableAutoConfiguration</code>, <code>@SpringBootConfiguration</code>**三个注解。</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootConfiguration</span></span><br><span class="line"><span class="meta">@EnableAutoConfiguration</span></span><br><span class="line"><span class="meta">@ComponentScan(</span></span><br><span class="line"><span class="meta">    excludeFilters = &#123;@Filter(</span></span><br><span class="line"><span class="meta">    type = FilterType.CUSTOM,</span></span><br><span class="line"><span class="meta">    classes = &#123;TypeExcludeFilter.class&#125;</span></span><br><span class="line"><span class="meta">), @Filter(</span></span><br><span class="line"><span class="meta">    type = FilterType.CUSTOM,</span></span><br><span class="line"><span class="meta">    classes = &#123;AutoConfigurationExcludeFilter.class&#125;</span></span><br><span class="line"><span class="meta">)&#125;</span></span><br><span class="line"><span class="meta">)</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> SpringBootApplication</span><br></pre></td></tr></table></figure>
+<ul>
+<li>**<code>@ComponentScan 注解</code>**：组件扫描。 spring里有四大注解：<code>@Service</code>,<code>@Repository</code>,<code>@Component</code>,<code>@Controller</code>用来定义一个bean.<code>@ComponentScan</code>注解就是用来自动扫描被这些注解标识的类，最终生成ioc容器里的bean．</li>
+<li>**<code>@SpringBootConfiguration 注解</code>**：@SpringBootConfiguration继承自@Configuration，二者功能也一致，标注当前类是配置类， 并会将当前类内声明的一个或多个以@Bean注解标记的方法的实例纳入到spring容器中，并且实例名就是方法名。</li>
+<li>**<code>@EnableAutoConfiguration 注解</code>**：从 classpath 中搜索所有的 META-INF/spring.factories 配置文件，然后将其中key为org.springframework.boot.autoconfigure.EnableAutoConfiguration 的 value 加载到spring容器中。</li>
+</ul>
+</li>
+<li><p>注解：</p>
+<ul>
+<li><code>@Configuration</code>： 表示这是一个配置类</li>
+<li><code>@EnableConfigurationProperties</code>： 自动配置属性，其中传入的类的属性即为配置文件中可以设置的属性</li>
+<li>Conditional系列注解：Spring的底层注解，根据不同的条件，判断当前配置或类是否生效，该系列下的每一个注解用于对一种情况做出判断，如：<ul>
+<li><code>@ConditionalOnClass</code>：判断是否为指定类型的类</li>
+<li><code>@ConditionalOnWebApplication</code>： 判断是否为web应用</li>
+<li><code>@ConditionalOnProperty</code>： 判断属性值是否为指定值  </li>
+<li>等等</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>原理粗略理解：</p>
+<ul>
+<li>spring boot启动时会加载大量的自动配置类，而每个自动配置类都有一个条件判断，只有当条件满足时才会被加载，因此我们需要完成什么任务就要在pom.xml文件中导入相关的starter，导入之后，相关的自动配置类的条件就会满足，实现加载。而在加载的过程中又会读取相关的属性，每个自动配置类都包含一个xxxProperties类（该类用于提供相关属性）的实例作为属性，xxxProperties类中的属性既有默认值，又可以绑定到我们创建的配置文件application.yaml中的一个对象，因此如果我们在application.yaml中配置了相关属性，就会在加载自动配置类时覆盖默认值从而实现配置，否则就会读取默认值完成启动。<ul>
+<li>xxxAutoConfiguration:：自动配置类，向ioc容器中添加组件</li>
+<li>xxxProperties：封装配置文件中的相关属性</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="yaml"><a href="#yaml" class="headerlink" title="yaml"></a>yaml</h3><ul>
+<li>配置文件用于修改spring boot自动配置的默认值。官方推荐使用yaml，因此可以将自动生成的application.properties文件删除，再重新创建一个application.yaml文件</li>
+<li>application.properties与application.yaml的格式区别：<ul>
+<li>application.properties：语法： key=value</li>
+<li>application.yaml：语法： key: 空格 value</li>
+</ul>
+</li>
+<li>yaml文件的基础语法：<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 普通k-v键值对</span></span><br><span class="line"><span class="attr">name:</span> <span class="string">xunlu</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 对象</span></span><br><span class="line"><span class="attr">student:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">xunlu</span></span><br><span class="line">  <span class="attr">gender:</span> <span class="string">male</span></span><br><span class="line"><span class="comment"># 对象的行内写法</span></span><br><span class="line"><span class="attr">student:</span> &#123;<span class="attr">name:</span> <span class="string">xunlu</span>, <span class="attr">gender:</span> <span class="string">male</span>&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 数组</span></span><br><span class="line"><span class="attr">pets:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">cat</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">dog</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">pig</span></span><br><span class="line"><span class="comment"># 数组的行内写法</span></span><br><span class="line"><span class="attr">pets:</span> [<span class="string">cat</span>, <span class="string">dog</span>, <span class="string">pig</span>]</span><br></pre></td></tr></table></figure></li>
+<li>yaml可以对实体类赋值，如下,先创建一个Person实体类，再在yaml配置文件中创建person对象：<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span>  <span class="comment">// 注册bean</span></span><br><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="meta">@AllArgsConstructor</span></span><br><span class="line"><span class="meta">@NoArgsConstructor</span></span><br><span class="line"><span class="meta">@ConfigurationProperties(prefix = &quot;person&quot;)</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">前文已说yaml文件可以表达对象，prefix = &quot;person&quot;就是将配置文件中的person对象与下方Person类进行绑定。</span></span><br><span class="line"><span class="comment">@ConfigurationProperties注解会将配置文件中的person对象的属性与下方Person类的属性一一对应进行绑定</span></span><br><span class="line"><span class="comment">    并将所有属性的值映射到这个组件中，完成注入。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Person</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line">    <span class="keyword">private</span> Integer age;</span><br><span class="line">    <span class="keyword">private</span> Boolean isHappy;</span><br><span class="line">    <span class="keyword">private</span> Date birth;</span><br><span class="line">    <span class="keyword">private</span> Map&lt;String, ?&gt; maps;</span><br><span class="line">    <span class="keyword">private</span> List&lt;?&gt; lists;</span><br><span class="line">    <span class="keyword">private</span> Dog dog;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">person:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">xunlu</span>  <span class="comment"># 配置文件不需要用 &quot;&quot; 来特别指明该属性为字符串，会根据实体类进行类型转换</span></span><br><span class="line">  <span class="attr">age:</span> <span class="number">18</span></span><br><span class="line">  <span class="attr">isHappy:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">birth:</span> <span class="number">2021</span><span class="string">/5/11</span></span><br><span class="line">  <span class="attr">maps:</span> &#123;<span class="attr">k1:</span> <span class="string">va</span>, <span class="attr">k2:</span> <span class="string">v2</span>&#125;</span><br><span class="line">  <span class="attr">lists:</span> [<span class="string">code</span>, <span class="string">music</span>, <span class="string">girl</span>]</span><br><span class="line">  <span class="attr">dog:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">旺财</span></span><br><span class="line">    <span class="attr">age:</span></span><br></pre></td></tr></table></figure></li>
+<li>yaml还支持松散绑定（感觉用处不大）。中杠&lt;–&gt;驼峰命名，如：Person的first-name与person的firstNmae可以绑定，反之也可以</li>
+<li>占位符<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">books:</span></span><br><span class="line">  <span class="attr">id:</span> <span class="string">$&#123;random.uuid&#125;</span>    <span class="comment"># 随机生成一个uuid序列号</span></span><br><span class="line">  <span class="attr">price:</span> <span class="string">$&#123;random.int&#125;</span>  <span class="comment"># 随机生成一个整数</span></span><br><span class="line">  <span class="attr">author:</span> <span class="string">xunlu</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">$&#123;books.author:xunlu&#125;的第一本书</span>  <span class="comment"># 引用books.author的值，若不存在则使用默认值xunlu</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<h3 id="JSR-303校验"><a href="#JSR-303校验" class="headerlink" title="JSR-303校验"></a>JSR-303校验</h3><ul>
+<li>JSR-303校验用于规范化输入，可以将属性指定为只能接收某种格式的值</li>
+</ul>
+<ol>
+<li>在pom.xml中导入spring-boot-starter-validation</li>
+<li>在类前加注解<code>@Validated</code></li>
+<li>在需要规范化的属性前加相应注解，如在属性emil前加注解<code>@Email(message = &quot;邮箱格式错误！&quot;)</code>就可以规定该属性只能接收邮箱格式的输入，如果输入格式不符合邮箱的规范就会报错提示message中的值，也可以不指定message，直接为<code>@Email()</code>，有默认提示。除了<code>@Email()</code>，JSR-303还有许多其他的注解用于规定不同格式，用到时在网上搜即可。</li>
+</ol>
+<hr>
+<h3 id="多环境配置文件"><a href="#多环境配置文件" class="headerlink" title="多环境配置文件"></a>多环境配置文件</h3><ul>
+<li>配置文件可以放置于如下位置，且从上到下优先级逐级降低。且同级目录下properties》yml》yaml<ol>
+<li>file:./config/</li>
+<li>file:./config/*/</li>
+<li>file:./</li>
+<li>classpath:/config/</li>
+<li>classpath:/</li>
+</ol>
+</li>
+<li>多配置文件的切换。当创建了应用于多套环境（如开发环境application-dev.yaml、测试环境application-test.yaml等）的配置文件时，可以通过如下语句切换配置文件  <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">    <span class="attr">profiles:</span></span><br><span class="line">        <span class="attr">active:</span> <span class="string">dev</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<h3 id="静态资源及模板"><a href="#静态资源及模板" class="headerlink" title="静态资源及模板"></a>静态资源及模板</h3><ul>
+<li>静态资源导入<ul>
+<li>可以放置静态资源的目录：1. maven导入wenbars（一般不用）， 2. /**， 3. /public， 4. /static（默认）， 5. /resources。 /表示resources目录。存放在这些目录下的文件可以通过在地址栏输入localhost:8080/文件名直接访问。优先级：/resources &gt; /static &gt; /public </li>
+</ul>
+</li>
+<li>在templates目录下的所有页面只能通过controller跳转，无法直接访问</li>
+<li>模板引擎：导入thymeleaf依赖，在templates目录下创建html文件，就可以使用controller跳转过来了<ul>
+<li>thymeleaf的使用：<ul>
+<li>首先需在html页面加上名称空间约束：<code>&lt;html lang=&quot;en&quot; xmlns:th=&quot;http://www.thymeleaf.org&quot;&gt;</code></li>
+<li>所有的html元素都可以被thymeleaf替换：th:元素名</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="扩展springmvc"><a href="#扩展springmvc" class="headerlink" title="扩展springmvc"></a>扩展springmvc</h3><ul>
+<li>自定义类，实现xxxxConfigurer接口，并在类前添加@Configuration注解，然后覆盖相应方法，最后将该组件注册到IOC容器中（即先创建一个类实现WebMvcConfigurer接口并添加@Configuration注解，然后在该类中任意创建一个方法，方法前添加@Bean注解，方法中只需写<code>return new MyxxxxConfiguration()</code>即可）</li>
+</ul>
+<hr>
+<h3 id="国际化（即页面支持多种语言）"><a href="#国际化（即页面支持多种语言）" class="headerlink" title="国际化（即页面支持多种语言）"></a>国际化（即页面支持多种语言）</h3><ul>
+<li>在页面中添加thymeleaf的命名空间，为当前页面的元素配置多种语言的配置文件，他们会自动装在一个包中。在H5页面中由#{}接收配置文件中的值，然后按照上一节的方法自定义地区解析器（实现LocaleResolver接口，重写resolveLocale方法）</li>
+</ul>
+<hr>
+<h3 id="整合MyBatis"><a href="#整合MyBatis" class="headerlink" title="整合MyBatis"></a>整合MyBatis</h3><ul>
+<li>项目中导入依赖<code>mybatis-spring-boot-starter</code>。</li>
+<li>在配置文件中做如下配置：<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 配置数据库连接</span></span><br><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">datasource:</span></span><br><span class="line">    <span class="attr">username:</span> <span class="string">root</span></span><br><span class="line">    <span class="attr">password:</span> <span class="string">gaolu666</span></span><br><span class="line">    <span class="attr">url:</span> <span class="string">jdbc:mysql://localhost:3306/mybatis?useSSL=false&amp;useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=Asia/Shanghai</span></span><br><span class="line">    <span class="attr">driver-class-name:</span> <span class="string">com.mysql.cj.jdbc.Driver</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 整合mybatis</span></span><br><span class="line"><span class="attr">mybatis:</span></span><br><span class="line">  <span class="attr">type-aliases-package:</span> <span class="string">com.lu.pojo</span>                   <span class="comment"># 起别名</span></span><br><span class="line">  <span class="attr">mapper-locations:</span> <span class="string">classpath:mybatis/mapper/*.xml</span>    <span class="comment"># 配置mapper.xml的位置，classpath即resources目录</span></span><br></pre></td></tr></table></figure></li>
+<li>写实体类，mapper接口和mapper.xml文件，其中实体类和mapper.xml文件与单独使用mybatis一摸一样，没有增加任何东西，只有mapper接口前需要添加如下两个注解<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Mapper</span>         <span class="comment">// @Mapper注解表示这是一个mybatis的mapper类</span></span><br><span class="line"><span class="meta">@Repository</span>     <span class="comment">// @Repository 即添加到ioc容器中，用于自动创建对象</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">UserMapper</span> </span>&#123;...&#125;</span><br></pre></td></tr></table></figure></li>
+<li>之后在service层调用dao层时，只需在service层的类中注入mapper接口属性即可，如下：由于自动生成对象，直接使用其方法即可。<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Autowired</span></span><br><span class="line"><span class="keyword">private</span> UserMapper mapper;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<h3 id="SpringSecurity（基于AOP）"><a href="#SpringSecurity（基于AOP）" class="headerlink" title="SpringSecurity（基于AOP）"></a>SpringSecurity（基于AOP）</h3><ul>
+<li>导入<code>spring-boot-starter-security</code>依赖</li>
+<li>写相关安全配置，在config包下创建一个配置类，如下：<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@EnableWebSecurity</span>    <span class="comment">// 开启Security功能</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SecurityConfig</span> <span class="keyword">extends</span> <span class="title">WebSecurityConfigurerAdapter</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 认证</span></span><br><span class="line">    <span class="comment">// withUser方法用于认证用户，参数为用户名；password中的匿名对象用于加密密码；roles方法用于为用户划分权限分类-&gt;一个用户可以有多个角色</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">configure</span><span class="params">(AuthenticationManagerBuilder auth)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">      <span class="comment">// 下方为内存认证，若想用数据库认证可以换为 `auth.jdbcAuthentication().dataSource(datasource).withUser()`</span></span><br><span class="line">        auth.inMemoryAuthentication().passwordEncoder(<span class="keyword">new</span> BCryptPasswordEncoder())</span><br><span class="line">                .withUser(<span class="string">&quot;xunlu&quot;</span>).password(<span class="keyword">new</span> BCryptPasswordEncoder().encode(<span class="string">&quot;123456&quot;</span>)).roles(<span class="string">&quot;administer&quot;</span>, <span class="string">&quot;normal&quot;</span>)</span><br><span class="line">                .and()</span><br><span class="line">                .withUser(<span class="string">&quot;root&quot;</span>).password(<span class="keyword">new</span> BCryptPasswordEncoder().encode(<span class="string">&quot;123456&quot;</span>)).roles(<span class="string">&quot;root&quot;</span>, <span class="string">&quot;administer&quot;</span>, <span class="string">&quot;normal&quot;</span>)</span><br><span class="line">                .and()</span><br><span class="line">                .withUser(<span class="string">&quot;other&quot;</span>).password(<span class="keyword">new</span> BCryptPasswordEncoder().encode(<span class="string">&quot;123456&quot;</span>)).roles(<span class="string">&quot;normal&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 授权</span></span><br><span class="line">    <span class="comment">// 为不同权限的用户指定能访问的页面</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">configure</span><span class="params">(HttpSecurity http)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        http.authorizeRequests()</span><br><span class="line">                .antMatchers(<span class="string">&quot;/&quot;</span>).permitAll()</span><br><span class="line">                .antMatchers(<span class="string">&quot;/dir1/**&quot;</span>).hasRole(<span class="string">&quot;root&quot;</span>)</span><br><span class="line">                .antMatchers(<span class="string">&quot;/dir2/**&quot;</span>).hasRole(<span class="string">&quot;administer&quot;</span>)</span><br><span class="line">                .antMatchers(<span class="string">&quot;/dir3/**&quot;</span>).hasRole(<span class="string">&quot;normal&quot;</span>);</span><br><span class="line"></span><br><span class="line">        http.formLogin();   <span class="comment">// 没有权限默认转到登录页面</span></span><br><span class="line">        http.logout();      <span class="comment">// 开启注销功能，即用户从网站退出登录</span></span><br><span class="line">        <span class="comment">// http.logout().logoutUrl(&quot;/&quot;);  指定登出页</span></span><br><span class="line">        http.csrf().disable();  <span class="comment">// 关闭csrf，防止跨站请求</span></span><br><span class="line">        http.rememberMe();      <span class="comment">// 开启记住我功能，用户名和密码写入cookie，默认保存两周</span></span><br><span class="line">    &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<h3 id="Shiro"><a href="#Shiro" class="headerlink" title="Shiro"></a>Shiro</h3><ul>
+<li>核心三大组件：<ul>
+<li>Subject：用户</li>
+<li>SecurityManager：管理所有用户</li>
+<li>Realm：连接数据</li>
+</ul>
+</li>
+<li>Shiro的快速开始<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Quickstart</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">transient</span> Logger log = LoggerFactory.getLogger(Quickstart.class); <span class="comment">// 日志</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;                  </span><br><span class="line">        Factory&lt;SecurityManager&gt; factory = <span class="keyword">new</span> IniSecurityManagerFactory(<span class="string">&quot;classpath:shiro.ini&quot;</span>);<span class="comment">// 安全管理工厂   </span></span><br><span class="line">        SecurityManager securityManager = factory.getInstance();   <span class="comment">// 安全管理实例</span></span><br><span class="line">        SecurityUtils.setSecurityManager(securityManager);</span><br><span class="line">        Subject currentUser = SecurityUtils.getSubject();   <span class="comment">// 获取当前用户</span></span><br><span class="line">        Session session = currentUser.getSession();         <span class="comment">// 获取当前用户的session</span></span><br><span class="line">        session.setAttribute(<span class="string">&quot;someKey&quot;</span>, <span class="string">&quot;aValue&quot;</span>);</span><br><span class="line">        String value = (String) session.getAttribute(<span class="string">&quot;someKey&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (value.equals(<span class="string">&quot;aValue&quot;</span>))</span><br><span class="line">            log.info(<span class="string">&quot;Retrieved the correct value! [&quot;</span> + value + <span class="string">&quot;]&quot;</span>);</span><br><span class="line">        <span class="comment">// 判断当前用户是否被认证</span></span><br><span class="line">        <span class="keyword">if</span> (!currentUser.isAuthenticated()) &#123;</span><br><span class="line">            UsernamePasswordToken token = <span class="keyword">new</span> UsernamePasswordToken(<span class="string">&quot;lonestarr&quot;</span>, <span class="string">&quot;vespa&quot;</span>);  <span class="comment">// 获取用户令牌</span></span><br><span class="line">            token.setRememberMe(<span class="keyword">true</span>);  <span class="comment">// 记住我</span></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                currentUser.login(token);   <span class="comment">// 登录</span></span><br><span class="line">            &#125; <span class="keyword">catch</span> (UnknownAccountException uae) &#123;   <span class="comment">// 未知用户名</span></span><br><span class="line">                log.info(<span class="string">&quot;There is no user with username of &quot;</span> + token.getPrincipal());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (IncorrectCredentialsException ice) &#123;    <span class="comment">// 密码错误</span></span><br><span class="line">                log.info(<span class="string">&quot;Password for account &quot;</span> + token.getPrincipal() + <span class="string">&quot; was incorrect!&quot;</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (LockedAccountException lae) &#123;           <span class="comment">// 冻结</span></span><br><span class="line">                log.info(<span class="string">&quot;The account for username &quot;</span> + token.getPrincipal() + <span class="string">&quot; is locked.  &quot;</span> +</span><br><span class="line">                        <span class="string">&quot;Please contact your administrator to unlock it.&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// ... catch more exceptions here (maybe custom ones specific to your application?</span></span><br><span class="line">            <span class="keyword">catch</span> (AuthenticationException ae) &#123;</span><br><span class="line">                <span class="comment">//unexpected condition?  error?</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//say who they are:</span></span><br><span class="line">        <span class="comment">//print their identifying principal (in this case, a username):</span></span><br><span class="line">        log.info(<span class="string">&quot;User [&quot;</span> + currentUser.getPrincipal() + <span class="string">&quot;] logged in successfully.&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//test a role:</span></span><br><span class="line">        <span class="keyword">if</span> (currentUser.hasRole(<span class="string">&quot;schwartz&quot;</span>)) &#123;  <span class="comment">// 是否拥有这个角色</span></span><br><span class="line">            log.info(<span class="string">&quot;May the Schwartz be with you!&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            log.info(<span class="string">&quot;Hello, mere mortal.&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//test a typed permission (not instance-level)    粗粒度地判断权限</span></span><br><span class="line">        <span class="keyword">if</span> (currentUser.isPermitted(<span class="string">&quot;lightsaber:wield&quot;</span>)) &#123; </span><br><span class="line">            log.info(<span class="string">&quot;You may use a lightsaber ring.  Use it wisely.&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            log.info(<span class="string">&quot;Sorry, lightsaber rings are for schwartz masters only.&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//a (very powerful) Instance Level permission:    细粒度地判断权限</span></span><br><span class="line">        <span class="keyword">if</span> (currentUser.isPermitted(<span class="string">&quot;winnebago:drive:eagle5&quot;</span>)) &#123;</span><br><span class="line">            log.info(<span class="string">&quot;You are permitted to &#x27;drive&#x27; the winnebago with license plate (id) &#x27;eagle5&#x27;.  &quot;</span> +</span><br><span class="line">                    <span class="string">&quot;Here are the keys - have fun!&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            log.info(<span class="string">&quot;Sorry, you aren&#x27;t allowed to drive the &#x27;eagle5&#x27; winnebago!&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//all done - log out!</span></span><br><span class="line">        currentUser.logout();</span><br><span class="line"></span><br><span class="line">        System.exit(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>将Shiro整合到SpringBoot （看项目springboot-02-security吧，太多了，写不行了）<ol>
+<li>导入依赖  shiro-spring</li>
+<li>自定义UserRealm<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserRealm</span> <span class="keyword">extends</span> <span class="title">AuthorizingRealm</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> UserService userService;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 授权</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> AuthorizationInfo <span class="title">doGetAuthorizationInfo</span><span class="params">(PrincipalCollection principalCollection)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;execute the Authorization procedure !&quot;</span>);</span><br><span class="line"></span><br><span class="line">        SimpleAuthorizationInfo info = <span class="keyword">new</span> SimpleAuthorizationInfo();</span><br><span class="line">        <span class="comment">// info.addStringPermission(&quot;user:add&quot;); // 此处将所有用户都授予了user:add权限，正常应该从数据库的权限表中读取权限,如下方</span></span><br><span class="line">        <span class="comment">// 获取当前登录的用户</span></span><br><span class="line">        Subject subject = SecurityUtils.getSubject();</span><br><span class="line">        User currentUser = (User) subject.getPrincipal(); <span class="comment">// 拿到user</span></span><br><span class="line">        info.addStringPermission(currentUser.getPerms()); <span class="comment">// 设置权限</span></span><br><span class="line">        <span class="keyword">return</span> info;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 认证</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> AuthenticationInfo <span class="title">doGetAuthenticationInfo</span><span class="params">(AuthenticationToken authenticationToken)</span> <span class="keyword">throws</span> AuthenticationException </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;execute the Authentication procedure !&quot;</span>);</span><br><span class="line"></span><br><span class="line">        UsernamePasswordToken token = (UsernamePasswordToken) authenticationToken;</span><br><span class="line">        String username = token.getUsername();   <span class="comment">// 通过令牌获取用户名</span></span><br><span class="line">        <span class="comment">// connect to the mysql</span></span><br><span class="line">        User user = userService.queryUserByName(username);</span><br><span class="line">        <span class="keyword">if</span> (user == <span class="keyword">null</span>)</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;   <span class="comment">// throw the UnknownAccountException</span></span><br><span class="line">        <span class="comment">// 密码验证由shiro做，防止源码中出现明文密码,可以配置加密方式</span></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> SimpleAuthenticationInfo(user, user.getPasswd(),<span class="string">&quot;&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>配置<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ShiroConfig</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 3. ShiroFilterFactoryBean</span></span><br><span class="line">  <span class="meta">@Bean</span>  <span class="comment">// 该注解作用在方法上表明Spring接管该方法，会在IOC容器中创建一个Bean对象（初步推断该方法必须返回一个对象类型）</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> ShiroFilterFactoryBean <span class="title">getShiroFilterFactoryBean</span><span class="params">(<span class="meta">@Qualifier(&quot;securityManager&quot;)</span> DefaultWebSecurityManager securityManager)</span></span>&#123;</span><br><span class="line">      ShiroFilterFactoryBean bean = <span class="keyword">new</span> ShiroFilterFactoryBean();</span><br><span class="line">      <span class="comment">// 设置安全管理器</span></span><br><span class="line">      bean.setSecurityManager(securityManager);</span><br><span class="line">      <span class="comment">// 添加shiro的内置过滤器</span></span><br><span class="line">      <span class="comment">/*</span></span><br><span class="line"><span class="comment">       * anon:无需认证即可访问</span></span><br><span class="line"><span class="comment">       * authc：必须认证才能访问</span></span><br><span class="line"><span class="comment">       * user：必须开启“记住我”功能才能使用</span></span><br><span class="line"><span class="comment">       * perms：拥有资源的相关权限才能访问</span></span><br><span class="line"><span class="comment">       * role：拥有相关角色才能访问</span></span><br><span class="line"><span class="comment">       */</span></span><br><span class="line">      Map&lt;String, String&gt; filterMap = <span class="keyword">new</span> LinkedHashMap&lt;&gt;();</span><br><span class="line">      filterMap.put(<span class="string">&quot;/user/*&quot;</span>, <span class="string">&quot;authc&quot;</span>);</span><br><span class="line">      bean.setFilterChainDefinitionMap(filterMap); <span class="comment">// 拦截</span></span><br><span class="line">      <span class="comment">// 设置登录请求</span></span><br><span class="line">      bean.setLoginUrl(<span class="string">&quot;/login&quot;</span>);</span><br><span class="line">      <span class="keyword">return</span> bean;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 2. DefaultWebSecurityManager</span></span><br><span class="line">  <span class="meta">@Bean(&quot;securityManager&quot;)</span>  <span class="comment">//可以只写@Bean,此时改bean在IOC容器中的默认为方法名</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> DefaultWebSecurityManager <span class="title">getDefaultWebSecurityManager</span><span class="params">(<span class="meta">@Qualifier(&quot;userRealm&quot;)</span> UserRealm userRealm)</span> </span>&#123;</span><br><span class="line">      DefaultWebSecurityManager securityManager = <span class="keyword">new</span> DefaultWebSecurityManager();</span><br><span class="line">      <span class="comment">// 关联UserRealm</span></span><br><span class="line">      securityManager.setRealm(userRealm);</span><br><span class="line">      <span class="keyword">return</span> securityManager;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 1. 获取UserRealm对象，即上方自定义的UserRealm类</span></span><br><span class="line">  <span class="meta">@Bean(&quot;userRealm&quot;)</span> <span class="comment">// 该注解所修饰的方法所在的类前必须有@Configuration注解</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> UserRealm <span class="title">getUserRealm</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">new</span> UserRealm();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+</li>
+</ul>
+<hr>
+<h3 id="SpringBoot集成Swagger"><a href="#SpringBoot集成Swagger" class="headerlink" title="SpringBoot集成Swagger"></a>SpringBoot集成Swagger</h3><ul>
+<li>导入依赖<code>springfox-swagger2</code>和<code>springfox-swagger-ui</code></li>
+<li>配置<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span>   <span class="comment">// 配置类</span></span><br><span class="line"><span class="meta">@EnableSwagger2</span>  <span class="comment">// 开启Swagger</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SwaggerConfig</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 配置Swagger的Docket的bean</span></span><br><span class="line">  <span class="meta">@Bean</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Docket <span class="title">getDocket</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">new</span> Docket(DocumentationType.SWAGGER_2)</span><br><span class="line">              .groupName(<span class="string">&quot;lu&quot;</span>)     <span class="comment">// 指定分组，可以创建多个getDocket方法，每个方法对应一个分组，用于多人协同合作</span></span><br><span class="line">              <span class="comment">// .enable(false)    关闭swagger，即不能访问swagger页面。默认开启</span></span><br><span class="line">              .apiInfo(apiInfo())  <span class="comment">// 配置api文档信息</span></span><br><span class="line">              .select()            <span class="comment">// 配置扫描哪些controller</span></span><br><span class="line">              <span class="comment">// RequestHandlerSelectors有如下方法：</span></span><br><span class="line">              <span class="comment">// basePackage指定扫描的包</span></span><br><span class="line">              <span class="comment">// any 扫描全部</span></span><br><span class="line">              <span class="comment">// none 全不扫描</span></span><br><span class="line">              <span class="comment">// withMethodAnnotation和withMethodAnnotation按相关注解扫描</span></span><br><span class="line">              .apis(RequestHandlerSelectors.basePackage(<span class="string">&quot;com.lu.controller&quot;</span>))</span><br><span class="line">              .paths(PathSelectors.ant(<span class="string">&quot;lu/.*&quot;</span>)) <span class="comment">// （过滤路劲）用到再查吧，不知道什么玩意</span></span><br><span class="line">              .build();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 配置Swagger信息（即修改相关默认值）</span></span><br><span class="line">  <span class="comment">// apiInfo</span></span><br><span class="line">  <span class="function"><span class="keyword">private</span> ApiInfo <span class="title">apiInfo</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 作者信息</span></span><br><span class="line">      Contact contact = <span class="keyword">new</span> Contact(<span class="string">&quot;驯鹿&quot;</span>, <span class="string">&quot;https://ethereal-lu.github.io&quot;</span>, <span class="string">&quot;gaolulu620.163.com&quot;</span>);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">new</span> ApiInfo(</span><br><span class="line">              <span class="string">&quot;驯鹿的SwaggerAPI文档&quot;</span>,</span><br><span class="line">              <span class="string">&quot;白马非马，驯鹿非鹿&quot;</span>,</span><br><span class="line">              <span class="string">&quot;1.0&quot;</span>,</span><br><span class="line">              <span class="string">&quot;https://ethereal-lu.github.io/&quot;</span>,</span><br><span class="line">              contact,</span><br><span class="line">              <span class="string">&quot;Apache 2.0&quot;</span>,</span><br><span class="line">              <span class="string">&quot;http://www.apache.org/licenses/LICENSE-2.0&quot;</span>,</span><br><span class="line">              <span class="keyword">new</span> ArrayList&lt;&gt;()</span><br><span class="line">      );</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+配置也可以写在 application.yaml 中，如下：（下方只写了部分，需要时可以再加）</li>
+</ul>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">swagger:</span></span><br><span class="line">  <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">title:</span> <span class="string">驯鹿的SwaggerAPI文档</span></span><br><span class="line">  <span class="attr">description:</span> <span class="string">后端API测试</span></span><br><span class="line">  <span class="attr">version:</span> <span class="number">1.0</span></span><br><span class="line">  <span class="attr">base-package:</span> <span class="string">com.privacy</span></span><br><span class="line">  <span class="attr">contact:</span></span><br><span class="line">    <span class="attr">email:</span> <span class="string">gaolulu620.163.com</span></span><br><span class="line">    <span class="attr">url:</span> <span class="string">https://ethereal-lu.github.io</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">驯鹿</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>Swagger相关的注解用时再查，主要实用的注解也就三四个</li>
+</ul>
+<hr>
+<h3 id="SpringBoot-文件上传"><a href="#SpringBoot-文件上传" class="headerlink" title="SpringBoot 文件上传"></a>SpringBoot 文件上传</h3><p>1、 application.yaml 中配置如下</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">servlet:</span></span><br><span class="line">    <span class="comment"># spring默认的上传文件大小限制是1MB,单次请求文件总数不能大于10MB，如果要移除限制设置为-1</span></span><br><span class="line">    <span class="attr">multipart:</span></span><br><span class="line">      <span class="attr">max-request-size:</span> <span class="string">20MB</span>    <span class="comment"># 所有上传文件总和的最大值</span></span><br><span class="line">      <span class="attr">max-file-size:</span> <span class="string">10MB</span>       <span class="comment"># 单个文件上传最大值</span></span><br><span class="line">      <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="attr">server:</span></span><br><span class="line">  <span class="attr">tomcat:</span></span><br><span class="line">    <span class="comment"># 内嵌tomcat最大请求吞吐量限制，-1表示没有限制，如果不配置上传文件超过最大限制后tomcat会取消请求，前端的请求将会没有返回</span></span><br><span class="line">    <span class="attr">max-swallow-size:</span> <span class="number">-1</span></span><br></pre></td></tr></table></figure>
+
+<p>2、在 controller 包下创建如下类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Api(tags = &#123;&quot;数据接口&quot;&#125;)</span></span><br><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="meta">@RequestMapping(&quot;/data&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DataController</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@PostMapping(&quot;/upload&quot;)</span></span><br><span class="line">    <span class="meta">@ApiOperation(&quot;上传文件&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> RestResponse <span class="title">upload</span><span class="params">(MultipartFile file)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (file != <span class="keyword">null</span>) &#123;</span><br><span class="line">            String fileName = file.getOriginalFilename();</span><br><span class="line"></span><br><span class="line">            String code = UUID.randomUUID().toString().replaceAll(<span class="string">&quot;-&quot;</span>, <span class="string">&quot;&quot;</span>);</span><br><span class="line">            <span class="keyword">assert</span> fileName != <span class="keyword">null</span>;</span><br><span class="line">            String newFileName = code + fileName.substring(fileName.lastIndexOf(<span class="string">&#x27;.&#x27;</span>));</span><br><span class="line">            String currentDateFolder = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);</span><br><span class="line"></span><br><span class="line">            String destFilePath = <span class="string">&quot;D:\\uploads&quot;</span> + File.separator + currentDateFolder + File.separator + newFileName;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">                File destFile = <span class="keyword">new</span> File(destFilePath);</span><br><span class="line">                <span class="keyword">if</span> (!destFile.getParentFile().exists()) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (!destFile.getParentFile().mkdirs())&#123;</span><br><span class="line">                        <span class="keyword">return</span> ResultGenerator.genFailResult(<span class="string">&quot;上传失败，请稍后重新上传！&quot;</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                file.transferTo(destFile);</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 这里直接返回的服务器上的物理地址，项目中需要根据实际情况自行处理</span></span><br><span class="line">                <span class="keyword">return</span> ResultGenerator.genSuccessResult(<span class="string">&quot;上传成功！&quot;</span>);</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">                <span class="comment">// TODO 异常处理</span></span><br><span class="line">                <span class="keyword">return</span> ResultGenerator.genFailResult(<span class="string">&quot;上传失败，请稍后重新上传！&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> ResultGenerator.genFailResult(<span class="string">&quot;上传文件不能为空&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="任务"><a href="#任务" class="headerlink" title="任务"></a>任务</h3><ul>
+<li><strong>异步任务</strong><ul>
+<li>两步即可实现<ul>
+<li>1.在主类XXXApplication前添加@EnableAsync注解    </li>
+<li>2.在需要实现异步的方法前加上@Async注解。  </li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>定时任务</strong><ul>
+<li>两步即可实现<ul>
+<li>1.在主类XXXApplication前添加@EnableScheduling注解</li>
+<li>2.在需要定时执行的方法前加上@Scheduled(cron = “”)注解。其中参数的引号中填入cron表达式（用到时网上搜）</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>邮件发送</strong><ul>
+<li>导包spring-boot-starter-mail</li>
+<li>在aplication中配置<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line"><span class="attr">mail:</span></span><br><span class="line">  <span class="attr">username:</span> <span class="string">邮箱名</span></span><br><span class="line">  <span class="attr">password:</span> <span class="string">授权码而非密码</span></span><br><span class="line">  <span class="attr">host:</span> <span class="string">smtp.qq.com</span></span><br><span class="line">  <span class="comment"># qq邮箱还需要开启加密验证</span></span><br></pre></td></tr></table></figure></li>
+<li>使用<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Autowired</span></span><br><span class="line">JavaMailSenderImpl mailSender;</span><br><span class="line">  </span><br><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">contextLoads</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 简单邮件</span></span><br><span class="line">    SimpleMailMessage message = <span class="keyword">new</span> SimpleMailMessage();</span><br><span class="line">    message.setSubject(<span class="string">&quot;驯鹿，你好呀&quot;</span>); <span class="comment">// 主题</span></span><br><span class="line">    message.setText(<span class="string">&quot;springboot发送的邮件&quot;</span>); <span class="comment">// 内容</span></span><br><span class="line">    message.setTo(<span class="string">&quot;983811022@qq.com&quot;</span>);</span><br><span class="line">    message.setFrom(<span class="string">&quot;983811022@qq.com&quot;</span>);</span><br><span class="line">    mailSender.send(message);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="SpringBoot集成Redis"><a href="#SpringBoot集成Redis" class="headerlink" title="SpringBoot集成Redis"></a>SpringBoot集成Redis</h3><p>见<a href="https://ethereal-lu.github.io/2021/05/22/Spring%E7%B3%BB%E5%88%97%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Redis%E7%AC%94%E8%AE%B0/">Redis学习笔记</a></p>
+<hr>
+<h3 id="分布式-Dubbo-Zookeeper-SpringBoot"><a href="#分布式-Dubbo-Zookeeper-SpringBoot" class="headerlink" title="分布式 Dubbo + Zookeeper + SpringBoot"></a>分布式 Dubbo + Zookeeper + SpringBoot</h3><h5 id="RPC"><a href="#RPC" class="headerlink" title="RPC"></a>RPC</h5><p>RPC（Remote Procedure Call）即远程过程调用，是一种进程间通信方式。它允许程序调用另一台机器上的函数而不需要了解其中的通信细节。</p>
+<p>RPC的核心为：通讯 + 序列化</p>
+<h5 id="Dubbo"><a href="#Dubbo" class="headerlink" title="Dubbo"></a>Dubbo</h5><p>Dubbo 是高新能的基于java的RPC框架</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2021/05/10/Java/SpringBoot%E7%AC%94%E8%AE%B0/" data-id="cl3ir9vvy002xkkaqgdhjhj5c" data-title="SpringBoot学习笔记" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/05/12/Java/Annotation%E7%AC%94%E8%AE%B0/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">前一篇</strong>
+      <div class="article-nav-title">
+        
+          Annotation学习笔记
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/04/26/Java/mybatis%E7%AC%94%E8%AE%B0/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">后一篇</strong>
+      <div class="article-nav-title">mybatis学习笔记</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Go 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2022/05/22/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%9B%B6%E7%A2%8E%E7%AE%97%E6%B3%95/">零碎算法</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/19/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/">分布式事务</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/17/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E9%BB%98%E8%AE%A4%E6%95%B0%E6%8D%AE%E5%BA%93/">MySQL默认数据库</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/Zookeeper%E9%80%89%E4%B8%BE%E6%9C%BA%E5%88%B6/">Zookeeper选举机制</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Kafka/Kafka%E5%9F%BA%E7%A1%80/">Kafka基础</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2022 驯鹿先生<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
