@@ -15,7 +15,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://img2020.cnblogs.com/blog/1696980/202007/1696980-20200715102950625-1441570329.png">
 <meta property="article:published_time" content="2022-04-09T11:42:15.000Z">
-<meta property="article:modified_time" content="2022-04-09T13:13:03.976Z">
+<meta property="article:modified_time" content="2022-05-26T07:30:12.309Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://img2020.cnblogs.com/blog/1696980/202007/1696980-20200715102950625-1441570329.png">
@@ -128,6 +128,7 @@
 <p>　　因此可以说fork后父子进程的用户空间是相同的，kernel空间是不同的。</p>
 <p>　　但是fork后父子进程的用户空间遵循的是“读时共享，写时复制”的原则，类似于“父子进程共享栈变量、全局变量”的说法都是不准确的。</p>
 <h3 id="5、缺页中断"><a href="#5、缺页中断" class="headerlink" title="5、缺页中断"></a>5、缺页中断</h3><p>缺页中断：缺页中断的过程其实已经在1.（2）中描述了，缺页中断简单来说就是：先对 待访问数据的虚拟地址进行段表和页表的映射，试图访问其对应的物理内存单元， 然后——待访问的数据在物理内存中吗 ？ （在）访问/修改该物理内存单元 ： （不在）申请一段物理内存存放该数据并完成与虚拟地址的映射，然后访问/修改该内存单元。 （段表和页表是段页式内存管理中记录虚拟地址与物理地址映射关系的表）</p>
+<p>tips：<code>pstree</code> 命令可以查看各进程之间的创建关系。</p>
 
       
     </div>

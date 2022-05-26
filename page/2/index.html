@@ -619,6 +619,9 @@
 <li>硬链接是指针，所有的硬链接都是指向同一个磁盘块。 删除一个指针不会真正删除文件，只有把所有的指针都删除才会真正删除文件。   </li>
 <li>软链接是另外一种类型的文件，保存的是它指向文件的全路径，访问时会替换成绝对路径。</li>
 </ul>
+<h3 id="4、查看-cpu、mem-信息"><a href="#4、查看-cpu、mem-信息" class="headerlink" title="4、查看 cpu、mem 信息"></a>4、查看 cpu、mem 信息</h3><p>查看 cpu 信息： <code>cat /proc/cpuinfo</code></p>
+<p>查看内存信息：<code>cat /proc/meminfo</code>；<code>free</code></p>
+<p>此外：<code>top</code>命令动态显示进程信息，其中也包含 cpu 和 mem 的使用情况。</p>
 
       
     </div>
