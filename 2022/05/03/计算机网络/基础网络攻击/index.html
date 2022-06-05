@@ -14,7 +14,7 @@
 <meta property="og:description" content="1、SYN洪泛攻击1.1、产生原理服务器在收到连接请求报文段后，如同意建立连接，就向客户机发回确认，并在OS内核中为该TCP连接分配TCP缓存和变量。除此之外标识该tcp连接的tcb也会占用内存资源。 1.2、防御手段SYN cookie 方法 在服务器收到客户端的第一次请求之后，不立马分配资源，而是将  SYN报文的源和目的IP与端口号 仅仅有服务器知道的密钥  塞入一个哈希函数，生成一个认证码">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-05-03T14:39:41.000Z">
-<meta property="article:modified_time" content="2022-05-04T13:47:00.897Z">
+<meta property="article:modified_time" content="2022-06-02T13:55:41.182Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -124,6 +124,22 @@
 <p>使用 SSL 身份认证即可防御中间人攻击。</p>
 <h2 id="4、缓冲区溢出攻击"><a href="#4、缓冲区溢出攻击" class="headerlink" title="4、缓冲区溢出攻击"></a>4、缓冲区溢出攻击</h2><p>通过往程序的缓冲区写超出其长度的内容，造成缓冲区的溢出，使程序转而执行其它指令，以达到攻击的目的。如strcpy()函数，不会对字符串边界进行检查就直接复制，当参数长度大于缓冲区长度时就会造成缓冲区溢出。</p>
 <p>可以通过制造缓冲区溢出使程序运行一个用户shell，再通过shell执行其它命令。如果该程序有root权限的话，攻击者就获得了一个有root权限的shell，可以对系统进行任意操作了。</p>
+<h2 id="5、跨站请求伪造-CSRF"><a href="#5、跨站请求伪造-CSRF" class="headerlink" title="5、跨站请求伪造 CSRF"></a>5、跨站请求伪造 CSRF</h2><h3 id="5-1、同源策略"><a href="#5-1、同源策略" class="headerlink" title="5.1、同源策略"></a>5.1、同源策略</h3><p>源由[协议、域名、端口]三元组组成，三元组都一样时称为同源。</p>
+<p>同源策略限制了其他源的脚本对当前页面资源的读写。</p>
+<p>同源策略不会限制发起跨域请求，而是限制 Javascript 对于响应结果的读写。</p>
+<h3 id="5-2、CSRF-原理"><a href="#5-2、CSRF-原理" class="headerlink" title="5.2、CSRF 原理"></a>5.2、CSRF 原理</h3><p>用户在登录网站 A 后，在本地浏览器中存储了网站 A 的 Cookie 。之后没有结束与 A 的会话就去访问恶意网站 B ，网站 B 可以通过 img 的 src 向网站 A 发起 GET 请求，或通过表单向网站 A 发起 POST请求。这些请求会自动携带上之前还没有删除的 Cookie ，网站 A 就会认为这是来自用户的一个合法请求并执行它。</p>
+<p>举例：用户登录银行网站后访问恶意网站，恶意网站中存在一个表单，该表单可以向银行网站发起向自己转账的请求，请求中携带用户的信息便会执行该用户向自己转账。</p>
+<p><strong>同源策略不能作为防范 CSRF 的方法</strong>。原因：如上所述，同源策略并不会限制发起跨域请求，所以这些请求实际已经到达了目标服务器，只是这些请求的响应结果被浏览器所拦截，不允许 Javascript  对这些结果操作。</p>
+<p>注：Javascript  同样无法读取到其他源的 Cookie 的内容。</p>
+<p>http请求自动携带cookies的条件:</p>
+<ol>
+<li>本地已经缓存有cookies</li>
+<li>根据请求的URL来匹配cookies的domain、path属性，如果都符合才会发送。</li>
+</ol>
+<h3 id="5-3、CSRF的防御"><a href="#5-3、CSRF的防御" class="headerlink" title="5.3、CSRF的防御"></a>5.3、CSRF的防御</h3><ul>
+<li>所有的表单都包含一个统一的伪随机值，因为攻击者无法读取到 Cookie 的内容，所以也就无法伪造表单了。</li>
+<li>每个 post 请求都需要用户填写一个图片验证码。</li>
+</ul>
 
       
     </div>
@@ -167,7 +183,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Go 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
     </div>
   </div>
 
@@ -182,7 +198,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
     </div>
   </div>
 
@@ -195,23 +211,23 @@
       <ul>
         
           <li>
+            <a href="/2022/06/02/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/">分布式基础</a>
+          </li>
+        
+          <li>
+            <a href="/2022/06/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/HTTP/">HTTP</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/Nginx/Nginx%E5%9F%BA%E7%A1%80/">Nginx基础</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">分布式锁</a>
+          </li>
+        
+          <li>
             <a href="/2022/05/22/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%9B%B6%E7%A2%8E%E7%AE%97%E6%B3%95/">零碎算法</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/19/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/">分布式事务</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/17/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E9%BB%98%E8%AE%A4%E6%95%B0%E6%8D%AE%E5%BA%93/">MySQL默认数据库</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/Zookeeper%E9%80%89%E4%B8%BE%E6%9C%BA%E5%88%B6/">Zookeeper选举机制</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Kafka/Kafka%E5%9F%BA%E7%A1%80/">Kafka基础</a>
           </li>
         
       </ul>

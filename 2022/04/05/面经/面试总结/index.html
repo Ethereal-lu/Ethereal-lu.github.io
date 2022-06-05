@@ -14,7 +14,7 @@
 <meta property="og:description" content="1、大文件上传每个分块的文件内容都是通过 MultipartFile 来接收的，改接口的所有实现类都是通过包装 HttpServletRequest 来实现的，故该文件传输是通过 HTTP 协议实现的。 1.1、分片上传 先获取完整文件的 MD5 值，之后将文件分割成相同大小的数据块； 每次上传文件时都携带上 MD5 值、分块序号、文件内容等。 每收到一个分块，便将其存储到文件中，并将分块序号添加">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-04-05T13:12:41.000Z">
-<meta property="article:modified_time" content="2022-05-08T07:53:22.229Z">
+<meta property="article:modified_time" content="2022-06-02T14:36:15.193Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -121,6 +121,24 @@
 </ol>
 <p><strong>submit 内部调用了 execute，为何还有这种区别</strong></p>
 <p>因为 submit 方法会将任务封装为 FutureTask （FutureTask 会将 Runnable 通过适配器转为 Callable），而 FutureTask 会捕获线程运行中的异常，将其存储在线程结果信息中，当调用 get 方法时判断线程运行结果状态，有异常就抛出存储的异常信息，因此submit运行异常我们只能用get方法来拿到。</p>
+<h2 id="3、TCP-有什么值得改进的地方"><a href="#3、TCP-有什么值得改进的地方" class="headerlink" title="3、TCP 有什么值得改进的地方"></a>3、TCP 有什么值得改进的地方</h2><ul>
+<li>TCP是基于四元组的（源IP，目的IP，源端口，目的端口），如果使用中途网络切换了或者连接超时重连后IP换了，那么四元组就改变了，就需要重新发起三次握手连接，所以此处值得改进</li>
+<li>TCP保证有序性，如果响应队列中队头的报文没有返回，那么后续报文就会被阻塞。尽管HTTP1.1可以通过Pipelining在一条TCP连接中发送多次HTTP请求，以及HTTP2.0采用多路复用将请求拆分为多个帧传输，但是由于底层使用的还是TCP，因此还存在队头的帧没有传输后续帧被阻塞的情况。因此此处值得改进</li>
+<li>TCP 的拥塞控制算法是在丢包之后才开始降低传输速度，而Google 的 BBR 拥塞控制算法是通过主动探测网络带宽和RTT来避免丢包</li>
+</ul>
+<p>拥塞控制通过BBR改善，前两点可以通过QUIC协议改善。</p>
+<p>QUIC（Quick UDP Internet Connection）是谷歌制定的一种基于UDP的低时延的传输层协议。</p>
+<p>QUIC 在 UDP 的基础上融合了 TCP、TSL、HTTP2.0的协议的特性，使其既有低的连接时延，又有高的安全性。</p>
+<p>客户端第一次连接服务器时，QUIC只需要1RTT（Round-Trip Time）的延迟就可以建立可靠安全的连接，之后客户端可以在本地缓存加密的认证信息，再次与服务器建立连接时可以实现0-RTT的连接建立延迟。QUIC同时复用了HTTP/2协议的多路复用功能，而且由于QUIC基于UDP所以避免了HTTP/2的队头阻塞。</p>
+<h2 id="4、进程切换为什么比线程慢"><a href="#4、进程切换为什么比线程慢" class="headerlink" title="4、进程切换为什么比线程慢"></a>4、进程切换为什么比线程慢</h2><p>由于进程是资源分配的最小单位，因此切换进程就是切换资源，影响最大的就是虚拟地址空间的切换。由于页表的频繁访问，因此CPU会在MMU中做Cache，也就是TLB快表，如果线程切换，页表就要切换，此时Cache就失效了，因此导致程序变慢。而线程共享进程中的资源，线程的切换不会导致页表的切换。</p>
+<p>注：线程切换和进程切换都需要记录程序计数器、CPU寄存器。</p>
+<h2 id="5、Token"><a href="#5、Token" class="headerlink" title="5、Token"></a>5、Token</h2><p>前端使用用户名/密码登录成功后，服务端会返回 Token 给前端。前端可以在每次请求的时候带上 Token 证明自己的合法地位。</p>
+<h3 id="5-1、为什么要用-Token？"><a href="#5-1、为什么要用-Token？" class="headerlink" title="5.1、为什么要用 Token？"></a>5.1、为什么要用 Token？</h3><ol>
+<li>避开同源策略：无需考虑是否同源的问题，只要使用相同的密钥和算法，token就是有效的</li>
+<li>避免CSRF攻击：由于 cookie 会在请求时自动携带，而token需要传入且csrf不能读取到token的值，所以无法构造带有token的请求。</li>
+<li>Token 可以是无状态的，可以在多个服务间共享</li>
+</ol>
+<h3 id="5-2、无状态-token"><a href="#5-2、无状态-token" class="headerlink" title="5.2、无状态 token"></a>5.2、无状态 token</h3><p>有状态 token 即项目中使用的 refresh_token 模型。 无状态 token 即所有状态信息都附加在 Token 上，多个服务端都使用相同的密钥和算法对 token 验证。为了实现用户注销时可控可以让前端在用户注销时删除对应的token。</p>
 
       
     </div>
@@ -164,7 +182,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Go 学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
     </div>
   </div>
 
@@ -179,7 +197,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
     </div>
   </div>
 
@@ -192,23 +210,23 @@
       <ul>
         
           <li>
+            <a href="/2022/06/02/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/">分布式基础</a>
+          </li>
+        
+          <li>
+            <a href="/2022/06/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/HTTP/">HTTP</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/Nginx/Nginx%E5%9F%BA%E7%A1%80/">Nginx基础</a>
+          </li>
+        
+          <li>
+            <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">分布式锁</a>
+          </li>
+        
+          <li>
             <a href="/2022/05/22/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%9B%B6%E7%A2%8E%E7%AE%97%E6%B3%95/">零碎算法</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/19/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/">分布式事务</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/17/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E9%BB%98%E8%AE%A4%E6%95%B0%E6%8D%AE%E5%BA%93/">MySQL默认数据库</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/Zookeeper%E9%80%89%E4%B8%BE%E6%9C%BA%E5%88%B6/">Zookeeper选举机制</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Kafka/Kafka%E5%9F%BA%E7%A1%80/">Kafka基础</a>
           </li>
         
       </ul>
