@@ -73,6 +73,211 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-分布式/Zookeeper/Zookeeper基础" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/Zookeeper%E5%9F%BA%E7%A1%80/" class="article-date">
+  <time class="dt-published" datetime="2022-05-08T09:42:15.000Z" itemprop="datePublished">2022-05-08</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Zookeeper/">Zookeeper</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/Zookeeper%E5%9F%BA%E7%A1%80/">Zookeeper基础</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="1、概述"><a href="#1、概述" class="headerlink" title="1、概述"></a>1、概述</h2><p>Zookeeper 是一个分布式程序协调服务，提供的主要功能包括：配置管理、名字服务、分布式锁、集群管理。 由 java 编写。</p>
+<h3 id="1-1、特点"><a href="#1-1、特点" class="headerlink" title="1.1、特点"></a>1.1、特点</h3><ul>
+<li>一主多从：一个 Leader 负责写数据，多个 Follower 负责读数据。</li>
+<li>集群中只要有半数<strong>以上</strong>节点存活，Zookeeper 集群就能正常服务，因此 Zookeeper 适合安装奇数台服务器。</li>
+<li>所有节点数据一致</li>
+<li>来自同一个客户端的多个请求按顺序执行</li>
+<li>每个写操作都是事务，具有原子性。</li>
+<li>在一定时间范围内，Client 能读到最新的数据。最终一致性。</li>
+</ul>
+<h3 id="1-2、应用场景"><a href="#1-2、应用场景" class="headerlink" title="1.2、应用场景"></a>1.2、应用场景</h3><ul>
+<li>分布式协调：客户端先后对不同节点的同一个变量设置不同的值，此时数据不一致。通过 Zookeeper 监听该变量，当变量改变时通知其他节点修改该值。</li>
+<li>分布式锁</li>
+<li>无状态化实现：在分布式登陆场景中，若将用户的登录信息放在某一个节点中，则下一次登录到其他节点就无法获取登录信息。可以将登录信息放在 Zookeeper 中，每个节点都到 Zookeeper 查询登录信息。这样对于每个节点而言就实现了无状态登录。</li>
+</ul>
+<h2 id="2、数据结构"><a href="#2、数据结构" class="headerlink" title="2、数据结构"></a>2、数据结构</h2><p>Zookeeper 的数据结构类似于 Unix 文件系统，可以看作一棵树，每个节点称为一个 ZNode ，每个 ZNode 都可以通过其路径唯一标识。为了保证高吞吐和低延迟，znode只适合存储非常小的数据，不能超过1M。</p>
+<p><img src="%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84.png" alt="数据结构"></p>
+<h3 id="2-1、节点结构"><a href="#2-1、节点结构" class="headerlink" title="2.1、节点结构"></a>2.1、节点结构</h3><p>每个 ZNode 包含四部分：</p>
+<ul>
+<li>data：保存数据</li>
+<li>acl：权限。 c：创建权限；w：更新权限；r：读权限；d：删除权限；a：管理员权限，允许设置该节点的权限。</li>
+<li>stat：元数据</li>
+<li>child：子节点</li>
+</ul>
+<h3 id="2-2、节点类型"><a href="#2-2、节点类型" class="headerlink" title="2.2、节点类型"></a>2.2、节点类型</h3><p><img src="%E8%8A%82%E7%82%B9%E7%B1%BB%E5%9E%8B.png" alt="节点类型"></p>
+<p>临时节点<strong>实现原理</strong>：</p>
+<p>客户端与服务端之间的连接是基于 TCP 长连接，client 端连接 server 端默认的 2181 端口，也就是 session 会话。</p>
+<p>客户端与服务端建立连接后，服务端会给客户端分配一个全局唯一的  session id。这个  session id 是有期限的，会话期间客户端会定时向服务端发送一个 ping 请求（心跳），服务端每次收到 ping 请求都会给  session id 续约。只要  session id 不过期，临时节点就一直存在。会话断开后，客户端便不再发送 ping 信号，session id 就会过期。服务端会定时查看 session id 是否过期，如果过期就将与之绑定的临时节点删除。</p>
+<h3 id="2-3、注册中心"><a href="#2-3、注册中心" class="headerlink" title="2.3、注册中心"></a>2.3、注册中心</h3><p>Zookeeper 可以通过临时节点实现注册中心的功能。服务提供者在 Zookeeper 创建临时节点来注册自己的信息，并且一直与 Zookeeper  保持会话，服务消费者通过该临时节点发现服务提供者。当服务提供者断开连接后，session id 过期，该临时节点就被删除，此时服务消费者便无法获取到该服务。</p>
+<h3 id="2-4、数据持久化"><a href="#2-4、数据持久化" class="headerlink" title="2.4、数据持久化"></a>2.4、数据持久化</h3><p>Zookeeper 的数据运行在内存中，Zookeeper 提供了两种持久化机制。</p>
+<ul>
+<li>事务日志：Zookeeper 把执行的命令以日志的形式保存在 dataLogDir 目录的文件中。</li>
+<li>每次事务操作都会有一条记录保存在事务日志文件中，日志文件名后缀是一条zxid，是写入该事务文件的第一条事务记录的zxid</li>
+<li>数据快照：用于记录zk服务器上某一时刻的全量内存数据内容。snapshot.2c021384ce，后缀也是一个zxid，表示本次数据快照开始时刻的服务器最新zxid。Zookeeper 定时将内存数据快照保存在快照文件中</li>
+</ul>
+<p>Zookeeper 在恢复时，先恢复快照文件中的数据到内存，再用日志文件中的数据做增量恢复，这样恢复速度更快。</p>
+<h2 id="3、客户端使用"><a href="#3、客户端使用" class="headerlink" title="3、客户端使用"></a>3、客户端使用</h2><p>docker 启动 Zookeeper 容器后，Zookeeper 服务端便已自动开启，在容器默认工作目录输入 <code>zkCli.sh -server 127.0.0.1:2181</code>即可进入 Zookeeper  客户端命令行。</p>
+<h3 id="3-1、增删改查"><a href="#3-1、增删改查" class="headerlink" title="3.1、增删改查"></a>3.1、增删改查</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">create /node <span class="string">&quot;firstnode&quot;</span>               <span class="comment"># 创建不带序号的永久节点 node ，节点中存储的值为 &quot;firstnode&quot;</span></span><br><span class="line"></span><br><span class="line">get /node                              <span class="comment"># 获取节点 node 中存储的值；若创建时不设置值，则返回 null</span></span><br><span class="line">firstnode</span><br><span class="line"></span><br><span class="line">get -s /node                           <span class="comment"># 获取节点 node 中存储的值以及 node 节点的元数据</span></span><br><span class="line"><span class="built_in">stat</span> /node                             <span class="comment"># 只获取节点 node 的元数据</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 对于带序号的节点，获取时也必须带序号，否则报错</span></span><br><span class="line">create -s /node/firstchild <span class="string">&quot;baby1&quot;</span>     <span class="comment"># 在 node 节点下创建带序号的永久子节点</span></span><br><span class="line">Created /node/firstchild0000000000     <span class="comment"># 由输出结果可知，该节点带了序号</span></span><br><span class="line">create -s /node/firstchild <span class="string">&quot;baby1&quot;</span>     <span class="comment"># 再次创建相同的节点依然允许</span></span><br><span class="line">Created /node/firstchild0000000001     <span class="comment"># 从输出结果可知，节点序号加1，其实节点已经不同</span></span><br><span class="line"></span><br><span class="line">create -e /node/secondchild            <span class="comment"># 不带序号的临时节点</span></span><br><span class="line">create -e -s /node/secondchild         <span class="comment"># 带序号的临时节点</span></span><br><span class="line"></span><br><span class="line">create -c /node/firstcontainer         <span class="comment"># 容器节点，容器节点中若没有子节点，则 60s 后被删除</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">set</span> /node/secondchild <span class="string">&quot;baby2&quot;</span>          <span class="comment"># 修改节点中的值</span></span><br><span class="line"></span><br><span class="line">ls /node                               <span class="comment"># 查看当前节点的子节点。 -s 元数据  -w 监听</span></span><br><span class="line"></span><br><span class="line">delete /node/firstchild                <span class="comment"># 删除子节点 firstchild。若子节点不为空则不能删除父节点</span></span><br><span class="line">deleteall /node                        <span class="comment"># 不论有没有子节点，删除整个路径</span></span><br><span class="line">delete -v 1 /node                      <span class="comment"># 乐观锁删除。节点的元数据中包含节点版本，节点初始创建时版本号为 0，每次通过</span></span><br><span class="line">                                       <span class="comment"># set 修改节点的值版本号加 1。乐观锁删除时指定版本号，若版本号不一致则删除失败</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3-2、权限设置"><a href="#3-2、权限设置" class="headerlink" title="3.2、权限设置"></a>3.2、权限设置</h3><p>子节点不会继承父节点的权限</p>
+<ol>
+<li>注册当前会话的账号和密码 <code>addauth digest username:passeord </code></li>
+<li>创建节点并设置权限 <code>create /test-node &quot;data&quot; auth:username:password:cdrwa</code></li>
+<li>在另一个会话中必须先执行步骤 1 才能拥有操作该节点的权限</li>
+</ol>
+<h2 id="4、spring-初体验"><a href="#4、spring-初体验" class="headerlink" title="4、spring 初体验"></a>4、spring 初体验</h2><h3 id="4-1、zkClient"><a href="#4-1、zkClient" class="headerlink" title="4.1、zkClient"></a>4.1、zkClient</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 逗号左右不允许有空格</span></span><br><span class="line"><span class="keyword">private</span> String connectString = <span class="string">&quot;192.168.40.130:2181,192.168.40.130:2182,192.168.40.130:2183&quot;</span>;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> sessionTimeout = <span class="number">20000</span>;</span><br><span class="line"><span class="keyword">private</span> ZooKeeper zkClient;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    zkClient = <span class="keyword">new</span> ZooKeeper(connectString, sessionTimeout, <span class="keyword">new</span> Watcher() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">process</span><span class="params">(WatchedEvent watchedEvent)</span> </span>&#123;</span><br><span class="line">			<span class="comment">// 这里写监听程序</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 获取到 zkClient 客户端后，即可进行相应操作，如上方的添加、获取、删除、监听节点等。</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="4-2、Curator"><a href="#4-2、Curator" class="headerlink" title="4.2、Curator"></a>4.2、Curator</h3><p>Curator 比 zkClient 更加优雅，推荐使用 Curator 。</p>
+<ol>
+<li><p>引入依赖</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- zookeeper --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.zookeeper<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>zookeeper<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.8.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!--对 zookeeper 基本命令的封装--&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.curator<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>curator-framework<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>5.2.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- zookeeper 高级使用 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.curator<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>curator-recipes<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>5.2.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><p>配置类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="meta">@EnableConfigurationProperties</span></span><br><span class="line"><span class="meta">@ConfigurationProperties(prefix = &quot;curator&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WrapperZk</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> retryCount;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> elapsedTimeMs;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String connectString;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> sessionTimeoutMs;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> connectionTimeoutMs;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CuratorConfig</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    WrapperZk wrapperZk;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean(initMethod = &quot;start&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> CuratorFramework <span class="title">curatorFramework</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> CuratorFrameworkFactory.newClient(</span><br><span class="line">                wrapperZk.getConnectString(),</span><br><span class="line">                wrapperZk.getSessionTimeoutMs(),</span><br><span class="line">                wrapperZk.getConnectionTimeoutMs(),</span><br><span class="line">                <span class="keyword">new</span> RetryNTimes(wrapperZk.getRetryCount(), wrapperZk.getElapsedTimeMs()));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>对上方配置类配置属性</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">curator:</span></span><br><span class="line">  <span class="attr">retryCount:</span> <span class="number">5</span>    <span class="comment"># 重试次数</span></span><br><span class="line">  <span class="attr">elapsedTimeMs:</span> <span class="number">5000</span>   <span class="comment">#重试间隔时间</span></span><br><span class="line">  <span class="attr">connectString:</span> <span class="number">192.168</span><span class="number">.36</span><span class="number">.128</span><span class="string">:2181</span>   <span class="comment"># zookeeper 地址</span></span><br><span class="line">  <span class="attr">sessionTimeoutMs:</span> <span class="number">60000</span>  <span class="comment"># session超时时间</span></span><br><span class="line">  <span class="attr">connectionTimeoutMs:</span> <span class="number">5000</span>  <span class="comment"># 连接超时时间</span></span><br></pre></td></tr></table></figure></li>
+<li><p>基础使用</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootTest</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ZkApplicationTests</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    CuratorFramework curatorFramework;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 增</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">createNode</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="comment">// 添加持久节点</span></span><br><span class="line">        String path = curatorFramework.create().forPath(<span class="string">&quot;/curator-node&quot;</span>, <span class="string">&quot;hello zookeeper&quot;</span>.getBytes());</span><br><span class="line">        System.out.println(path);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 添加临时节点</span></span><br><span class="line">        String path1 = curatorFramework.create().withMode(CreateMode.EPHEMERAL).</span><br><span class="line">                forPath(<span class="string">&quot;/ephemeral-node&quot;</span>, <span class="string">&quot;data&quot;</span>.getBytes());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 查</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">getNode</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">byte</span>[] bytes = curatorFramework.getData().forPath(<span class="string">&quot;/curator-node&quot;</span>);</span><br><span class="line">        System.out.println(<span class="keyword">new</span> String(bytes));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 改</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setNode</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        curatorFramework.setData().forPath(<span class="string">&quot;/curator-node&quot;</span>, <span class="string">&quot;changed&quot;</span>.getBytes());</span><br><span class="line">        <span class="keyword">byte</span>[] bytes = curatorFramework.getData().forPath(<span class="string">&quot;/curator-node&quot;</span>);</span><br><span class="line">        System.out.println(<span class="keyword">new</span> String(bytes));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 删</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">deleteNode</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        curatorFramework.delete().guaranteed().deletingChildrenIfNeeded().forPath(<span class="string">&quot;/curator-node&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 监听</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">nodeListener</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        CuratorCache curatorCache = CuratorCache.build(curatorFramework, <span class="string">&quot;/listener-node&quot;</span>);</span><br><span class="line">        CuratorCacheListener listener = CuratorCacheListener.builder()</span><br><span class="line">                .forCreates(node -&gt; System.out.printf(<span class="string">&quot;[%s] has been created!%n&quot;</span>, node.getPath()))</span><br><span class="line">                .forChanges(((oldNode, node) -&gt; </span><br><span class="line">                             System.out.printf(<span class="string">&quot;the value [%s] of [%s] has been changed to [%s]%n&quot;</span>,</span><br><span class="line">                        <span class="keyword">new</span> String(oldNode.getData()), oldNode.getPath(), <span class="keyword">new</span> String(node.getData()))))</span><br><span class="line">                .forDeletes(node -&gt; System.out.printf(<span class="string">&quot;[%s] has been deleted!%n&quot;</span>, node.getPath()))</span><br><span class="line">                .build();</span><br><span class="line">        curatorCache.listenable().addListener(listener);</span><br><span class="line">        curatorCache.start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="5、ZooKeeper-实现分布式读写锁"><a href="#5、ZooKeeper-实现分布式读写锁" class="headerlink" title="5、ZooKeeper 实现分布式读写锁"></a>5、ZooKeeper 实现分布式读写锁</h2><h3 id="5-1、ZooKeeper-锁的种类"><a href="#5-1、ZooKeeper-锁的种类" class="headerlink" title="5.1、ZooKeeper 锁的种类"></a>5.1、ZooKeeper 锁的种类</h3><ul>
+<li>读锁：共享读，获取读锁的前提是不存在写锁</li>
+<li>写锁：互斥写，获取写锁的前提是不存在任何锁</li>
+</ul>
+<p>读-读兼容；读-写互斥；写-写互斥。</p>
+<p>对于分辨当前锁是读锁还是写锁有两种方案：1. 节点值分别保存为 read 和 write；2. 节点的路径保存为 read 和 write。对于第一种情况，需要每次额外去获取节点的值，比较浪费性能。因此选用第二种方案。<strong>注：即使临时序号节点的路径名不同，但其后缀序列都是单调递增的。</strong></p>
+<h3 id="5-2、ZooKeeper-上读锁"><a href="#5-2、ZooKeeper-上读锁" class="headerlink" title="5.2、ZooKeeper 上读锁"></a>5.2、ZooKeeper 上读锁</h3><ol>
+<li>在一个永久节点下创建一个临时序号节点，节点路径名是 read，表示是读锁</li>
+<li>获取当前永久节点下的所有子节点</li>
+<li>判断自己是否是最小节点或者序号比自己小的节点是否都是读锁<ul>
+<li>如果比自己小的节点中存在写锁，则上锁失败，为离自己最近的写锁注册监听。</li>
+<li>如果自己是最小节点或者序号比自己小的节点都是读锁，则上锁成功。</li>
+</ul>
+</li>
+</ol>
+<h3 id="5-2、ZooKeeper-上写锁"><a href="#5-2、ZooKeeper-上写锁" class="headerlink" title="5.2、ZooKeeper 上写锁"></a>5.2、ZooKeeper 上写锁</h3><ol>
+<li>创建一个临时序号节点，节点保存的数据是 write，表示是写锁</li>
+<li>获取当前zk中所有子节点</li>
+<li>判断自己是否是最小节点<ul>
+<li>如果是，上写锁成功</li>
+<li>如果不是，说明前面还有锁，上锁失败，监听比自己小的节点，形成链式监听，当比自己小的节点改变时，再次执行步骤 2</li>
+</ul>
+</li>
+</ol>
+<p><strong>惊群效应</strong>：如果在上写锁时，每个节点监听的是最小的节点，那么每次最小节点发生改变都会触发大量的监听事件，对于 zk 压力非常大，这就是惊群效应。故应该使用上述的链式监听，因为如果前一个结点没有获取到锁，自然也轮不到自己获取。这样只能实现公平锁。</p>
+<h3 id="5-3、spring-上锁"><a href="#5-3、spring-上锁" class="headerlink" title="5.3、spring 上锁"></a>5.3、spring 上锁</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootTest</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ZkApplicationTests</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    CuratorFramework curatorFramework;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">getReadLock</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        InterProcessReadWriteLock readWriteLock = <span class="keyword">new</span> InterProcessReadWriteLock(curatorFramework, <span class="string">&quot;/lock-node&quot;</span>);</span><br><span class="line">        InterProcessLock readLock = readWriteLock.readLock();</span><br><span class="line">        System.out.println(<span class="string">&quot;阻塞获取读锁&quot;</span>);</span><br><span class="line">        readLock.acquire();</span><br><span class="line">        System.out.println(<span class="string">&quot;got the read lock&quot;</span>);</span><br><span class="line">        readLock.release();</span><br><span class="line">        System.out.println(<span class="string">&quot;release the lock&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">getWriteLock</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        InterProcessReadWriteLock readWriteLock = <span class="keyword">new</span> InterProcessReadWriteLock(curatorFramework, <span class="string">&quot;/lock-node&quot;</span>);</span><br><span class="line">        InterProcessLock writeLock = readWriteLock.writeLock();</span><br><span class="line">        System.out.println(<span class="string">&quot;阻塞获取写锁&quot;</span>);</span><br><span class="line">        writeLock.acquire();</span><br><span class="line">        System.out.println(<span class="string">&quot;got the write lock&quot;</span>);</span><br><span class="line">        writeLock.release();</span><br><span class="line">        System.out.println(<span class="string">&quot;release the lock&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="6、监听"><a href="#6、监听" class="headerlink" title="6、监听"></a>6、监听</h2><h3 id="6-1、监听"><a href="#6-1、监听" class="headerlink" title="6.1、监听"></a>6.1、监听</h3><p>客户端监听它关心的目录节点，当目录节点发生变化（数据改变、节点删除、子目录节点增加删除）时，Zookeeper 会通知客户端。监听只生效一次，即一旦所监听的节点发生改变，后续该监听便失效了。</p>
+<p>监听相当于客户端向 Znode 节点注入回调函数，当节点改变时调用该函数，此时客户端会收到异步通知。客户端同时也会以 NIO 的方式等待通知的到来。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">get -w /node               # 监听 node 节点的数据改变、节点删除。</span><br><span class="line">WatchedEvent state:SyncConnected type:NodeDataChanged path:/node    # 若 node 节点的值改变，则收到该信息</span><br><span class="line"></span><br><span class="line">ls -w /node                # 监听 node 节点的子节点是否改变。监听不到数据改变</span><br><span class="line">WatchedEvent state:SyncConnected type:NodeChildrenChanged path:/node  # 若 node 节点的子节点增加或删除，收到该信息</span><br><span class="line"></span><br><span class="line">ls -R -w /node             # 监听 node 节点的所有子孙节点。监听不到数据改变</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-2、spring-实现监听"><a href="#6-2、spring-实现监听" class="headerlink" title="6.2、spring 实现监听"></a>6.2、spring 实现监听</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootTest</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ZkApplicationTests</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    CuratorFramework curatorFramework;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 监听</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">nodeListener</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        CuratorCache curatorCache = CuratorCache.build(curatorFramework, <span class="string">&quot;/listener-node&quot;</span>);</span><br><span class="line">        CuratorCacheListener listener = CuratorCacheListener.builder()</span><br><span class="line">                .forCreates(node -&gt; System.out.printf(<span class="string">&quot;[%s] has been created!%n&quot;</span>, node.getPath()))</span><br><span class="line">                .forChanges(((oldNode, node) -&gt; </span><br><span class="line">                             System.out.printf(<span class="string">&quot;the value [%s] of [%s] has been changed to [%s]%n&quot;</span>,</span><br><span class="line">                        <span class="keyword">new</span> String(oldNode.getData()), oldNode.getPath(), <span class="keyword">new</span> String(node.getData()))))</span><br><span class="line">                .forDeletes(node -&gt; System.out.printf(<span class="string">&quot;[%s] has been deleted!%n&quot;</span>, node.getPath()))</span><br><span class="line">                .build();</span><br><span class="line">        curatorCache.listenable().addListener(listener);</span><br><span class="line">        curatorCache.start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="7、Zookeeper-集群"><a href="#7、Zookeeper-集群" class="headerlink" title="7、Zookeeper 集群"></a>7、Zookeeper 集群</h2><h3 id="7-1、角色"><a href="#7-1、角色" class="headerlink" title="7.1、角色"></a>7.1、角色</h3><p>Zookeeper 集群中包含三种角色</p>
+<ul>
+<li>Leader：主节点，主要负责写数据，当然也可以读</li>
+<li>Follower：从节点，只负责读数据，可以参与 Leader 的选举</li>
+<li>Observer：观察者，只负责读数据，不参与 Leader 的选举</li>
+</ul>
+<h3 id="7-2、zoo-cfg"><a href="#7-2、zoo-cfg" class="headerlink" title="7.2、zoo.cfg"></a>7.2、zoo.cfg</h3><p>Zookeeper 配置文件 zoo.cfg 中的各参数含义：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>tickTime</strong></td>
+<td>通信心跳时间，ZK中的一个时间单元。ZK中所有时间都是以这个时间单元为基础，进行整数倍配置的。</td>
+</tr>
+<tr>
+<td><strong>initLimit</strong></td>
+<td>Follower在启动过程中，会从Leader同步所有最新数据，然后确定自己能够对外服务的起始状态。Leader允许Follower在 initLimit 时间内完成这个工作。</td>
+</tr>
+<tr>
+<td><strong>syncLimit</strong></td>
+<td>在运行过程中，Leader负责与ZK集群中所有机器进行通信，例如通过一些心跳检测机制，来检测机器的存活状态。如果Leader发出心跳包在syncLimit之后，还没有从Follower那里收到响应，那么就认为这个Follower已经不在线了。</td>
+</tr>
+<tr>
+<td><strong>dataDir</strong></td>
+<td>存储快照文件snapshot的目录。默认情况下，事务日志也会存储在这里。</td>
+</tr>
+<tr>
+<td><strong>clientPort</strong></td>
+<td>客户端连接server的端口，即对外服务端口，默认2181。</td>
+</tr>
+</tbody></table>
+<h3 id="7-3、多主机搭建"><a href="#7-3、多主机搭建" class="headerlink" title="7.3、多主机搭建"></a>7.3、多主机搭建</h3><p>Zookeeper 集群至少由3个ZooKeeper节点组成.</p>
+<p>在每台 Zookeeper 服务器上的 dataDir 目录下创建名为 myid 的文件，文件中写入一个全局唯一的数字代表其编号。</p>
+<p>在每台 Zookeeper 服务器上的 zoo.cfg 中添加如下配置：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">server.1=hostname1:2888:3888</span><br><span class="line">server.2=hostname2:2888:3888</span><br><span class="line">server.3=hostname3:2888:3888</span><br></pre></td></tr></table></figure>
+
+<p>格式为 server.A=B:C:D</p>
+<ul>
+<li>A：Zookeeper 服务器编号，为 myid 中的数字。</li>
+<li>B：Zookeeper 服务器的机器名或 ip 地址</li>
+<li>C：Leader 和 Follower 交换信息的端口</li>
+<li>D：Leader 下线后， Follower 之间重新选举 Leader 的端口</li>
+</ul>
+<p>之后将所有  Zookeeper 服务器启动即可。</p>
+<h3 id="7-4、docker-搭建"><a href="#7-4、docker-搭建" class="headerlink" title="7.4、docker 搭建"></a>7.4、docker 搭建</h3><p>同一个docoker-compose中定义的<code>service</code>是直接可以通信的,docker-compose在启动后会自动创建默认的<code>default</code>网络用于内部通信。</p>
+<ol>
+<li>创建名为 docker-compose.yml 的文件，内容如下</li>
+</ol>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3.1&#x27;</span>                 <span class="comment"># 这是 compose 的 version</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">zoo1:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">zookeeper:latest</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">hostname:</span> <span class="string">zoo1</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">2181</span><span class="string">:2181</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">ZOO_MY_ID:</span> <span class="number">1</span></span><br><span class="line">      <span class="attr">ZOO_SERVERS:</span> <span class="string">server.1=0.0.0.0:2888:3888;2181</span> <span class="string">server.2=zoo2:2888:3888;2181</span> <span class="string">server.3=zoo3:2888:3888;2181</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">zoo2:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">zookeeper:latest</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">hostname:</span> <span class="string">zoo2</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">2182</span><span class="string">:2181</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">ZOO_MY_ID:</span> <span class="number">2</span></span><br><span class="line">      <span class="attr">ZOO_SERVERS:</span> <span class="string">server.1=zoo1:2888:3888;2181</span> <span class="string">server.2=0.0.0.0:2888:3888;2181</span> <span class="string">server.3=zoo3:2888:3888;2181</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">zoo3:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">zookeeper:latest</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">hostname:</span> <span class="string">zoo3</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">2183</span><span class="string">:2181</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">ZOO_MY_ID:</span> <span class="number">3</span></span><br><span class="line">      <span class="attr">ZOO_SERVERS:</span> <span class="string">server.1=zoo1:2888:3888;2181</span> <span class="string">server.2=zoo2:2888:3888;2181</span> <span class="string">server.3=0.0.0.0:2888:3888;2181</span></span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><p>在 docker-compose.yml 所在目录下运行如下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">COMPOSE_PROJECT_NAME=zookeeper_cluster docker-compose up -d   # zookeeper_cluster 为自定义的工程名称</span><br></pre></td></tr></table></figure></li>
+<li><p>使用 docker ps 查看发现集群已启动。</p>
+</li>
+<li><p>在容器内，通过 <code>zkCli.sh -server localhost:2181</code>连接本节点，或通过                                                                                        <code>zkCli.sh -server localhost:2181,localhost:2182,localhost:2183</code>连接集群</p>
+</li>
+</ol>
+<h2 id="8、NIO、BIO"><a href="#8、NIO、BIO" class="headerlink" title="8、NIO、BIO"></a>8、NIO、BIO</h2><ul>
+<li><p>NIO</p>
+<ul>
+<li>在 2181 端口，使用 NIO 模型与客户端建立连接</li>
+<li>客户端开始 Watch 时，使用 NIO 等待 Zookeeper 服务器的回调</li>
+</ul>
+</li>
+<li><p>BIO</p>
+<p>集群选举时，多个节点之间投票通信端口，使用 BIO 通信</p>
+</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/Zookeeper%E5%9F%BA%E7%A1%80/" data-id="cl3ir9vv2001bkkaqh3nnd3ds" data-title="Zookeeper基础" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Linux/swap" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/05/07/Linux/swap/" class="article-date">
@@ -509,7 +714,7 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h1 id="1、概述"><a href="#1、概述" class="headerlink" title="1、概述"></a>1、概述</h1><p>主从复制，是指将一台Redis服务器的数据，复制到其他的Redis服务器。前者称为主节点(master)，后者称为从节点(slave)；数据的复制是单向的，只能由主节点到从节点。</p>
+        <h1 id="1、概述"><a href="#1、概述" class="headerlink" title="1、概述"></a>1、概述</h1><p>主从复制，是指将一台Redis服务器的数据，复制到其他的Redis服务器。前者称为主节点(master)，后者称为从节点(slave)；数据的复制是单向的，只能由主节点到从节点。主从节点建立连接后会保持心跳检测。</p>
 <p><strong>主从复制的作用</strong>主要包括：</p>
 <ul>
 <li><strong>数据冗余</strong>：主从复制实现了数据的热备份，是持久化之外的一种数据冗余方式。</li>
@@ -559,12 +764,19 @@
 <li>进入命令传播阶段，每收到一个写命令，主库都将其写入 replication_buffer 和 replication_backlog_buffer。写入 replication_buffer 即表示发送给从库。</li>
 <li>在命令传播阶段，若从库断开连接，则再次连接后向主库发送 psync 命令，主库判断后进行增量复制或全量复制。</li>
 </ol>
-<h1 id="4、思考"><a href="#4、思考" class="headerlink" title="4、思考"></a>4、思考</h1><h3 id="4-1、若主库关闭持久化功能，则应该禁止自动重启"><a href="#4-1、若主库关闭持久化功能，则应该禁止自动重启" class="headerlink" title="4.1、若主库关闭持久化功能，则应该禁止自动重启"></a>4.1、若主库关闭持久化功能，则应该禁止自动重启</h3><p>原因：若主库故障自动重启，则变为空表，从库复制后全部变为空表。</p>
-<h3 id="4-2、-为什么全量复制使用RDB而不使用AOF？"><a href="#4-2、-为什么全量复制使用RDB而不使用AOF？" class="headerlink" title="4.2、 为什么全量复制使用RDB而不使用AOF？"></a>4.2、 为什么全量复制使用RDB而不使用AOF？</h3><ul>
+<h1 id="4、redis-脑裂问题"><a href="#4、redis-脑裂问题" class="headerlink" title="4、redis 脑裂问题"></a>4、redis 脑裂问题</h1><p>主库出现假故障，无法及时响应心跳包，然后哨兵选举了新主节点，但是在选举过程中，旧主库恢复正常了并响应了客户端的写操作，在新主节点选举成功后，旧主节点需要变为从节点并删除原有的数据，这样在选举过程中旧主节点处理的写操作数据便丢失了。</p>
+<p>通过设置下方两个参数来避免脑裂：</p>
+<ul>
+<li>min-slaves-to-write：设置了主库能进行数据同步的最少从库数量；</li>
+<li>min-slaves-max-lag：设置了主从库间进行数据复制时，从库给主库发送 ACK 消息的最大延迟。</li>
+</ul>
+<p>当主节点不满足这两个参数的要求时就会拒绝接收客户端的请求。</p>
+<h1 id="5、思考"><a href="#5、思考" class="headerlink" title="5、思考"></a>5、思考</h1><h3 id="5-1、若主库关闭持久化功能，则应该禁止自动重启"><a href="#5-1、若主库关闭持久化功能，则应该禁止自动重启" class="headerlink" title="5.1、若主库关闭持久化功能，则应该禁止自动重启"></a>5.1、若主库关闭持久化功能，则应该禁止自动重启</h3><p>原因：若主库故障自动重启，则变为空表，从库复制后全部变为空表。</p>
+<h3 id="5-2、-为什么全量复制使用RDB而不使用AOF？"><a href="#5-2、-为什么全量复制使用RDB而不使用AOF？" class="headerlink" title="5.2、 为什么全量复制使用RDB而不使用AOF？"></a>5.2、 为什么全量复制使用RDB而不使用AOF？</h3><ul>
 <li>RDB文件内容是经过压缩的二进制数据，文件很小，可以降低网络带宽消耗。</li>
 <li>RDB文件存储的都是二进制数据，从库直接按照RDB协议解析还原数据即可，速度会非常快。</li>
 </ul>
-<h3 id="4-3、从库的从库"><a href="#4-3、从库的从库" class="headerlink" title="4.3、从库的从库"></a>4.3、从库的从库</h3><p>一次全量复制中，对于主库来说，需要完成两个耗时的操作：<strong>生成 RDB 文件和传输 RDB 文件</strong>。</p>
+<h3 id="5-3、从库的从库"><a href="#5-3、从库的从库" class="headerlink" title="5.3、从库的从库"></a>5.3、从库的从库</h3><p>一次全量复制中，对于主库来说，需要完成两个耗时的操作：<strong>生成 RDB 文件和传输 RDB 文件</strong>。</p>
 <p>fork 操作会阻塞主线程处理正常请求，传输 RDB 文件也会占用主库的网络带宽。因此可以主库只连接一个从库，其他从库连接这个从库，从而降低主库的复制压力。</p>
 
       
@@ -608,7 +820,7 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <p>哨兵的核心功能是主节点的自动故障转移。</p>
+        <p>由于主从模式是读写分离的，如果主节点故障，那么将没有主节点来执行写操作，也没有主节点给从节点进行数据同步了。若是每次主节点故障都需要人工切换主从节点太繁琐，于是哨兵机制出现了。哨兵的核心功能是主节点的自动故障转移。</p>
 <h2 id="1、哨兵集群的组建"><a href="#1、哨兵集群的组建" class="headerlink" title="1、哨兵集群的组建"></a>1、哨兵集群的组建</h2><p>哨兵实例之间可以相互发现，要归功于 Redis 提供的发布 / 订阅机制。</p>
 <ol>
 <li>首先主节点的信息配置在哨兵(Sentinel)的配置文件中</li>
@@ -621,18 +833,21 @@
 <p>上述 6 点中，加粗部分为每个哨兵的三个定时任务。</p>
 <h2 id="2、主库下线的判定"><a href="#2、主库下线的判定" class="headerlink" title="2、主库下线的判定"></a>2、主库下线的判定</h2><ul>
 <li><strong>主观下线</strong>：哨兵节点每隔1秒向各节点发送PING命令，如果在规定时间内没有收到有效响应，哨兵就会将该节点标记为主观下线。</li>
-<li><strong>客观下线</strong>：当某个哨兵判断主库主观下线后，就会给其他哨兵发起询问，其他哨兵会根据自己和主库的连接情况，做出赞成或反对的响应。如果赞成票数大于等于配置参数 <code>quorum</code> 的值, 则判定主库客观下线。</li>
+<li><strong>客观下线</strong>：当某个哨兵判断主库主观下线后，就会给其他哨兵发起询问，其他哨兵会根据自己和主库的连接情况，做出赞成或反对的响应。如果赞成票数大于等于哨兵配置文件中的配置项 <code>quorum</code> 的值, 则判定主库客观下线。<code>quorum</code> 的值一般为哨兵个数 / 2 + 1。</li>
 </ul>
-<h2 id="3、选举Leader哨兵"><a href="#3、选举Leader哨兵" class="headerlink" title="3、选举Leader哨兵"></a>3、选举Leader哨兵</h2><p>通过<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/32052223">Raft选举算法</a>来选举Leader哨兵： 选举的票数超过一半时，将成为领导者，如果没有超过，继续选举。</p>
-<p>若有超过一半的哨兵宕机，则无法完成Leader哨兵的选举。</p>
-<h2 id="4、新主库选取"><a href="#4、新主库选取" class="headerlink" title="4、新主库选取"></a>4、新主库选取</h2><p>根据以下规则选取新主库：</p>
+<h2 id="3、新主库选取"><a href="#3、新主库选取" class="headerlink" title="3、新主库选取"></a>3、新主库选取</h2><p>根据以下规则选取新主库：</p>
 <ol>
-<li>通讯正常</li>
-<li>选择<code>salve-priority</code>从节点优先级最高的（redis.conf）</li>
+<li>过滤掉网络状态不好的：redis 有一个参数用于表示主从节点的通信超时时间，如果从节点的超时次数超过10次，说明这个从节点的网络状况不好，不适合作为新主节点。</li>
+<li>选择从节点优先级最高的（redis.conf 中有一个配置项<code>salve-priority</code>表示从节点优先级）</li>
 <li>优先级相同时选择复制偏移量最大的</li>
+<li>若优先级和偏移量都相同，则选择 id 号小的</li>
 </ol>
+<h2 id="4、选举Leader哨兵"><a href="#4、选举Leader哨兵" class="headerlink" title="4、选举Leader哨兵"></a>4、选举Leader哨兵</h2><p>新主库选取选举之后需要进行故障转移，但是哨兵节点有多个，需要选举一个 leader 哨兵来负责进行主从切换。</p>
+<p><strong>选举算法</strong><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/32052223">Raft选举算法</a>：哪个哨兵节点判断主节点为「客观下线」，这个哨兵节点就是候选者。候选者会向其他哨兵发送命令，表明希望成为 Leader 来执行主从切换，并让所有其他哨兵对它进行投票。每个哨兵只有一次投票机会，如果用完后就不能参与投票了，可以投给自己或投给别人，但是只有候选者才能把票投给自己。若只有一个候选者，则其他哨兵会将票投给它，若有多个候选者，即多个哨兵同时判断主节点为「客观下线」，此时其他非候选者哨兵会对它收到的第一个拉票候选者投票，对后续收到的其他拉票请求给予拒绝。</p>
+<p>一个候选者若能成为 Leader ，那它获得的赞成票必须既大于哨兵节点的一半又大于<code>quorum</code>的值。如果所有候选者都不满足，则发起下一轮选举。</p>
+<p>若有超过一半的哨兵宕机，则无法完成Leader哨兵的选举。</p>
 <h2 id="5、故障转移"><a href="#5、故障转移" class="headerlink" title="5、故障转移"></a>5、故障转移</h2><ol>
-<li>通过 <code>slave of no one</code> 命令将 4 中选举的节点变为主节点。</li>
+<li>通过 <code>slave of no one</code> 命令将 4 中选举的从节点变为主节点。</li>
 <li>通过<code>replicaof</code>命令将其他从节点和旧的主节点都成为新主节点的从节点。</li>
 </ol>
 
@@ -844,67 +1059,11 @@
 
 
   
-    <article id="post-Linux/Linux基础" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/04/28/Linux/Linux%E5%9F%BA%E7%A1%80/" class="article-date">
-  <time class="dt-published" datetime="2022-04-28T06:42:15.000Z" itemprop="datePublished">2022-04-28</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Linux/">Linux</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/04/28/Linux/Linux%E5%9F%BA%E7%A1%80/">Linux基础</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h3 id="1、-bin-bash"><a href="#1、-bin-bash" class="headerlink" title="1、#!/bin/bash"></a>1、#!/bin/bash</h3><p>shell 脚本第一行的 <code>#!/bin/bash</code> 用于指定执行该文件的解释器路径，不写默认是 <code>/bin/bash</code>；也可以执行时手动指定解释器路径，如：<code>/usr/bin/python3 test_py</code>，手动指定优先级高于文件内第一行指定的优先级。</p>
-<h3 id="2、-bin；-sbin；-usr-sbin；-usr-bin"><a href="#2、-bin；-sbin；-usr-sbin；-usr-bin" class="headerlink" title="2、 /bin；/sbin；/usr/sbin；/usr/bin"></a>2、 /bin；/sbin；/usr/sbin；/usr/bin</h3><ul>
-<li> <strong>/bin</strong> 存放系统的一些指令。如：ls、chmod、rm、cp、mkdir、su等等</li>
-<li>**/sbin **存放超级用户指令。如：shutdown、halt、init、ifconfig、fdisk等等</li>
-<li><strong>/usr/bin</strong> 存放用户后期安装的一些软件的运行脚本。如：awk、man、python3、c++、less等等</li>
-<li> <strong>/usr/sbin</strong>  存放一些用户安装的系统命令：如：httpd、netconfig、swap等等。</li>
-</ul>
-<h3 id="3、软硬链接"><a href="#3、软硬链接" class="headerlink" title="3、软硬链接"></a>3、软硬链接</h3><ul>
-<li>硬链接是指针，所有的硬链接都是指向同一个磁盘块。 删除一个指针不会真正删除文件，只有把所有的指针都删除才会真正删除文件。   </li>
-<li>软链接是另外一种类型的文件，保存的是它指向文件的全路径，访问时会替换成绝对路径。</li>
-</ul>
-<h3 id="4、查看-cpu、mem-信息"><a href="#4、查看-cpu、mem-信息" class="headerlink" title="4、查看 cpu、mem 信息"></a>4、查看 cpu、mem 信息</h3><p>查看 cpu 信息： <code>cat /proc/cpuinfo</code></p>
-<p>查看内存信息：<code>cat /proc/meminfo</code>；<code>free</code></p>
-<p>此外：<code>top</code>命令动态显示进程信息，其中也包含 cpu 和 mem 的使用情况。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/04/28/Linux/Linux%E5%9F%BA%E7%A1%80/" data-id="cl2lifthq0002zcaqd0sk2tx2" data-title="Linux基础" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
     
-    <a class="extend prev" rel="prev" href="/">&laquo; 上一页</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><a class="extend next" rel="next" href="/page/3/">下一页 &raquo;</a>
+    <a class="extend prev" rel="prev" href="/">&laquo; 上一页</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/9/">9</a><a class="extend next" rel="next" href="/page/3/">下一页 &raquo;</a>
   </nav>
 
 </section>
@@ -915,7 +1074,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
     </div>
   </div>
 
@@ -943,6 +1102,10 @@
       <ul>
         
           <li>
+            <a href="/2022/06/06/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/Kuberbetes/Kuberbetes%E5%9F%BA%E7%A1%80/">Kuberbetes基础</a>
+          </li>
+        
+          <li>
             <a href="/2022/06/02/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/">分布式基础</a>
           </li>
         
@@ -956,10 +1119,6 @@
         
           <li>
             <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">分布式锁</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/22/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%9B%B6%E7%A2%8E%E7%AE%97%E6%B3%95/">零碎算法</a>
           </li>
         
       </ul>

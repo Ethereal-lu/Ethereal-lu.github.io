@@ -15,7 +15,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://ethereal-lu.github.io/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/ZAB%E5%8D%8F%E8%AE%AE/%E9%9D%9E%E7%AC%AC%E4%B8%80%E6%AC%A1%E5%90%AF%E5%8A%A8%E9%80%89%E4%B8%BE.png">
 <meta property="article:published_time" content="2022-05-08T11:42:15.000Z">
-<meta property="article:modified_time" content="2022-05-29T09:40:09.044Z">
+<meta property="article:modified_time" content="2022-06-07T09:51:03.055Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://ethereal-lu.github.io/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/ZAB%E5%8D%8F%E8%AE%AE/%E9%9D%9E%E7%AC%AC%E4%B8%80%E6%AC%A1%E5%90%AF%E5%8A%A8%E9%80%89%E4%B8%BE.png">
@@ -146,7 +146,7 @@
 </ol>
 <h3 id="6-2、-Leader-崩溃"><a href="#6-2、-Leader-崩溃" class="headerlink" title="6.2、 Leader 崩溃"></a>6.2、 Leader 崩溃</h3><p>Leader 选举成功后，Leader 会周期性地向 follower 发送心跳（ping命令，没有内容的 socket）。当 Leader 崩溃后，Follower 发现通道关闭，则 Follower 的状态变为 LOOKING，开始进行选举。</p>
 <p><img src="%E9%9D%9E%E7%AC%AC%E4%B8%80%E6%AC%A1%E5%90%AF%E5%8A%A8%E9%80%89%E4%B8%BE.png" alt="非第一次启动选举"></p>
-<h2 id="7、数据同步"><a href="#7、数据同步" class="headerlink" title="7、数据同步"></a>7、数据同步</h2><p>在选举结束后还需要进行数据同步。Follower 将自己的 ZXID 发送给 Leader，当收到半数以上的 Follower 发送的 ZXID 后，Leader 根据 ZXID 对每个 Follower 给出不同的同步策略。</p>
+<h2 id="7、数据同步"><a href="#7、数据同步" class="headerlink" title="7、数据同步"></a>7、数据同步</h2><p>在选举结束后还需要进行数据同步。先同步 epoch，然后 Follower 将自己的 ZXID 发送给 Leader，当收到半数以上的 Follower 发送的 ZXID 后，Leader 根据 ZXID 对每个 Follower 给出不同的同步策略。</p>
 <ul>
 <li>DIFF：如果 Follower 的记录和 Leader 的记录相差的不多，使用增量同步的方式将一个一个写请求发送给 Follower</li>
 <li>SNAP：如果 Follower 的记录和当前 Leader 相差太多，Leader 直接将自己的整个内存数据发送给 Follower</li>
@@ -165,19 +165,24 @@
 <p>客户端会随机连接 Zookeeper 集群中的节点 ，如果集群中的follewer接收到来自客户端的写请求，follower会将请求转发给 leader，统一交给leader来处理。</p>
 <p>主从数据同步步骤如下：</p>
 <ol>
-<li>客户端向主节点写入数据</li>
-<li>主节点将数据写入磁盘中，并给自己返回一个 ACK，同时将数据发送给从节点</li>
-<li>从节点将数据写入磁盘中，并给主节点返回一个 ACK</li>
+<li>客户端向主节点发起事务请求</li>
+<li>主节点将事务写到本地事务日志，并给自己返回一个 ACK，同时将数据发送给从节点</li>
+<li>从节点将事务写到本地事务日志，并给主节点返回一个 ACK</li>
 <li>主节点统计收到的 ACK 数，加上自己的 ACK，如果收到的 ACK 数量超过集群总数的一半，则向从节点发送 commit，同时本地也提交事务。</li>
-<li>各节点接收到 commit 后提交事务，将数据从磁盘加载到内存。</li>
+<li>各节点接收到 commit 后提交事务，将事务操作应用到内存中。</li>
 </ol>
 <p>之所以说该过程类似于 2PC，是因为 2PC 要求所有的节点全部执行成功才提交事务，而 ZAB 只需要超过半数节点执行成功就可以提交</p>
 <p>Observer 不参与投票过程，不会返回 ack，但其必须要与 Leader 保持数据一致性。</p>
 <h1 id="4、数据一致性"><a href="#4、数据一致性" class="headerlink" title="4、数据一致性"></a>4、数据一致性</h1><p>根据上方数据同步过程可知，Leader 总是与超过半数的从节点保持强一致性，但是与其他的从节点并没有保持强一致性。</p>
 <p>Zookeeper 在数据同步时追求的并不是强一致性，而是<strong>顺序一致性</strong>。</p>
 <h2 id="1、顺序一致性"><a href="#1、顺序一致性" class="headerlink" title="1、顺序一致性"></a>1、顺序一致性</h2><p>Zookeeper 的所有写操作都通过主节点进行，这样所有节点的事务执行顺序都和主节点相同，不会出现某个节点的事务执行顺序与其它节点不同的情况。</p>
+<p>Zookeeper 是通过 ZXID 来保证顺序一致性的，由于在同一任期内 zxid 是连续递增的，每个节点都会通过比较自身的最新 zxid 和 当前提案的 zxid 是否差1来保证事务严格按照顺序生效。Leader 会将所有未提交的事务存储在 ConcurrentHashMap 中，键为 zxid，值为提案的信息，当事务提交后就删除这个键值对。每次 Leader 要提交事务时都先查看 ConcurrentHashMap 是否存在 zxid - 1 的键，若存在说明在它之前还有事务没有提交，则当前事务就不能提交，如此保证事务执行的顺序一致性。</p>
 <p>但是Zookeeper 允许客户端从从节点读取数据，因此如果客户端在读取过程中连接了不同的节点，则顺序一致性就得不到保证了，即客户端先在一个节点读取了新的数据，然后到另一个节点读取到了旧数据。为了解决这种情况，Zookeeper 保证了单一视图。</p>
 <h2 id="2、单一视图"><a href="#2、单一视图" class="headerlink" title="2、单一视图"></a>2、单一视图</h2><p>对于客户端的每次请求，服务器都会返回自己当前最新的事务id。当客户端与服务器断开之后又重新连接时，会将自己记录的事务id 发送给服务端，服务端如果发现收到的事务 id 在本地不存在，就会拒绝连接请求，之后客户端再尝试连接其他服务器。从而保证客户端不会连接到数据版本比自己之前看到的旧的服务器上，保证了单一视图特性。</p>
+<h1 id="5、Zookeeper的脑裂问题"><a href="#5、Zookeeper的脑裂问题" class="headerlink" title="5、Zookeeper的脑裂问题"></a>5、Zookeeper的脑裂问题</h1><p>脑裂问题是指由于网络等原因导致集群被分割为俩个团体，团体内部可以通信，团体之间不可以通信。这时必然有一个团体内是没有 Leader 的，于是该团体就会选举一个 Leader。这样，原本作为一个整体的集群出现了两个 Leader，这就脑裂现象。</p>
+<p>Zookeeper 由于实行半数原则，如果出现两个团体，则要么这两个团体的成员数量都不过半，此时两个团体都选举 Leader 失败，即整个集群不能提供服务；要么一个团体成员数量过半，另一个不过半，此时过半的团体正常提供服务，而不过半的团体则无法选举 leader 不能提供服务。</p>
+<p>因此 Zookeeper 不存在脑裂问题。</p>
+<p>假设: leader发生了假死, followers选举出了一个新的leader.当旧的leader复活并认为自己仍然是leader, 它向其他followers发出写请求时, 会被拒绝.—— 因为ZooKeeper维护了一个叫epoch的变量, 每当新leader产生时, epoch都会递增, followers如果确认了新的leader存在, 同时也会知道其epoch的值 —— 它们会拒绝epoch小于现任leader的epoch的所有旧leader的任何请求.</p>
 
       
     </div>
@@ -221,7 +226,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
     </div>
   </div>
 
@@ -249,6 +254,10 @@
       <ul>
         
           <li>
+            <a href="/2022/06/06/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/Kuberbetes/Kuberbetes%E5%9F%BA%E7%A1%80/">Kuberbetes基础</a>
+          </li>
+        
+          <li>
             <a href="/2022/06/02/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/">分布式基础</a>
           </li>
         
@@ -262,10 +271,6 @@
         
           <li>
             <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">分布式锁</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/22/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%9B%B6%E7%A2%8E%E7%AE%97%E6%B3%95/">零碎算法</a>
           </li>
         
       </ul>
