@@ -217,7 +217,7 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Producer</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String EXCHANGE_NAME = <span class="string">&quot;first_exchange&quot;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String ROUTING_KEY = <span class="string">&quot;first_routing_key&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException, TimeoutException </span>&#123;</span><br><span class="line">        Channel channel = RabbitMqUtil.getChannel();</span><br><span class="line">        <span class="comment">// 声明交换机，类型为 FANOUT 广播类型</span></span><br><span class="line">        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);</span><br><span class="line"></span><br><span class="line">        Scanner sc = <span class="keyword">new</span> Scanner(System.in);</span><br><span class="line">        <span class="keyword">while</span> (sc.hasNext()) &#123;</span><br><span class="line">            String message = sc.next();</span><br><span class="line">            <span class="comment">// 发送消息到指定的交换机并指明使用的 ROUTING_KEY</span></span><br><span class="line">            channel.basicPublish(EXCHANGE_NAME, ROUTING_KEY, <span class="keyword">null</span>, message.getBytes(StandardCharsets.UTF_8));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Consumer1</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException, TimeoutException </span>&#123;</span><br><span class="line">        Channel channel = RabbitMqUtil.getChannel();</span><br><span class="line">        <span class="comment">// 声明一个临时队列，消费者断开就自动删除</span></span><br><span class="line">        String queueName = channel.queueDeclare().getQueue();</span><br><span class="line">        <span class="comment">// 绑定</span></span><br><span class="line">        channel.queueBind(queueName, EXCHANGE_NAME, ROUTING_KEY);</span><br><span class="line"></span><br><span class="line">        DeliverCallback deliverCallback = (consumerTag, message) -&gt;</span><br><span class="line">                System.out.println(<span class="string">&quot;Consumer1: &quot;</span> + <span class="keyword">new</span> String(message.getBody()));</span><br><span class="line">        channel.basicConsume(queueName, <span class="keyword">true</span>, deliverCallback, (consumerTag, message) -&gt; &#123;&#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Consumer2</span> </span>&#123;&#125;  <span class="comment">// Consumer2 与 Consumer1 完全相同</span></span><br></pre></td></tr></table></figure>
 
 <h3 id="6-3、Direct-Exchange"><a href="#6-3、Direct-Exchange" class="headerlink" title="6.3、Direct Exchange"></a>6.3、Direct Exchange</h3><p>Direct Exchange 仅会向与它通过特定的 Routing_Key 绑定的队列发送消息，这个特定的 Routing_Key 就是发布者指定的 Routing_Key。</p>
-<h3 id="6-4、Topic-Exchange"><a href="#6-4、Topic-Exchange" class="headerlink" title="6.4、Topic Exchange"></a>6.4、Topic Exchange</h3><p>Topic Exchange 中，消费者可以使用带有通配符的 Routing_Key 来匹配多个发布者指定的 Routing_Key 。</p>
+<h3 id="6-4、Topic-Exchange"><a href="#6-4、Topic-Exchange" class="headerlink" title="6.4、Topic Exchange"></a>6.4、Topic Exchange</h3><p>Topic Exchange 中，可以使用带有通配符的 Routing_Key 将 Exchange 和 Queue 进行绑定。</p>
 <p>在该模式中，发布者指定的 Routing_Key 必须以点号隔开的单词列表，如 com.lu.mq</p>
 <p><code>#</code>匹配 0 个或多个词，<code>*</code>表示 1 个词。注意是点与点之间的完成的词，不是字母。如 com.*.mq、 com.#</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Producer</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String EXCHANGE_NAME = <span class="string">&quot;third_exchange&quot;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String ROUTING_KEY = <span class="string">&quot;com.lu.mq&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException, TimeoutException </span>&#123;</span><br><span class="line">        Channel channel = RabbitMqUtil.getChannel();</span><br><span class="line">        <span class="comment">// 声明交换机，类型为 TOPIC 主题类型</span></span><br><span class="line">        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.TOPIC);</span><br><span class="line"></span><br><span class="line">        Scanner sc = <span class="keyword">new</span> Scanner(System.in);</span><br><span class="line">        <span class="keyword">while</span> (sc.hasNext()) &#123;</span><br><span class="line">            String message = sc.next();</span><br><span class="line">            channel.basicPublish(EXCHANGE_NAME, ROUTING_KEY, <span class="keyword">null</span>, message.getBytes(StandardCharsets.UTF_8));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Consumer1</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException, TimeoutException </span>&#123;</span><br><span class="line">        Channel channel = RabbitMqUtil.getChannel();</span><br><span class="line">        String queueName = channel.queueDeclare().getQueue();</span><br><span class="line">        channel.queueBind(queueName, EXCHANGE_NAME, <span class="string">&quot;com.#&quot;</span>);</span><br><span class="line"></span><br><span class="line">        DeliverCallback deliverCallback = (consumerTag, message) -&gt;</span><br><span class="line">                System.out.println(<span class="string">&quot;Consumer1: &quot;</span> + <span class="keyword">new</span> String(message.getBody()));</span><br><span class="line">        channel.basicConsume(queueName, <span class="keyword">true</span>, deliverCallback, (consumerTag, message) -&gt; &#123;&#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Consumer2</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException, TimeoutException </span>&#123;</span><br><span class="line">        Channel channel = RabbitMqUtil.getChannel();</span><br><span class="line">        String queueName = channel.queueDeclare().getQueue();</span><br><span class="line">        <span class="comment">// 一个队列可以通过不同的 Routing_Key 绑定一个或多个交换机</span></span><br><span class="line">        channel.queueBind(queueName, EXCHANGE_NAME, <span class="string">&quot;com.*.mq&quot;</span>);</span><br><span class="line">        channel.queueBind(queueName, EXCHANGE_NAME, <span class="string">&quot;com.lu.*&quot;</span>);</span><br><span class="line"></span><br><span class="line">        DeliverCallback deliverCallback = (consumerTag, message) -&gt;</span><br><span class="line">                System.out.println(<span class="string">&quot;Consumer2: &quot;</span> + <span class="keyword">new</span> String(message.getBody()));</span><br><span class="line">        channel.basicConsume(queueName, <span class="keyword">true</span>, deliverCallback, (consumerTag, message) -&gt; &#123;&#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -410,7 +410,7 @@
 <p>Java 中的 BIO、NIO和 AIO 理解为是 Java 语言对操作系统的各种 IO 模型的封装。程序员在使用这些 API 的时候，不需要关心操作系统层面的知识，也不需要根据不同操作系统编写不同的代码。只需要使用Java的API就可以了。</p>
 <p><strong>同步与异步</strong></p>
 <ul>
-<li><strong>同步：</strong> 同步就是发起一个调用后，被调用者未处理完请求之前，调用不返回。</li>
+<li><strong>同步：</strong> 同步就是发起一个调用后，需要等待被调用者返回结果。</li>
 <li><strong>异步：</strong> 异步就是发起一个调用后，立刻得到被调用者的回应表示已接收到请求，但是被调用者并没有返回结果，此时我们可以处理其他的请求，被调用者通常依靠事件，回调等机制来通知调用者其返回结果。</li>
 </ul>
 <p>同步和异步的区别最大在于异步的话调用者不需要等待处理结果，被调用者会通过回调等机制来通知调用者其返回结果。</p>
@@ -419,7 +419,9 @@
 <li><strong>阻塞：</strong> 阻塞就是发起一个请求，调用者一直等待请求结果返回，也就是当前线程会被挂起，无法从事其他任务，只有当条件就绪才能继续。</li>
 <li><strong>非阻塞：</strong> 非阻塞就是发起一个请求，调用者不用一直等着结果返回，可以先去干其他事情。</li>
 </ul>
+<p>同步和阻塞最大的区别就是线程是否会被挂起。</p>
 <p><strong>那么同步阻塞、同步非阻塞和异步非阻塞又代表什么意思呢？</strong></p>
+<p>在等待返回结果前如果什么也不干就是同步阻塞；如果可以做一些其他的事只需要以轮询的方式查看结果是否返回就是同步非阻塞；如果不需要等待返回结果就是异步非阻塞。</p>
 <p>举个生活中简单的例子，你妈妈让你烧水，小时候你比较笨啊，在哪里傻等着水开（<strong>同步阻塞</strong>）。等你稍微再长大一点，你知道每次烧水的空隙可以去干点其他事，然后只需要时不时来看看水开了没有（<strong>同步非阻塞</strong>）。后来，你们家用上了水开了会发出声音的壶，这样你就只需要听到响声后就知道水开了，在这期间你可以随便干自己的事情，你需要去倒水了（<strong>异步非阻塞</strong>）。</p>
 <h2 id="1-BIO-Blocking-I-O"><a href="#1-BIO-Blocking-I-O" class="headerlink" title="1. BIO (Blocking I/O)"></a>1. BIO (Blocking I/O)</h2><p>同步阻塞I/O模式，数据的读取写入必须阻塞在一个线程内等待其完成。</p>
 <h3 id="1-1-传统-BIO"><a href="#1-1-传统-BIO" class="headerlink" title="1.1 传统 BIO"></a>1.1 传统 BIO</h3><p>BIO通信（一请求一应答）模型图如下(图源网络，原出处不明)：</p>
@@ -534,6 +536,13 @@
 <li>Token 可以是无状态的，可以在多个服务间共享</li>
 </ol>
 <h3 id="5-2、无状态-token"><a href="#5-2、无状态-token" class="headerlink" title="5.2、无状态 token"></a>5.2、无状态 token</h3><p>有状态 token 即项目中使用的 refresh_token 模型。 无状态 token 即所有状态信息都附加在 Token 上，多个服务端都使用相同的密钥和算法对 token 验证。为了实现用户注销时可控可以让前端在用户注销时删除对应的token。</p>
+<h2 id="999、短问题"><a href="#999、短问题" class="headerlink" title="999、短问题"></a>999、短问题</h2><h3 id="1、cpu特别高如何定位"><a href="#1、cpu特别高如何定位" class="headerlink" title="1、cpu特别高如何定位"></a>1、cpu特别高如何定位</h3><p>先使用 top 命令定位到那个进程占用的 cpu 高，一般 cpu 占用高要么是 cpu 密集型任务，要么就是发生了死循环，定位到进程后可以使用 jstack 定位到异常代码的位置。</p>
+<h3 id="2、sql执行慢的原因"><a href="#2、sql执行慢的原因" class="headerlink" title="2、sql执行慢的原因"></a>2、sql执行慢的原因</h3><p>如果 sql 平时正常只是偶尔执行慢，可能是网络抖动或者在等待锁。</p>
+<p>如果 sql 一直执行慢，那一般是 sql 语句本身有问题，可能的问题如下：</p>
+<ul>
+<li>没有使用索引；where 条件的字段没有索引，或者有索引但没有走上。</li>
+<li>单表数据量过大</li>
+</ul>
 
       
     </div>
@@ -740,6 +749,25 @@
 
 <hr>
 <h3 id="Redis-conf-解析"><a href="#Redis-conf-解析" class="headerlink" title="Redis.conf 解析"></a>Redis.conf 解析</h3><p><a href="%5BRedis%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6redis.conf%E8%B6%85%E8%AF%A6%E7%BB%86%E7%9A%84%E8%A7%A3%E6%9E%90-Redis-PHP%E4%B8%AD%E6%96%87%E7%BD%91%5D(https://www.php.cn/redis/470708.html)">redis.conf 解析</a></p>
+<hr>
+<h3 id="redis的淘汰机制"><a href="#redis的淘汰机制" class="headerlink" title="redis的淘汰机制"></a>redis的淘汰机制</h3><p><strong>redis的过期策略</strong></p>
+<p>redis有两种过期策略，定期删除和惰性删除</p>
+<ul>
+<li><strong>定期删除</strong>：redis每个100ms随机抽取一些设置了过期时间的key，检查其是否过期，如果过期就删除。</li>
+<li><strong>惰性删除</strong>：在获取某个key的时候，redis检查一下，如果该key设置了过期时间则判断该过期时间是否已经过期，如果过期了就直接删掉并不返回任何东西。</li>
+</ul>
+<p><strong>redis的内存淘汰机制</strong></p>
+<p>当redis内存快耗尽时，redis会启动内存淘汰机制，将部分key清掉以腾出内存。</p>
+<p>redis提供6中数据淘汰策略，可在redis.conf中配置：maxmemory-policy noeviction</p>
+<ul>
+<li>noeviction：禁止驱逐数据。默认配置都是这个。当内存使用达到阀值的时候，所有引起申请内存的命令都会报错。</li>
+<li>volatile-lru：从设置了过期时间的数据集中挑选最近最少使用的数据淘汰。</li>
+<li>volatile-ttl：从已设置了过期时间的数据集中挑选即将要过期的数据淘汰。</li>
+<li>volatile-random：从已设置了过期时间的数据集中任意选择数据淘汰。</li>
+<li>allkeys-lru：从数据集中挑选最近最少使用的数据淘汰。</li>
+<li>allkeys-random：从数据集中任意选择数据淘汰。</li>
+</ul>
+<p>当Redis确定好要驱逐某个键值对后，会删除这个数据，并将这个数据变更消息同步到本地和从机。</p>
 
       
     </div>
@@ -1025,7 +1053,7 @@
 <p>如果辅助索引上已经存在我们需要的数据,那么引擎就不会去主键上去搜索数据了。 —- 这个就是所谓的”<strong>覆盖索引</strong>“</p>
 <p>普通索引、唯一索引、组合索引都可以是覆盖索引，只要满足所查询的字段全部都在辅助索引就行，这样就无需回表。</p>
 <h3 id="5-3、为什么数据库中建议使用自增主键"><a href="#5-3、为什么数据库中建议使用自增主键" class="headerlink" title="5.3、为什么数据库中建议使用自增主键"></a>5.3、为什么数据库中建议使用自增主键</h3><ol>
-<li>自增主键往往占用空间比较小，int 占 4 个字节，bigint 占 8 个字节。由于二级索引的叶子节点存储的就是主键，所以如果主键占用空间小，意味着二级索引的叶子节点将来占用的空间小（间接降低 B+Tree 的高度，提高搜索效率）。</li>
+<li>自增主键往往占用空间比较小，int 占 4 个字节，bigint 占 8 个字节。由于辅助索引的叶子节点存储的就是主键，所以如果主键占用空间小，则辅助索引的叶子节点占用的空间就小；同时主键索引的非叶子节点存储的就是主键值，如果主键占用空间小那么一个非叶子节点能指向的子节点更多，从而降低 B+Tree 的高度，提高搜索效率。</li>
 <li>自增主键插入的时候比较快，直接插入即可，不会涉及到叶子节点分裂等问题（不需要挪动其他记录）；而其他非自增主键插入的时候，可能要插入到两个已有的数据中间，就有可能导致叶子节点分裂等问题，插入效率低（要挪动其他记录）。</li>
 </ol>
 
@@ -1083,7 +1111,7 @@
 <h2 id="1、redo-log-与-undo-log"><a href="#1、redo-log-与-undo-log" class="headerlink" title="1、redo log 与 undo log"></a>1、redo log 与 undo log</h2><h3 id="1-1、redo-log"><a href="#1-1、redo-log" class="headerlink" title="1.1、redo log"></a>1.1、redo log</h3><p>mysql 为了提升性能不会把每次的修改都实时同步到磁盘，而是会先存到Boffer Pool(缓冲池)里头，把这个当作缓存来用。然后使用后台线程去做<strong>缓冲池和磁盘之间的同步</strong>。</p>
 <p>那么问题来了，如果还没来的同步的时候宕机或断电了怎么办？还没来得及执行上面图中红色的操作。这样会导致丢部分已提交事务的修改信息！</p>
 <p>所以引入了redo log来记录已成功提交事务的修改信息，并且会把redo log持久化到磁盘，系统重启之后在读取redo log恢复最新数据。</p>
-<p>redo log在事务提交后就写入磁盘，不会等待后台程序执行。</p>
+<p>redo log在事务提交时就写入磁盘，不会等待后台程序执行。</p>
 <p><strong>总结：</strong> redo log是用来恢复数据的 用于保障，已提交事务的持久化特性。</p>
 <p>既然redo log也需要存储，也涉及磁盘IO为啥还用它？</p>
 <p>（1）redo log 的存储是顺序存储，而缓存同步是随机操作。</p>

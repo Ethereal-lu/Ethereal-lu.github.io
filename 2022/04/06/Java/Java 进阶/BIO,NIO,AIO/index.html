@@ -16,7 +16,7 @@
 <meta property="og:image" content="https://img-blog.csdnimg.cn/2019042212100021.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L20wXzM4MTA5MDQ2,size_16,color_FFFFFF,t_70">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/20190422121019666.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L20wXzM4MTA5MDQ2,size_16,color_FFFFFF,t_70">
 <meta property="article:published_time" content="2022-04-06T13:12:41.000Z">
-<meta property="article:modified_time" content="2022-04-06T13:58:21.456Z">
+<meta property="article:modified_time" content="2022-06-09T07:31:42.726Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://img-blog.csdnimg.cn/2019042212100021.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L20wXzM4MTA5MDQ2,size_16,color_FFFFFF,t_70">
@@ -106,7 +106,7 @@
 <p>Java 中的 BIO、NIO和 AIO 理解为是 Java 语言对操作系统的各种 IO 模型的封装。程序员在使用这些 API 的时候，不需要关心操作系统层面的知识，也不需要根据不同操作系统编写不同的代码。只需要使用Java的API就可以了。</p>
 <p><strong>同步与异步</strong></p>
 <ul>
-<li><strong>同步：</strong> 同步就是发起一个调用后，被调用者未处理完请求之前，调用不返回。</li>
+<li><strong>同步：</strong> 同步就是发起一个调用后，需要等待被调用者返回结果。</li>
 <li><strong>异步：</strong> 异步就是发起一个调用后，立刻得到被调用者的回应表示已接收到请求，但是被调用者并没有返回结果，此时我们可以处理其他的请求，被调用者通常依靠事件，回调等机制来通知调用者其返回结果。</li>
 </ul>
 <p>同步和异步的区别最大在于异步的话调用者不需要等待处理结果，被调用者会通过回调等机制来通知调用者其返回结果。</p>
@@ -115,7 +115,9 @@
 <li><strong>阻塞：</strong> 阻塞就是发起一个请求，调用者一直等待请求结果返回，也就是当前线程会被挂起，无法从事其他任务，只有当条件就绪才能继续。</li>
 <li><strong>非阻塞：</strong> 非阻塞就是发起一个请求，调用者不用一直等着结果返回，可以先去干其他事情。</li>
 </ul>
+<p>同步和阻塞最大的区别就是线程是否会被挂起。</p>
 <p><strong>那么同步阻塞、同步非阻塞和异步非阻塞又代表什么意思呢？</strong></p>
+<p>在等待返回结果前如果什么也不干就是同步阻塞；如果可以做一些其他的事只需要以轮询的方式查看结果是否返回就是同步非阻塞；如果不需要等待返回结果就是异步非阻塞。</p>
 <p>举个生活中简单的例子，你妈妈让你烧水，小时候你比较笨啊，在哪里傻等着水开（<strong>同步阻塞</strong>）。等你稍微再长大一点，你知道每次烧水的空隙可以去干点其他事，然后只需要时不时来看看水开了没有（<strong>同步非阻塞</strong>）。后来，你们家用上了水开了会发出声音的壶，这样你就只需要听到响声后就知道水开了，在这期间你可以随便干自己的事情，你需要去倒水了（<strong>异步非阻塞</strong>）。</p>
 <h2 id="1-BIO-Blocking-I-O"><a href="#1-BIO-Blocking-I-O" class="headerlink" title="1. BIO (Blocking I/O)"></a>1. BIO (Blocking I/O)</h2><p>同步阻塞I/O模式，数据的读取写入必须阻塞在一个线程内等待其完成。</p>
 <h3 id="1-1-传统-BIO"><a href="#1-1-传统-BIO" class="headerlink" title="1.1 传统 BIO"></a>1.1 传统 BIO</h3><p>BIO通信（一请求一应答）模型图如下(图源网络，原出处不明)：</p>

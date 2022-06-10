@@ -14,7 +14,7 @@
 <meta property="og:description" content="1、大文件上传每个分块的文件内容都是通过 MultipartFile 来接收的，改接口的所有实现类都是通过包装 HttpServletRequest 来实现的，故该文件传输是通过 HTTP 协议实现的。 1.1、分片上传 先获取完整文件的 MD5 值，之后将文件分割成相同大小的数据块； 每次上传文件时都携带上 MD5 值、分块序号、文件内容等。 每收到一个分块，便将其存储到文件中，并将分块序号添加">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-04-05T13:12:41.000Z">
-<meta property="article:modified_time" content="2022-06-02T14:36:15.193Z">
+<meta property="article:modified_time" content="2022-06-09T16:20:55.067Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -139,6 +139,13 @@
 <li>Token 可以是无状态的，可以在多个服务间共享</li>
 </ol>
 <h3 id="5-2、无状态-token"><a href="#5-2、无状态-token" class="headerlink" title="5.2、无状态 token"></a>5.2、无状态 token</h3><p>有状态 token 即项目中使用的 refresh_token 模型。 无状态 token 即所有状态信息都附加在 Token 上，多个服务端都使用相同的密钥和算法对 token 验证。为了实现用户注销时可控可以让前端在用户注销时删除对应的token。</p>
+<h2 id="999、短问题"><a href="#999、短问题" class="headerlink" title="999、短问题"></a>999、短问题</h2><h3 id="1、cpu特别高如何定位"><a href="#1、cpu特别高如何定位" class="headerlink" title="1、cpu特别高如何定位"></a>1、cpu特别高如何定位</h3><p>先使用 top 命令定位到那个进程占用的 cpu 高，一般 cpu 占用高要么是 cpu 密集型任务，要么就是发生了死循环，定位到进程后可以使用 jstack 定位到异常代码的位置。</p>
+<h3 id="2、sql执行慢的原因"><a href="#2、sql执行慢的原因" class="headerlink" title="2、sql执行慢的原因"></a>2、sql执行慢的原因</h3><p>如果 sql 平时正常只是偶尔执行慢，可能是网络抖动或者在等待锁。</p>
+<p>如果 sql 一直执行慢，那一般是 sql 语句本身有问题，可能的问题如下：</p>
+<ul>
+<li>没有使用索引；where 条件的字段没有索引，或者有索引但没有走上。</li>
+<li>单表数据量过大</li>
+</ul>
 
       
     </div>

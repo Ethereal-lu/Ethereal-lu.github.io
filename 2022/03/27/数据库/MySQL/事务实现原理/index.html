@@ -14,7 +14,7 @@
 <meta property="og:description" content="MySQL 默认开启事务自动提交模式，即除非显式的开启事务（BEGIN 或 START TRANSACTION），否则每条 SOL 语句都会被当做一个单独的事务自动执行。 在 MySQL 中，可以使用 SET autocommit 语句设置事务的自动提交模式，语法格式如下： 1SET autocommit &#x3D; 0|1|ON|OFF;  对取值的说明：  值为 0 和值为 OFF：关闭事务自动提交。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-03-27T09:39:41.000Z">
-<meta property="article:modified_time" content="2022-05-30T03:30:16.169Z">
+<meta property="article:modified_time" content="2022-06-08T04:38:52.583Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -112,7 +112,7 @@
 <h2 id="1、redo-log-与-undo-log"><a href="#1、redo-log-与-undo-log" class="headerlink" title="1、redo log 与 undo log"></a>1、redo log 与 undo log</h2><h3 id="1-1、redo-log"><a href="#1-1、redo-log" class="headerlink" title="1.1、redo log"></a>1.1、redo log</h3><p>mysql 为了提升性能不会把每次的修改都实时同步到磁盘，而是会先存到Boffer Pool(缓冲池)里头，把这个当作缓存来用。然后使用后台线程去做<strong>缓冲池和磁盘之间的同步</strong>。</p>
 <p>那么问题来了，如果还没来的同步的时候宕机或断电了怎么办？还没来得及执行上面图中红色的操作。这样会导致丢部分已提交事务的修改信息！</p>
 <p>所以引入了redo log来记录已成功提交事务的修改信息，并且会把redo log持久化到磁盘，系统重启之后在读取redo log恢复最新数据。</p>
-<p>redo log在事务提交后就写入磁盘，不会等待后台程序执行。</p>
+<p>redo log在事务提交时就写入磁盘，不会等待后台程序执行。</p>
 <p><strong>总结：</strong> redo log是用来恢复数据的 用于保障，已提交事务的持久化特性。</p>
 <p>既然redo log也需要存储，也涉及磁盘IO为啥还用它？</p>
 <p>（1）redo log 的存储是顺序存储，而缓存同步是随机操作。</p>

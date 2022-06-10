@@ -14,7 +14,7 @@
 <meta property="og:description" content="1、SYN洪泛攻击1.1、产生原理服务器在收到连接请求报文段后，如同意建立连接，就向客户机发回确认，并在OS内核中为该TCP连接分配TCP缓存和变量。除此之外标识该tcp连接的tcb也会占用内存资源。 1.2、防御手段SYN cookie 方法 在服务器收到客户端的第一次请求之后，不立马分配资源，而是将  SYN报文的源和目的IP与端口号 仅仅有服务器知道的密钥  塞入一个哈希函数，生成一个认证码">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-05-03T14:39:41.000Z">
-<meta property="article:modified_time" content="2022-06-02T13:55:41.182Z">
+<meta property="article:modified_time" content="2022-06-09T06:13:51.172Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -113,7 +113,7 @@
 <p>或许由于第二次握手的包丢失，客户端不会发起第三次握手；或者客户端的第三次握手的包丢失。总之，服务端在接收不到第三次握手包时会执行如下操作：</p>
 <ol>
 <li>没有收到来自客户端的任何包：根据 TCP的超时重传机制，重新发送第二次握手包，若重发指定次数之后，仍然未收到响应，就会发送reset包，关闭连接，释放资源。</li>
-<li>收到了后续的数据包：由于第三次握手的关键就是其ack，而数据包中也有ack，故连接正常建立并进行通信。</li>
+<li>收到了后续的数据包：由于第三次握手的关键就是其ack，而数据包中也有ack，故连接正常建立并进行通信。如果第三次握手包中不包含数据则不消耗序号。</li>
 </ol>
 <h2 id="2、DNS-劫持"><a href="#2、DNS-劫持" class="headerlink" title="2、DNS 劫持"></a>2、DNS 劫持</h2><p>某些网络运营商为了某些目的，对DNS进行了某些操作，导致用户无法通过域名取得正确的IP地址。</p>
 <p>运营商会利用 DNS 劫持 投放小广告等。DNS污染则让域名直接无法访问了。</p>

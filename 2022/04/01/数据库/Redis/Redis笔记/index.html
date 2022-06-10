@@ -14,7 +14,7 @@
 <meta property="og:description" content="概述Redis是什么？ Redis（Remote Dictionary Server )，即远程字典服务！ Redis能干吗？  —》 数据库、缓存、中间件  内存存储、持久化（rdb、aof） 效率高，可用于缓存 发布订阅系统 地图信息分析 计时器、计数器 。。。  Redis 通过“Redis序列化协议”（简称“RESP”），实现客户端与服务端之间的连接通信，其底层是通过TCP来完成的。  L">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-04-01T09:39:41.000Z">
-<meta property="article:modified_time" content="2022-05-25T15:10:42.033Z">
+<meta property="article:modified_time" content="2022-06-10T02:16:04.964Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -263,6 +263,25 @@
 
 <hr>
 <h3 id="Redis-conf-解析"><a href="#Redis-conf-解析" class="headerlink" title="Redis.conf 解析"></a>Redis.conf 解析</h3><p><a href="%5BRedis%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6redis.conf%E8%B6%85%E8%AF%A6%E7%BB%86%E7%9A%84%E8%A7%A3%E6%9E%90-Redis-PHP%E4%B8%AD%E6%96%87%E7%BD%91%5D(https://www.php.cn/redis/470708.html)">redis.conf 解析</a></p>
+<hr>
+<h3 id="redis的淘汰机制"><a href="#redis的淘汰机制" class="headerlink" title="redis的淘汰机制"></a>redis的淘汰机制</h3><p><strong>redis的过期策略</strong></p>
+<p>redis有两种过期策略，定期删除和惰性删除</p>
+<ul>
+<li><strong>定期删除</strong>：redis每个100ms随机抽取一些设置了过期时间的key，检查其是否过期，如果过期就删除。</li>
+<li><strong>惰性删除</strong>：在获取某个key的时候，redis检查一下，如果该key设置了过期时间则判断该过期时间是否已经过期，如果过期了就直接删掉并不返回任何东西。</li>
+</ul>
+<p><strong>redis的内存淘汰机制</strong></p>
+<p>当redis内存快耗尽时，redis会启动内存淘汰机制，将部分key清掉以腾出内存。</p>
+<p>redis提供6中数据淘汰策略，可在redis.conf中配置：maxmemory-policy noeviction</p>
+<ul>
+<li>noeviction：禁止驱逐数据。默认配置都是这个。当内存使用达到阀值的时候，所有引起申请内存的命令都会报错。</li>
+<li>volatile-lru：从设置了过期时间的数据集中挑选最近最少使用的数据淘汰。</li>
+<li>volatile-ttl：从已设置了过期时间的数据集中挑选即将要过期的数据淘汰。</li>
+<li>volatile-random：从已设置了过期时间的数据集中任意选择数据淘汰。</li>
+<li>allkeys-lru：从数据集中挑选最近最少使用的数据淘汰。</li>
+<li>allkeys-random：从数据集中任意选择数据淘汰。</li>
+</ul>
+<p>当Redis确定好要驱逐某个键值对后，会删除这个数据，并将这个数据变更消息同步到本地和从机。</p>
 
       
     </div>

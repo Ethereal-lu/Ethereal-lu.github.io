@@ -15,7 +15,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://ethereal-lu.github.io/2022/05/02/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E9%9B%86%E7%BE%A4/redis-cluster.jpg">
 <meta property="article:published_time" content="2022-05-02T13:39:41.000Z">
-<meta property="article:modified_time" content="2022-05-03T03:00:21.196Z">
+<meta property="article:modified_time" content="2022-06-09T16:22:22.909Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://ethereal-lu.github.io/2022/05/02/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E9%9B%86%E7%BE%A4/redis-cluster.jpg">
@@ -106,7 +106,7 @@
 <p>如此，Redis集群的写能力和存储能力就是所有master之和了。</p>
 <p>虽然每个master下都挂载了一个slave节点，但是在Redis Cluster中的读、写请求其实都是在<strong>master</strong>上完成的。slave节点只是充当了一个数据备份的角色，当master发生了宕机，就会将对应的slave节点提拔为master，来重新对外提供服务。</p>
 <p><img src="redis-cluster.jpg" alt="redis-cluster"></p>
-<h2 id="2、-主要模块介绍"><a href="#2、-主要模块介绍" class="headerlink" title="2、 主要模块介绍"></a>2、 主要模块介绍</h2><h3 id="2-1、-哈希槽-Hash-Slot"><a href="#2-1、-哈希槽-Hash-Slot" class="headerlink" title="2.1、 哈希槽(Hash Slot)"></a>2.1、 哈希槽(Hash Slot)</h3><p>Redis-cluster没有使用一致性hash，而是引入了<strong>哈希槽</strong>的概念。Redis-cluster中有16384(即2的14次方）个哈希槽，每个key通过CRC16校验后对16383取模来决定放置哪个槽。Cluster中的每个节点负责一部分hash槽（hash slot）。</p>
+<h2 id="2、-主要模块介绍"><a href="#2、-主要模块介绍" class="headerlink" title="2、 主要模块介绍"></a>2、 主要模块介绍</h2><h3 id="2-1、-哈希槽-Hash-Slot"><a href="#2-1、-哈希槽-Hash-Slot" class="headerlink" title="2.1、 哈希槽(Hash Slot)"></a>2.1、 哈希槽(Hash Slot)</h3><p>Redis-cluster没有使用<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/129049724">一致性hash</a>，而是引入了<strong>哈希槽</strong>的概念。Redis-cluster中有16384(即2的14次方）个哈希槽，每个key通过CRC16校验后对16383取模来决定放置哪个槽。Cluster中的每个节点负责一部分hash槽（hash slot）。</p>
 <p> 一个键的对应的哈希槽通过计算键的CRC16 哈希值，然后对16384进行取模得到：<code>HASH_SLOT=CRC16(key) modulo 16383</code>。读写操作都是先计算出键的哈希槽，再在负责该哈希槽的 master 上进行相应操作。</p>
 <h3 id="2-2、Cluster总线"><a href="#2-2、Cluster总线" class="headerlink" title="2.2、Cluster总线"></a>2.2、Cluster总线</h3><p>每个Redis Cluster节点有一个额外的TCP端口用来接受其他节点的连接。这个端口为普通 client 端口 + 10000。如普通 client 端口为6379，则总线端口为 16379。节点到节点的通讯只使用集群总线。</p>
 <h3 id="2-3、集群拓扑"><a href="#2-3、集群拓扑" class="headerlink" title="2.3、集群拓扑"></a>2.3、集群拓扑</h3><p>Redis Cluster是一张全网拓扑，节点与其他每个节点之间都保持着TCP连接。</p>

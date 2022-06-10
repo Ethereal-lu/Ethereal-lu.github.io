@@ -131,11 +131,17 @@
 <h3 id="2-2、Kubernetes-安装"><a href="#2-2、Kubernetes-安装" class="headerlink" title="2.2、Kubernetes 安装"></a>2.2、Kubernetes 安装</h3><ol>
 <li><p>安装 docker，并执行 <code>systemctl enable docker.service</code></p>
 </li>
-<li><p>```shell<br>$ apt-get update &amp;&amp; apt-get install -y apt-transport-https</p>
-<h1 id="安装-GPG-证书"><a href="#安装-GPG-证书" class="headerlink" title="安装 GPG 证书"></a>安装 GPG 证书</h1><p>$ curl <a target="_blank" rel="noopener" href="https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg">https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg</a> | apt-key add -</p>
-<p>$ cat &lt;&lt;EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list<br>deb <a target="_blank" rel="noopener" href="https://mirrors.aliyun.com/kubernetes/apt/">https://mirrors.aliyun.com/kubernetes/apt/</a> kubernetes-xenial main<br>EOF</p>
-<p>$ apt-get update<br>$ apt-get install -y kubelet kubeadm kubectl<br>$ systemctl enable kubelet.service</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">- Kubelet：运行在cluster所有节点上，负责启动POD和容器；</span><br><span class="line">- Kubeadm：用于初始化cluster的一个工具；</span><br><span class="line">- Kubectl：kubectl是kubenetes命令行工具，通过kubectl可以部署和管理应用，查看各种资源，创建，删除和更新组件；</span><br><span class="line"></span><br><span class="line">3. 部署Master节点</span><br><span class="line"></span><br><span class="line">   &#96;&#96;&#96;shell</span><br><span class="line">   # 下方参数从前往后依次是：master节点ip；仓库镜像地址；kubernetes版本；最后俩参数不用管，照抄。</span><br><span class="line">   $ kubeadm init --apiserver-advertise-address&#x3D;192.168.36.128 --image-repository registry.aliyuncs.com&#x2F;google_containers --kubernetes-version v1.24.1 --service-cidr&#x3D;10.96.0.0&#x2F;12 --pod-network-cidr&#x3D;10.244.0.0&#x2F;16</span><br></pre></td></tr></table></figure>
+<li><p>下载 kubelet kubeadm kubectl</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> apt-get update &amp;&amp; apt-get install -y apt-transport-https</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 安装 GPG 证书</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> curl https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | apt-key add -</span></span><br><span class="line"></span><br><span class="line"><span class="meta">$</span><span class="bash"> cat &lt;&lt;<span class="string">EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list</span></span></span><br><span class="line">deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"><span class="meta">$</span><span class="bash"> apt-get update</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> apt-get install -y kubelet kubeadm kubectl</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> systemctl <span class="built_in">enable</span> kubelet.service</span></span><br></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li>Kubelet：运行在cluster所有节点上，负责启动POD和容器；</li>
+<li>Kubeadm：用于初始化cluster的一个工具；</li>
+<li>Kubectl：kubectl是kubenetes命令行工具，通过kubectl可以部署和管理应用，查看各种资源，创建，删除和更新组件；</li>
+</ul>
+<ol start="3">
+<li><p>部署Master节点</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 下方参数从前往后依次是：master节点ip；仓库镜像地址；kubernetes版本；最后俩参数不用管，照抄。</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> kubeadm init --apiserver-advertise-address=192.168.36.128 --image-repository registry.aliyuncs.com/google_containers --kubernetes-version v1.24.1 --service-cidr=10.96.0.0/12 --pod-network-cidr=10.244.0.0/16</span></span><br></pre></td></tr></table></figure>
 
 </li>
 </ol>
@@ -488,7 +494,7 @@
 <li>防止锁超时：如果客户端没有主动释放锁，服务器会在一段时间之后自动释放锁，防止客户端宕机或者网络不可达时产生死锁；</li>
 <li>独占性：加锁解锁必须由同一台服务器进行，也就是锁的持有者才可以释放锁，不能出现你加的锁，别人给你解锁了；</li>
 </ul>
-<h2 id="2、基于数据库实现分布式锁"><a href="#2、基于数据库实现分布式锁" class="headerlink" title="2、基于数据库实现分布式锁"></a>2、基于数据库实现分布式锁</h2><h3 id="2-1、实现方式"><a href="#2-1、实现方式" class="headerlink" title="2.1、实现方式"></a>2.1、实现方式</h3><p>先将数据库的自动提交关闭，然后在查询语句后面增加<code>for update</code>，数据库会在查询过程中给数据库表增加排他锁。值得注意的是：只有通过索引进行检索的时候才会使用行级锁，所以应该给方法名加上唯一锁，同时为了避免重载方法也被锁住，应该在方法名上将参数类型也加上。等临界资源使用完毕后再手动提交事务。</p>
+<h2 id="2、基于数据库实现分布式锁"><a href="#2、基于数据库实现分布式锁" class="headerlink" title="2、基于数据库实现分布式锁"></a>2、基于数据库实现分布式锁</h2><h3 id="2-1、实现方式"><a href="#2-1、实现方式" class="headerlink" title="2.1、实现方式"></a>2.1、实现方式</h3><p>在数据库中存储方法名，将数据库的自动提交关闭，然后在查询语句后面增加<code>for update</code>来查询需要上锁的方法名，数据库会在查询过程中给数据库表增加排他锁。值得注意的是：只有通过索引进行检索的时候才会使用行级锁，所以应该给方法名加上唯一锁，同时为了避免重载方法也被锁住，应该在方法名上将参数类型也加上。等临界资源使用完毕后再手动提交事务。</p>
 <h3 id="2-2、缺点"><a href="#2-2、缺点" class="headerlink" title="2.2、缺点"></a>2.2、缺点</h3><ul>
 <li>数据在磁盘中，查询开销很大</li>
 <li>事务提交之前客户端失联，会导致死锁</li>
@@ -634,6 +640,7 @@
 <li>在<strong>准备阶段</strong> 事务管理器给每个参与者发送 Prepare 消息，每个数据库参与者在本地执行事务（此时本地事务不提交），并将自己的执行结果发送给事务管理器。</li>
 <li>在<strong>提交阶段</strong> 事务管理器只要发现有任意一个数据库参与者执行失败，就会直接给每个参与者发送回滚（Rollback）消息；否则，发送提交（Commit）消息；参与者根据事务管理器的指令执行提交或者回滚操作，并释放事务处理过程中使用的锁资源。注意：<strong>必须在最后阶段释放锁资源</strong>。</li>
 </ol>
+<p>tips：Mysql 中，事务执行是指在内存中修改值；事务提交是指将 undolog 和  redolog 存储在磁盘中。事务已经提交，仍然可以回滚。</p>
 <h3 id="2-2-TCC"><a href="#2-2-TCC" class="headerlink" title="2.2 TCC"></a>2.2 TCC</h3><p>TCC 是 Try、Conﬁrm、Cancel 三个词语的缩写，TCC 要求每个分支事务实现三个操作：预处理、确认 、撤销 。</p>
 <ol>
 <li><strong>Try</strong> 阶段是做完业务检查（一致性）及资源预留（隔离），此阶段仅是一个初步操作，它和后续的  Conﬁrm 一起才能真正构成一个完整的业务逻辑。</li>
@@ -782,7 +789,7 @@
 <h2 id="4、选举流程"><a href="#4、选举流程" class="headerlink" title="4、选举流程"></a>4、选举流程</h2><ol>
 <li>自增选举轮次：每开始一次新的选举，节点先将自己的<code>logicClock</code>加 1，并且投票时会附带上这个<code>logicClock</code>。</li>
 <li>初始化选票：每个服务器在广播自己的选票前，会将自己的投票箱清空。投票箱记录了所收到的选票。票箱中只会记录每一个投票者的最新的选票。实际上投票箱是一个 Map，节点 id 为键，选票为值，如果收到某个节点的新选票，更新该 Map 即可。</li>
-<li>发送选票：节点先将投给自己的选票放入投票箱，然后广播该选票，用于与其它节点交换选票信息。</li>
+<li>发送选票：节点给自己投票，将投给自己的选票放入投票箱，然后广播该选票，用于与其它节点交换选票信息。</li>
 <li>接收其他节点广播的选票：对于接收到的其他节点的选票进行<code>logicClock</code>的校验<ul>
 <li>如果收到的选票中的<code>logicClock</code>大于自己的<code>logicClock</code>，则清空自己的投票箱，并更新自己的<code>logicClock</code>，然后进行步骤5</li>
 <li>如果收到的选票中的<code>logicClock</code>小于自己的<code>logicClock</code>，直接丢弃</li>

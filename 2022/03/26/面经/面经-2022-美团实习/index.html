@@ -14,7 +14,7 @@
 <meta property="og:description" content="一面：75min   4.211、自我介绍 2、项目中用户权限控制的数据表设计问题 3、如果有 100 个元素，且之后不会增加，存储在 hashmap 中，初始容量应该设置为多少？ 答：64？ 100？  128？ 瞎蒙 正确：为了不触发扩容操作，初始值应该设置为 129 到 256 的任意一个值；因为在 hashmap 的构造函数中，会将输入的初始容量转换为第一个大于等于它的 2 的幂次值并赋值">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-03-26T03:12:41.000Z">
-<meta property="article:modified_time" content="2022-05-07T07:44:22.416Z">
+<meta property="article:modified_time" content="2022-06-09T12:56:54.803Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -120,7 +120,8 @@
 <li>老年代空间不足：老年代空间不足的常见场景比如大对象、大数组直接进入老年代、长期存活的对象进入老年代等。</li>
 <li>空间分配担保失败</li>
 </ul>
-<p>8、 full GC 对服务器有什么影响？ 由于 full GC 期间 STW ，不能提供服务了呗。</p>
+<p>8、 full GC 对服务器有什么影响？ </p>
+<p>因为 full GC 需要所有的业务线程都进入安全点，所以这些线程就不能执行任何字节码指令了，只有出了安全点才能继续执行，所以会发生 STW，导致不能正常提供服务。</p>
 <p>9、如果服务器在运行期将发生了 full GC ，你会如何处理？</p>
 <ul>
 <li>增大 survivor space ；可避免在 Minor GC 时由于 survivor space 太小而晋升到老年代。</li>
@@ -130,11 +131,11 @@
 <p>尽量做到让对象在Minor GC阶段被回收、让对象在新生代多存活一段时间及不要创建过大的对象及数组。</p>
 <p>10、执行一次 System.gc() 的流程？  不会！扯了一通可达性分析</p>
 <p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/zhxdick/p/14449554.html">深入理解System.gc()</a></p>
-<p><code>System.gc()</code>实际上调用的是<code>RunTime.getRunTime().gc()</code>，这个方法是一个 native 方法：首先，根据 DisableExplicitGC 这个 JVM 启动参数的状态，确定是否会 GC，如果需要 GC，不同 GC 会有不同的处理。 以 G1 GC 为例：如果是 <code>System.gc()</code> 触发的 GC，G1 GC 会根据 ExplicitGCInvokesConcurrent 这个 JVM 参数决定是默认 GC （轻量 GC，YoungGC）还是 FullGC。</p>
+<p><code>System.gc()</code>实际上调用的是<code>RunTime.getRunTime().gc()</code>，这个方法是一个 native 方法：首先，根据 <code>DisableExplicitGC</code> 这个 JVM 启动参数的状态，确定是否会 GC，如果需要 GC，不同 GC 会有不同的处理。 以 G1 GC 为例：如果是 <code>System.gc()</code> 触发的 GC，G1 GC 会根据 <code>ExplicitGCInvokesConcurrent</code> 这个 JVM 参数决定是YoungGC 还是 FullGC。</p>
 <p><code>System.gc()</code> 相关的 JVM 参数</p>
 <ul>
-<li>DisableExplicitGC： <strong>说明</strong>：是否禁用<strong>显式 GC</strong>，默认是不禁用的。</li>
-<li>ExplicitGCInvokesConcurrent： <strong>说明</strong>：对于<strong>显式 GC</strong>，是执行轻量并行 GC （YoungGC）还是 FullGC，如果为 <strong>true 则是执行轻量并行 GC （YoungGC），false 则是执行 FullGC</strong></li>
+<li><code>DisableExplicitGC</code>： 是否禁用显式 GC；默认是不禁用的。</li>
+<li><code>ExplicitGCInvokesConcurrent</code>： 执行轻量并行 GC （YoungGC）还是 FullGC；默认执行 FullGC。</li>
 </ul>
 <p>11、进程与线程</p>
 <p>12、进程间通信方式</p>

@@ -15,7 +15,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://ethereal-lu.github.io/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/ZAB%E5%8D%8F%E8%AE%AE/%E9%9D%9E%E7%AC%AC%E4%B8%80%E6%AC%A1%E5%90%AF%E5%8A%A8%E9%80%89%E4%B8%BE.png">
 <meta property="article:published_time" content="2022-05-08T11:42:15.000Z">
-<meta property="article:modified_time" content="2022-06-07T09:51:03.055Z">
+<meta property="article:modified_time" content="2022-06-09T03:24:03.430Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://ethereal-lu.github.io/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/ZAB%E5%8D%8F%E8%AE%AE/%E9%9D%9E%E7%AC%AC%E4%B8%80%E6%AC%A1%E5%90%AF%E5%8A%A8%E9%80%89%E4%B8%BE.png">
@@ -123,7 +123,7 @@
 <h2 id="4、选举流程"><a href="#4、选举流程" class="headerlink" title="4、选举流程"></a>4、选举流程</h2><ol>
 <li>自增选举轮次：每开始一次新的选举，节点先将自己的<code>logicClock</code>加 1，并且投票时会附带上这个<code>logicClock</code>。</li>
 <li>初始化选票：每个服务器在广播自己的选票前，会将自己的投票箱清空。投票箱记录了所收到的选票。票箱中只会记录每一个投票者的最新的选票。实际上投票箱是一个 Map，节点 id 为键，选票为值，如果收到某个节点的新选票，更新该 Map 即可。</li>
-<li>发送选票：节点先将投给自己的选票放入投票箱，然后广播该选票，用于与其它节点交换选票信息。</li>
+<li>发送选票：节点给自己投票，将投给自己的选票放入投票箱，然后广播该选票，用于与其它节点交换选票信息。</li>
 <li>接收其他节点广播的选票：对于接收到的其他节点的选票进行<code>logicClock</code>的校验<ul>
 <li>如果收到的选票中的<code>logicClock</code>大于自己的<code>logicClock</code>，则清空自己的投票箱，并更新自己的<code>logicClock</code>，然后进行步骤5</li>
 <li>如果收到的选票中的<code>logicClock</code>小于自己的<code>logicClock</code>，直接丢弃</li>
