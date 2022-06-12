@@ -53585,27 +53585,13 @@ a.anchor-link {
 <h3 id="数据管理"><a href="#数据管理" class="headerlink" title="数据管理"></a>数据管理</h3><ul>
 <li><strong>DDL</strong>，Data Definition Language，数据库定义语言<br>用于定义和管理数据库所有对象的语言，包括：CREATE，ALERT，DROP，TRUNCATE</li>
 <li><strong>DML</strong>，Data Manipulation Language，数据库操作语言<br>SQL中处理数据等操作，包括：SELECT，INSERT，UPDATE，DELETE，CALL，EXPLAIN PLAN，LOCK</li>
-<li><ul>
-<li>INSERT</li>
-<li>UPDATE</li>
-<li>DELETE<ul>
-<li><code>TRUNCATE student</code> == <code>DELETE FROM student</code>  清空一张数据表，不过清空一般用<code>TRUNCATE student</code></li>
-<li>TRUNCATE与DELETE区别：<ul>
-<li>相同：都能删除数据，但不会删除表的结构</li>
-<li>不同：TRUNCATE重新设置自增列，计数器归零，且不影响事务</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><strong>DCL</strong>，Data Control Language，数据库控制语言<br>用来授予或回收访问数据库和某种特权并控制数据库操纵事务发生的时间及效果，对数据库实行监控，包括：<br>COMMIT，SAVEPOINT，ROLLBACK，SET TRANSACTION</li>
+<li><strong>DCL</strong>，Data Control Language，数据库控制语言<br>用来授予或回收访问数据库和某种特权并控制数据库操纵事务发生的时间及效果，对数据库实行监控，包括：COMMIT，SAVEPOINT，ROLLBACK，SET TRANSACTION</li>
 </ul>
 <hr>
-<h3 id="delete和truncate的区别"><a href="#delete和truncate的区别" class="headerlink" title="delete和truncate的区别"></a>delete和truncate的区别</h3><ul>
-<li>在功能上，truncate是清空一个表的内容，它相当于delete from table_name。</li>
-<li>delete是dml操作，truncate是ddl操作；因此，用delete删除整个表的数据时，会产生大量的roolback，占用很多的rollback segments， 而truncate不会。</li>
-<li>TRUNCATE TABLE是非常快的 ；TRUNCATE之后的自增字段从头开始计数了，而DELETE的仍保留原来的最大数值 </li>
+<h3 id="delete和truncate的区别"><a href="#delete和truncate的区别" class="headerlink" title="delete和truncate的区别"></a>delete和truncate的区别</h3><p><code>TRUNCATE student</code> == <code>DELETE FROM student</code> 清空表内容</p>
+<ul>
+<li>DELETE 会一行一行地删除，产生大量事务日志。</li>
+<li>TRUNCATE 速度快；TRUNCATE之后的自增字段从头开始计数，而DELETE的仍保留原来的最大数值 </li>
 <li>truncate和delete只删除数据，而drop则删除整个表（结构和数据）。</li>
 </ul>
 <hr>

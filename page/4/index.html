@@ -543,6 +543,13 @@
 <li>没有使用索引；where 条件的字段没有索引，或者有索引但没有走上。</li>
 <li>单表数据量过大</li>
 </ul>
+<h3 id="3、Spring事务失效的原因"><a href="#3、Spring事务失效的原因" class="headerlink" title="3、Spring事务失效的原因"></a>3、Spring事务失效的原因</h3><ul>
+<li>@Transactional 修饰的方法必须是 public 修饰符</li>
+<li>@Transactional 所在的类没有加载为 bean</li>
+<li>使用 <code>try...catch..</code>捕获了事务的异常，但是没有抛出<code>RuntimeExecption</code>，事务不回滚</li>
+<li>在类A里面有方法a 和方法b， 然后方法b上面用 @Transactional加了方法级别的事务，在方法a里面调用了方法b， 方法b里面的事务不会生效</li>
+<li>数据库引擎是 MyISAM</li>
+</ul>
 
       
     </div>
@@ -1028,6 +1035,7 @@
 <h2 id="3、索引的最左匹配"><a href="#3、索引的最左匹配" class="headerlink" title="3、索引的最左匹配"></a>3、索引的最左匹配</h2><p>最左前缀匹配原则，非常重要的原则，建立一个索引，对于索引中的字段，mysql会一直向右匹配直到遇到范围查询(&gt;、&lt;、between、like)就停止匹配，比如a = 1 and b = 2 and c &gt; 3 and d = 4 如果建立(a,b,c,d)顺序的索引，d是用不到索引的，如果建立(a,b,d,c)的索引则都可以用到，a,b,d的顺序可以任意调整。<br>=和in可以乱序，比如a = 1 and b = 2 and c = 3 建立(a,b,c)索引可以任意顺序，mysql的查询优化器会帮你优化成索引可以识别的形式。</p>
 <p>mysql创建复合索引的规则是首先会对复合索引的最左边的，也就是第一个name字段的数据进行排序，在第一个字段的排序基础上，然后再对后面第二个的cid字段进行排序。其实就相当于实现了类似 order by name cid这样一种排序规则。<br>所以：第一个name字段是绝对有序的，而第二字段就是无序的了。所以通常情况下，直接使用第二个cid字段进行条件判断是用不到索引的。</p>
 <p>在第一个值等值匹配的前提下，第二个值是有序的，因此mysql索引规则中要求复合索引要想使用第二个索引，必须先使用第一个索引的原因。（而且第一个索引必须是<strong>等值匹配</strong>）。</p>
+<p><code>order by</code>也会用到索引，但前提是 <code>where</code>子句必须用到索引；如果 <code>where</code>子句的字段没有索引，即使<code>order by</code>的字段有索引也不会用到。<code>where</code>和<code>order by</code>使用的索引可以是同一个组合索引，同样符合最左匹配原则，比如 <code>select * from tb_user where name = &quot;lu&quot; and age &lt; 21 order by score</code>，如果有 <code>(name, age, score)</code> 的组合索引，由于 <code>age</code> 使用了范围搜索，<code>score</code> 索引就会失效。</p>
 <h2 id="4、InnoDB-的-B-Tree"><a href="#4、InnoDB-的-B-Tree" class="headerlink" title="4、InnoDB 的 B+Tree"></a>4、InnoDB 的 B+Tree</h2><p>B-Tree 和 B+Tree 的区别在于：</p>
 <ol>
 <li>B-Tree 中，所有节点都会带有指向具体记录的指针；B+Tree 中只有叶子结点会带有指向具体记录的指针。</li>

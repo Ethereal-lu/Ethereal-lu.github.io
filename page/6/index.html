@@ -1540,18 +1540,26 @@
 <p><code>&lt;clinit&gt;()</code>方法是由编译器自动收集类中的所有类变量的赋值动作和静态语句块（static{}块）中的语句合并产生的，编译器收集的顺序是由语句在源文件中出现的顺序决定的，静态语句块只能访问定义在静态语句块之前的变量，对于定义在它之后的变量，可以赋值，但是不能访问。</p>
 <p>实例构造器<code>&lt;init&gt;()</code>方法需要显示调用父类构造器，但类构造器<code>&lt;clinit&gt;()</code>方法不需要，因为虚拟机已经保证父类的类构造器方法在之前已经执行。</p>
 <p>在多线程环境下类的<code>&lt;clinit&gt;()</code>方法是加锁同步执行的，一个线程执行，其他线程阻塞，且醒来后不会再执行一次。</p>
-<h4 id="5-3、类加载器"><a href="#5-3、类加载器" class="headerlink" title="5.3、类加载器"></a>5.3、类加载器</h4><p>每一个类加载器，都拥有一个独立的类名称空间。即使这两个类来源于同一个 Class文件，被同一个Java虚拟机加载，只要加载它们的类加载器不同，那这两个类就必定不相等。不相等包括 equals()、instanceof等方面。</p>
+<h4 id="5-3、类加载器"><a href="#5-3、类加载器" class="headerlink" title="5.3、类加载器"></a>5.3、类加载器</h4><h5 id="5-3-1、类加载器类型"><a href="#5-3-1、类加载器类型" class="headerlink" title="5.3.1、类加载器类型"></a>5.3.1、类加载器类型</h5><p>每一个类加载器，都拥有一个独立的类名称空间。即使这两个类来源于同一个 Class文件，被同一个Java虚拟机加载，只要加载它们的类加载器不同，那这两个类就必定不相等。不相等包括 equals()、instanceof等方面。</p>
 <ul>
 <li>Bootstrap ClassLoader：启动类加载器，用于加载java核心库jre/lib下的rt.jar、charsets.jar、resources.jar等</li>
 <li>Extension ClassLoader：扩展类加载器，用于加载java扩展库jre/ext/*.jar</li>
 <li>Application ClassLoader：应用程序类加载器，自己写的代码都是使用这个加载器来加载的</li>
 </ul>
-<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/60294147">类加载的双亲委派模型</a>：如果一个类加载器收到了类加载的请求，它首先不会自己去尝试加载这个类，而是把这个请求委派给父类加载器去完成，每一个层次的类加载器都是如此，因此所有的加载请求最终都应该传送到最顶层的启动类加载器中，只有当父加载器反馈自己无法完成这个加载请求（它的搜索范围中没有找到所需的类）时，子加载器才会尝试自己去完成加载。</p>
+<h5 id="5-3-2、类加载模型"><a href="#5-3-2、类加载模型" class="headerlink" title="5.3.2、类加载模型"></a>5.3.2、类加载模型</h5><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/60294147">类加载的双亲委派模型</a>：如果一个类加载器收到了类加载的请求，它首先不会自己去尝试加载这个类，而是把这个请求委派给父类加载器去完成，每一个层次的类加载器都是如此，因此所有的加载请求最终都应该传送到最顶层的启动类加载器中，只有当父加载器反馈自己无法完成这个加载请求（它的搜索范围中没有找到所需的类）时，子加载器才会尝试自己去完成加载。</p>
 <p>双亲委派的作用：</p>
 <ol>
 <li>防止加载同一个.class。通过委托去询问上级是否已经加载过该.class，如果加载过了，则不需要重新加载。保证了数据安全。</li>
 <li>保证核心.class不被篡改。通过委托的方式，保证核心.class不被篡改，即使被篡改也不会被加载，即使被加载也不会是同一个class对象，因为不同的加载器加载同一个.class也不是同一个Class对象。这样则保证了Class的执行安全。</li>
 </ol>
+<h5 id="5-3-3、打破双亲委派模型"><a href="#5-3-3、打破双亲委派模型" class="headerlink" title="5.3.3、打破双亲委派模型"></a>5.3.3、打破双亲委派模型</h5><p><strong>1、如何打破双亲委派模型</strong></p>
+<p>打破双亲委派模型的核心就是重写 <code>ClassLoader</code>类的<code>loadClass</code>方法。双亲委派的源码就是在这个方法中将加载的任务委派给父加载器。我们只需要在这个方法中不去委派父加载器，直接自己加载就可以打破双亲委派模型。但是如果直接将全部类都自己加载会报错，因为加载自己的类前必须先加载父类 Object，而自己的类加载器找不到 Object 类，因此可以分类，只有自己的类用自己的加载器直接加载，其他的类还是使用默认的三个加载器加载</p>
+<p><strong>2、Tomcat 打破双亲委派模型</strong></p>
+<p><img src="Tomcat%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8.jpg" alt="Tomcat类加载器"></p>
+<p><code>Tomcat</code> 让每个<code>WebApp ClassLoader</code>先加载自己目录下的<code>class</code>文件，如果找不到才会委托父加载器加载。</p>
+<p><code>Tomcat</code>通过这样一套类加载机制，实现了各个<code>Web</code>应用之间，相同版本的依赖由<code>Share ClassLoader</code>统一加载，不同版本的依赖由<code>WebApp ClassLoader</code>分别加载。此外<code>Catalina ClassLoader</code>实现了 <code>Tomcat</code>自身与各 web 应用之间的隔离，<code>Common ClassLoader</code>又实现<code>Tomcat</code>与 web 应用公共库的共用。以上这些类加载器也是先自己加载，找不到才去委托父加载器。</p>
+<p><strong>3、JDBC打破双亲委派模型</strong></p>
+<p><code>JDBC</code>的<code>Driver</code>是定义在<code>rt.jar</code>包中的，但是它的实现通常是由不同的数据库厂商来完成的。<code>Driver</code>由 <code>Boostrap Classloader</code>加载，那么它引用的实现类也应该由 <code>Boostrap Classloader</code>加载，但是<code>Boostrap Classloader</code>显然不可能认识各厂商实现的类，因此会使用一个线程上下文类加载器加载，而该加载器默认是 <code>Application ClassLoader</code>，这就会打破双亲委派模型。</p>
 <h4 id="5-4、Java模块化系统"><a href="#5-4、Java模块化系统" class="headerlink" title="5.4、Java模块化系统"></a>5.4、Java模块化系统</h4><p>在JDK 9中引入的Java模块化系统。此部分之后再学。</p>
 <h3 id="6、虚拟机字节码执行引擎"><a href="#6、虚拟机字节码执行引擎" class="headerlink" title="6、虚拟机字节码执行引擎"></a>6、虚拟机字节码执行引擎</h3>
       
