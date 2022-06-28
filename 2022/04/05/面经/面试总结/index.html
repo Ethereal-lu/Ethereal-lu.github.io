@@ -14,7 +14,7 @@
 <meta property="og:description" content="1、大文件上传每个分块的文件内容都是通过 MultipartFile 来接收的，改接口的所有实现类都是通过包装 HttpServletRequest 来实现的，故该文件传输是通过 HTTP 协议实现的。 1.1、分片上传 先获取完整文件的 MD5 值，之后将文件分割成相同大小的数据块； 每次上传文件时都携带上 MD5 值、分块序号、文件内容等。 每收到一个分块，便将其存储到文件中，并将分块序号添加">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-04-05T13:12:41.000Z">
-<meta property="article:modified_time" content="2022-06-10T13:04:50.250Z">
+<meta property="article:modified_time" content="2022-06-28T15:46:27.500Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -133,12 +133,91 @@
 <h2 id="4、进程切换为什么比线程慢"><a href="#4、进程切换为什么比线程慢" class="headerlink" title="4、进程切换为什么比线程慢"></a>4、进程切换为什么比线程慢</h2><p>由于进程是资源分配的最小单位，因此切换进程就是切换资源，影响最大的就是虚拟地址空间的切换。由于页表的频繁访问，因此CPU会在MMU中做Cache，也就是TLB快表，如果线程切换，页表就要切换，此时Cache就失效了，因此导致程序变慢。而线程共享进程中的资源，线程的切换不会导致页表的切换。</p>
 <p>注：线程切换和进程切换都需要记录程序计数器、CPU寄存器。</p>
 <h2 id="5、Token"><a href="#5、Token" class="headerlink" title="5、Token"></a>5、Token</h2><p>前端使用用户名/密码登录成功后，服务端会返回 Token 给前端。前端可以在每次请求的时候带上 Token 证明自己的合法地位。</p>
-<h3 id="5-1、为什么要用-Token？"><a href="#5-1、为什么要用-Token？" class="headerlink" title="5.1、为什么要用 Token？"></a>5.1、为什么要用 Token？</h3><ol>
-<li>避开同源策略：无需考虑是否同源的问题，只要使用相同的密钥和算法，token就是有效的</li>
-<li>避免CSRF攻击：由于 cookie 会在请求时自动携带，而token需要传入且csrf不能读取到token的值，所以无法构造带有token的请求。</li>
+<h3 id="5-1、浏览器数据存储"><a href="#5-1、浏览器数据存储" class="headerlink" title="5.1、浏览器数据存储"></a>5.1、浏览器数据存储</h3><p>浏览器有三种数据存储方式，三者都存储在浏览器的目录下：</p>
+<ul>
+<li>cookie：过期前一直有效；域内共享；domain和path匹配就会自动携带。</li>
+<li>localstorage：一直有效；域内共享；仅保存在本地，请求时不会自动携带。</li>
+<li>sessionStorage ：浏览器窗口关闭之前有效；浏览器窗口内共享；仅保存在本地，请求时不会自动携带。</li>
+</ul>
+<h3 id="5-2、cookie"><a href="#5-2、cookie" class="headerlink" title="5.2、cookie"></a>5.2、cookie</h3><p>每个 cookie 中的domain和path这两个属性标识其所属的域名和路径，只有请求的域名和路径都相同才会自动携带 cookie；一个域内可以有多个cookie，它们的path可以不同。cookie 的 http-only 字段若为 true，则域内的 js 无法读写本域的 cookie，可以防止 xss 攻击，该字段只能由服务端设置。</p>
+<p>网页要发<code>http</code>请求时，浏览器会先检查是否有相应的<code>cookie</code>，有则自动添加在<code>request header</code>中的<code>cookie</code>字段中。这些是浏览器自动帮我们做的，无需在前端中通过 js 添加。</p>
+<p>cookie 只保存在客户端，不保存在服务端；服务端每次通过请求中的 cookie 判断用户登陆状态；客户端和服务端都可以设置 cookie。</p>
+<h3 id="5-3、Session"><a href="#5-3、Session" class="headerlink" title="5.3、Session"></a>5.3、Session</h3><p>Sesson 存储在服务器的内存或redis 等中。Session 必须搭配 Cookie 使用，此时 Cookie 只需要保存一个 sessionid 即可。如果浏览器禁止 Cookie，则会使用 Url 重写方式将 sessionid 放在 url 中进行传递。</p>
+<p>Session对应的类为javax.servlet.http.HttpSession类。每个客户端对应一个Session对象，具体看 servlet 章节。</p>
+<p>在请求过程中 Tomcat 会解析请求中的sessionId信息，然后将sessionId存储到request的参数列表中。然后再从  request获取session的时候，如果存在sessionId那么就根据Id获取session（说明用户已登录），如果sessionId不存在或者session失效，那么则新建session（未登录）。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 根据 request 获取 session</span></span><br><span class="line">HttpSession session = request.getSession();</span><br><span class="line">session.setAttribute(<span class="string">&quot;name&quot;</span>,<span class="string">&quot;tom&quot;</span>);</span><br><span class="line">session.getAttribute(<span class="string">&quot;name&quot;</span>);</span><br><span class="line"><span class="comment">// 使其失效；此外只有过期 session 才会失效，过期从最后一次访问服务端开始计时，默认 30 分钟。</span></span><br><span class="line">session.invalidate();</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-4、为什么要用-Token？"><a href="#5-4、为什么要用-Token？" class="headerlink" title="5.4、为什么要用 Token？"></a>5.4、为什么要用 Token？</h3><ol>
+<li>避免CSRF攻击：由于 cookie 会在请求时自动携带，而token储存在<code>localStorage</code>，不会被自动携带，必须在 js 中手动添加；js 是基于事件的，只有点击页面内相关元素时才会触发 js 去添加 token，跨域请求无法触发 js 添加 token。</li>
 <li>Token 可以是无状态的，可以在多个服务间共享</li>
 </ol>
-<h3 id="5-2、无状态-token"><a href="#5-2、无状态-token" class="headerlink" title="5.2、无状态 token"></a>5.2、无状态 token</h3><p>有状态 token 即项目中使用的 refresh_token 模型。 无状态 token 即所有状态信息都附加在 Token 上，多个服务端都使用相同的密钥和算法对 token 验证。为了实现用户注销时可控可以让前端在用户注销时删除对应的token。</p>
+<h3 id="5-5、无状态-token"><a href="#5-5、无状态-token" class="headerlink" title="5.5、无状态 token"></a>5.5、无状态 token</h3><p>有状态 token 即项目中使用的 refresh_token 模型。 无状态 token 即所有状态信息都附加在 Token 上，多个服务端都使用相同的密钥和算法对 token 验证。为了实现用户注销时可控可以让前端在用户注销时删除对应的token。</p>
+<h3 id="5-6、JWT"><a href="#5-6、JWT" class="headerlink" title="5.6、JWT"></a>5.6、JWT</h3><p>Json web token (JWT)可以通过密码算法生成Token及验证Token。</p>
+<p>JWT生成的Token由三部分组成：</p>
+<ul>
+<li>header（头部）：存放使用的加密算法，base64加密</li>
+<li>payload（数据）：存放Token具体内容，有JWT固定字段，也有用户自定义存入的字段，base64加密</li>
+<li>signature（签名）：将前两部分通过base64编码后使用头部的加密算法进行加盐散列的结果</li>
+</ul>
+<p>因此，在payload不应该存入私密信息，因为客户端可以通过base64解密获取。三部分通过<code>.</code>连接</p>
+<p>解密时，服务端得到用户发来的Token，使用base64解码获取header和payload，再使用header中的加密算法及服务端存储的盐对前两部分加密，与signature比较，若不一致则验证失败。</p>
+<h2 id="6、大文件读取"><a href="#6、大文件读取" class="headerlink" title="6、大文件读取"></a>6、大文件读取</h2><p>对于一个几十G的超大文件，如果全部读取到内存必然OOM。</p>
+<h3 id="6-1、逐行读取"><a href="#6-1、逐行读取" class="headerlink" title="6.1、逐行读取"></a>6.1、逐行读取</h3><ul>
+<li><p>BufferReader：每次使用BufferReader的readLine方法读取一行数据。</p>
+</li>
+<li><p>stream：也是一行数据</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Stream&lt;String&gt; inputStream = Files.lines(Paths.get(<span class="string">&quot;test.txt&quot;</span>), StandardCharsets.UTF_8)</span><br></pre></td></tr></table></figure></li>
+<li><p>Apache Commons IO：也是一行数据，内部使用的还是BufferReader</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LineIterator fileContents = FileUtils.lineIterator(<span class="keyword">new</span> File(<span class="string">&quot;test.txt&quot;</span>), StandardCharsets.UTF_8.name());</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="6-2、Spring-Batch"><a href="#6-2、Spring-Batch" class="headerlink" title="6.2、Spring Batch"></a>6.2、Spring Batch</h3><p>知道有这么个东西即可。</p>
+<h2 id="7、序列化ID"><a href="#7、序列化ID" class="headerlink" title="7、序列化ID"></a>7、序列化ID</h2><p>类需要序列化必须实现Serializable接口，否则报错。</p>
+<h3 id="7-1、序列化ID的作用"><a href="#7-1、序列化ID的作用" class="headerlink" title="7.1、序列化ID的作用"></a>7.1、序列化ID的作用</h3><p>java的序列化机制是通过在运行时判断类的serialVersionUID来验证版本一致性的。在进行反序列化时，JVM会把传来的字节流中的serialVersionUID与本地类中的serialVersionUID进行比较，如果相同则认为是一致的，便可以进行反序列化，否则就会报序列化版本不一致的异常。</p>
+<h3 id="7-2、序列化ID如何产生"><a href="#7-2、序列化ID如何产生" class="headerlink" title="7.2、序列化ID如何产生"></a>7.2、序列化ID如何产生</h3><p>当类需要序列化时需要在类中<strong>显示</strong>定义<code>long</code>类型的<code>serialVersionUID</code>变量，如果没有显示定义，Java序列化机制会在编译时自动生成一个serialVersionUID，只要类不改变，每次编译生成的serialVersionUID是一致的。但是如果类的属性或方法等发生改变，再次编译生成的serialVersionUID就会改变。因此如果类发生改变，就会导致反序列化失败。解决办法即在类中显示定义serialVersionUID属性。</p>
+<h2 id="8、单点登录"><a href="#8、单点登录" class="headerlink" title="8、单点登录"></a>8、单点登录</h2><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/66037342">单点登录</a>就是在多个系统中，用户只需一次登录，各个系统即可感知该用户已经登录。如淘宝和天猫</p>
+<p>CAS （Central Authentication Service）中心认证服务。</p>
+<p>假设目前有系统A和系统B两个系统以及一个认证系统，三者的域名均不同。</p>
+<ol>
+<li>当用户访问系统A时，系统A发现用户没有登录，于是重定向到认证中心，并将自己的地址作为参数传递。</li>
+<li>认证中心发现用户未登录，将用户引导至登录页面，用户进行输入用户名和密码进行登录，用户与认证中心建立全局会话（生成一份Token，写到Cookie中，保存在浏览器上）</li>
+<li>认证中心重定向回系统A，并把Token携带过去给系统A，系统A去认证中心验证这个Token是否正确，如果正确，则系统A和用户建立局部会话。到此，系统A和用户已经是登录状态了。</li>
+<li>当用户访问系统B时，系统B发现用户没有登录，于是重定向到认证中心，并将自己的地址作为参数传递。</li>
+<li>由于认证中心的Cookie已经保存在浏览器，因此此次重定向会携带Cookie，认证中心根据Cookie发现用户已登录，认证中心重定向回系统B，并把Token携带过去给系统B。</li>
+<li>系统B去认证中心验证这个Token是否正确，如果正确，则系统B和用户建立局部会话。到此，系统B和用户已经是登录状态了。</li>
+</ol>
+<p>用户与系统A、B建立会话后，每次请求携带Token，系统A、B再去认证中心认证Token是否正确。（是的吧）</p>
+<h2 id="998、场景设计类题目"><a href="#998、场景设计类题目" class="headerlink" title="998、场景设计类题目"></a>998、场景设计类题目</h2><h3 id="1、设计一个秒杀场景可能会遇到什么问题？"><a href="#1、设计一个秒杀场景可能会遇到什么问题？" class="headerlink" title="1、设计一个秒杀场景可能会遇到什么问题？"></a>1、设计一个秒杀场景可能会遇到什么问题？</h3><p>这条搭配着下一题看把。</p>
+<p>从流量入口出发，秒杀场景会有大量请求同时到达服务器，而服务器只有有限资源处理这些请求，同时还要尽可能快地处理，在入口处可能需要做一些鉴权、限流、缓存、日志和监控等。流量进入入口之后，需要做一些流量削峰、资源隔离、服务器优化和负载均衡，之后还有服务降级、服务限流、拒绝请求。到达扣减库存时，需要有缓存以及用分布式锁控制并发读写，同时考虑用阻塞队列、线程池的方式让用户先拿到秒杀资格，再通过异步计算返回给客户。</p>
+<h3 id="2、如何设计秒杀场景？"><a href="#2、如何设计秒杀场景？" class="headerlink" title="2、如何设计秒杀场景？"></a>2、如何设计秒杀场景？</h3><p>秒杀场景的关键就是面对大量的请求可以正常提供服务并做出快速响应，同时保证数据的一致性。</p>
+<p><strong>流量过滤及削峰</strong></p>
+<ol>
+<li>前端添加验证码或者答题可以起到错峰的效果</li>
+<li>参加活动可以设置一些条件，通过条件以及一些其他黑名单等对流量进行校验过滤</li>
+<li>将大量请求存入消息队列中，消费者订阅消费，起到削峰的作用</li>
+</ol>
+<p><strong>性能优化</strong></p>
+<ol>
+<li>页面静态化，将活动页面缓存到CDN中，对这些静态资源的请求不进入服务器，减轻压力</li>
+<li>活动预热，将活动库存提前加载到Redis中，查询全部走缓存</li>
+<li>资源隔离，为秒杀活动单独部署一套系统，剥离一些无用逻辑</li>
+</ol>
+<p><strong>数据一致性</strong></p>
+<p>关于何时减库存有两种方案：1、下单时减库存；2、支付时减库存。由于支付时减库存实现较为复杂并且秒杀场景下用户不支付的概率较低，因此一般选择下单时减库存的方式。</p>
+<p>具体减库存方案：</p>
+<ol>
+<li>由于已经将活动库存缓存到Redis中，故先查询Redis库存是否充足</li>
+<li>先减数据库库存再减Redis库存，两个操作在一个事务中。（可以将多个扣减库存合并，减轻数据库压力）</li>
+<li>先减库存再生成订单，防止订单生成了没有库存的超卖问题</li>
+</ol>
+<p><strong>质量保障</strong></p>
+<ul>
+<li><p>服务降级：当请求量达到系统承受的能力时，需要对系统的一些非核心功能进行关闭操作，尽可能将资源留给秒杀核心链路。</p>
+</li>
+<li><p>服务限流：限流的目的是通过对并发访问/请求进行限速或者一个时间窗口内的的请求进行限速来保护系统，常用的有 QPS 限流。</p>
+</li>
+<li><p><strong>拒绝请求</strong>：如果服务降级、服务限流都不能解决问题，最后的兜底，那就是直接拒绝用户请求，比如直接给用户返回 “服务器繁忙，请稍后再试”等提示文案。只会发生在服务器负载过载时会启动，因此只会发生短暂不可用时刻，由于此时服务依然还在稳定运行中，等负载下降时，可以快速恢复正常服务。</p>
+</li>
+</ul>
 <h2 id="999、短问题"><a href="#999、短问题" class="headerlink" title="999、短问题"></a>999、短问题</h2><h3 id="1、cpu特别高如何定位"><a href="#1、cpu特别高如何定位" class="headerlink" title="1、cpu特别高如何定位"></a>1、cpu特别高如何定位</h3><p>先使用 top 命令定位到那个进程占用的 cpu 高，一般 cpu 占用高要么是 cpu 密集型任务，要么就是发生了死循环，定位到进程后可以使用 jstack 定位到异常代码的位置。</p>
 <h3 id="2、sql执行慢的原因"><a href="#2、sql执行慢的原因" class="headerlink" title="2、sql执行慢的原因"></a>2、sql执行慢的原因</h3><p>如果 sql 平时正常只是偶尔执行慢，可能是网络抖动或者在等待锁。</p>
 <p>如果 sql 一直执行慢，那一般是 sql 语句本身有问题，可能的问题如下：</p>
@@ -153,6 +232,21 @@
 <li>在类A里面有方法a 和方法b， 然后方法b上面用 @Transactional加了方法级别的事务，在方法a里面调用了方法b， 方法b里面的事务不会生效</li>
 <li>数据库引擎是 MyISAM</li>
 </ul>
+<h3 id="4、什么原因导致频繁的youngGC？"><a href="#4、什么原因导致频繁的youngGC？" class="headerlink" title="4、什么原因导致频繁的youngGC？"></a>4、什么原因导致频繁的youngGC？</h3><p>短时间内构造了大量小对象。</p>
+<h3 id="5、日志为什么使用slf4j-logback"><a href="#5、日志为什么使用slf4j-logback" class="headerlink" title="5、日志为什么使用slf4j + logback"></a>5、日志为什么使用slf4j + logback</h3><p><strong>slf4j只是一个日志标准，并不是日志系统的具体实现</strong>。slf4j只做两件事情：</p>
+<ul>
+<li>提供日志接口</li>
+<li>提供获取具体日志对象的方法</li>
+</ul>
+<p>slf4j-simple、logback都是slf4j的具体实现，log4j并不直接实现slf4j，但是有专门的一层桥接slf4j-log4j12来实现slf4j。</p>
+<p>项目中的日志采集分为两部分，一种是通过AspectJ将切入点抽取到注解中，这种方式获取的注解存入数据库中用于项目需求中的展示。另一种是通过slf4j + logback，在代码中手动获取日志，存放在文件中，具体的保存什么信息、文件存在哪里在logback.xml配置。</p>
+<h3 id="6、TCP粘包"><a href="#6、TCP粘包" class="headerlink" title="6、TCP粘包"></a>6、TCP粘包</h3><p>发送方发送的若干包数据到达接收方时粘成了一包，从接收缓冲区来看，后一包数据的头紧接着前一包数据的尾。</p>
+<p>发生TCP粘包的原因有两种</p>
+<ul>
+<li>发送方写入缓冲区的速度大于发送的速度</li>
+<li>接收方读取缓冲区的速度小于接收的速度</li>
+</ul>
+<p>解决方案：由于TCP是按需发送与到达。可以给每条数据都设置固定的开始符与结束符；也可以在每条数据的开头指明该数据包的长度。</p>
 
       
     </div>
@@ -196,7 +290,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%A1%B9%E7%9B%AE/">项目</a></li></ul>
     </div>
   </div>
 
@@ -224,6 +318,10 @@
       <ul>
         
           <li>
+            <a href="/2022/06/21/%E9%A1%B9%E7%9B%AE/%E7%A7%92%E6%9D%80%E9%A1%B9%E7%9B%AE/">秒杀项目</a>
+          </li>
+        
+          <li>
             <a href="/2022/06/06/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/Kuberbetes/Kuberbetes%E5%9F%BA%E7%A1%80/">Kuberbetes基础</a>
           </li>
         
@@ -237,10 +335,6 @@
         
           <li>
             <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/Nginx/Nginx%E5%9F%BA%E7%A1%80/">Nginx基础</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">分布式锁</a>
           </li>
         
       </ul>

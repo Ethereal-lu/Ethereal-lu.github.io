@@ -14,7 +14,7 @@
 <meta property="og:description" content="一面：75min   4.211、自我介绍 2、项目中用户权限控制的数据表设计问题 3、如果有 100 个元素，且之后不会增加，存储在 hashmap 中，初始容量应该设置为多少？ 答：64？ 100？  128？ 瞎蒙 正确：为了不触发扩容操作，初始值应该设置为 129 到 256 的任意一个值；因为在 hashmap 的构造函数中，会将输入的初始容量转换为第一个大于等于它的 2 的幂次值并赋值">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-03-26T03:12:41.000Z">
-<meta property="article:modified_time" content="2022-06-09T12:56:54.803Z">
+<meta property="article:modified_time" content="2022-06-27T08:10:17.977Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -107,6 +107,18 @@
 <p>4、如果有 41 个 int 数字，另外再给一个数字，如何判断这个数字在不在之前的 41 中？（后续准备八股文才反应过来，应该是40亿吧）</p>
 <p>答：hashset 或 布隆过滤器，瞎蒙。布隆过滤器存在误差。</p>
 <p>应该使用位图。由于 2^32 大约42亿多，故可以申请 2^32 个 bit，每个数对应一个bit，若有值该bit位为1，否则为0；如若 1 在，则第一个 bit 位置为 1，若17在，则第17个 bit 位置为 1。这样判断一个值在不在时只需判断该 bit 位是否为 1 即可。40 亿个 32 位int 大约 16GB，而使用位图算法，大约只需 500MB，可以在内存中判断。</p>
+<ul>
+<li><p>此处补充一问：如果是 40 亿个字符串，如何判断给定字符串是否在这 40 亿个中？  </p>
+<ul>
+<li>字符串到位图需要使用哈希映射，会产生冲突，因此不能使用位图。应该使用字典树。</li>
+</ul>
+</li>
+<li><p>从10亿个数据中找到第5亿个怎么找？</p>
+<ul>
+<li>将数据按顺序划分到 2^16个槽中，10亿数据不到2^32个，可以给每个槽放2^16个数据，这样第5亿个数据在哪个槽就知道了，然后将该槽的数据全部加载到内存扫描即可。</li>
+</ul>
+</li>
+</ul>
 <p>5、hashmap 的 put 过程？</p>
 <p>6、并发场景下 HashMap 有什么问题？</p>
 <ul>
@@ -129,6 +141,13 @@
 <li>代码层面避免使用大数组和大对象。</li>
 </ul>
 <p>尽量做到让对象在Minor GC阶段被回收、让对象在新生代多存活一段时间及不要创建过大的对象及数组。</p>
+<p>频繁发生full gc如何处理？</p>
+<ol>
+<li>观察年轻代 gc的情况，如果每次gc后存活的对象都大于survivor区就调整内存分配比例</li>
+<li>观察老年代的内存情况，如果内存持续上涨可能是大对象造成内存溢出</li>
+<li>如果年轻代和老年代内存都较低，可能是元数据区加载太多东西</li>
+<li>排查看代码中是否有循环System.gc()</li>
+</ol>
 <p>10、执行一次 System.gc() 的流程？  不会！扯了一通可达性分析</p>
 <p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/zhxdick/p/14449554.html">深入理解System.gc()</a></p>
 <p><code>System.gc()</code>实际上调用的是<code>RunTime.getRunTime().gc()</code>，这个方法是一个 native 方法：首先，根据 <code>DisableExplicitGC</code> 这个 JVM 启动参数的状态，确定是否会 GC，如果需要 GC，不同 GC 会有不同的处理。 以 G1 GC 为例：如果是 <code>System.gc()</code> 触发的 GC，G1 GC 会根据 <code>ExplicitGCInvokesConcurrent</code> 这个 JVM 参数决定是YoungGC 还是 FullGC。</p>
@@ -195,7 +214,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%A1%B9%E7%9B%AE/">项目</a></li></ul>
     </div>
   </div>
 
@@ -223,6 +242,10 @@
       <ul>
         
           <li>
+            <a href="/2022/06/21/%E9%A1%B9%E7%9B%AE/%E7%A7%92%E6%9D%80%E9%A1%B9%E7%9B%AE/">秒杀项目</a>
+          </li>
+        
+          <li>
             <a href="/2022/06/06/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/Kuberbetes/Kuberbetes%E5%9F%BA%E7%A1%80/">Kuberbetes基础</a>
           </li>
         
@@ -236,10 +259,6 @@
         
           <li>
             <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/Nginx/Nginx%E5%9F%BA%E7%A1%80/">Nginx基础</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">分布式锁</a>
           </li>
         
       </ul>

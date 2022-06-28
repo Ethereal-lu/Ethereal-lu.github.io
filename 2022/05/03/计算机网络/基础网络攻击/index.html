@@ -14,7 +14,7 @@
 <meta property="og:description" content="1、SYN洪泛攻击1.1、产生原理服务器在收到连接请求报文段后，如同意建立连接，就向客户机发回确认，并在OS内核中为该TCP连接分配TCP缓存和变量。除此之外标识该tcp连接的tcb也会占用内存资源。 1.2、防御手段SYN cookie 方法 在服务器收到客户端的第一次请求之后，不立马分配资源，而是将  SYN报文的源和目的IP与端口号 仅仅有服务器知道的密钥  塞入一个哈希函数，生成一个认证码">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-05-03T14:39:41.000Z">
-<meta property="article:modified_time" content="2022-06-09T06:13:51.172Z">
+<meta property="article:modified_time" content="2022-06-28T03:21:25.739Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -118,7 +118,7 @@
 <h2 id="2、DNS-劫持"><a href="#2、DNS-劫持" class="headerlink" title="2、DNS 劫持"></a>2、DNS 劫持</h2><p>某些网络运营商为了某些目的，对DNS进行了某些操作，导致用户无法通过域名取得正确的IP地址。</p>
 <p>运营商会利用 DNS 劫持 投放小广告等。DNS污染则让域名直接无法访问了。</p>
 <p>遇到DNS污染只能更换域名服务器或使用第三方域名解析服务。</p>
-<h2 id="3、中间人攻击"><a href="#3、中间人攻击" class="headerlink" title="3、中间人攻击"></a>3、中间人攻击</h2><p>前置知识：机器对于 ARP 包是信任的，不做任何安全校验。</p>
+<h2 id="3、中间人攻击"><a href="#3、中间人攻击" class="headerlink" title="3、中间人攻击"></a>3、中间人攻击</h2><p>前置知识：机器对于 ARP 包是信任的，不做任何安全校验。此方式需要和受害人在同一局域网。</p>
 <p>当客户端发起连接请求时，攻击者向客户端发送大量 ARP 包谎称自己是网关，然后客户端就会将所有请求都发送给攻击者。攻击者收到请求后返回自己的数字证书，并向服务端发送真实的请求。如果客户端不对证书校验，则客户端就会向攻击者发送对称加密密钥并进行后续的加密通信，而攻击者和服务器建立的是正规的安全连接。如此，中间人攻击就成功了，后续攻击者可以对请求和响应进行转发，并动一些手脚。</p>
 <p>也可以利用DNS 劫持发起中间人攻击。</p>
 <p>使用 SSL 身份认证即可防御中间人攻击。</p>
@@ -136,9 +136,27 @@
 <li>本地已经缓存有cookies</li>
 <li>根据请求的URL来匹配cookies的domain、path属性，如果都符合才会发送。</li>
 </ol>
-<h3 id="5-3、CSRF的防御"><a href="#5-3、CSRF的防御" class="headerlink" title="5.3、CSRF的防御"></a>5.3、CSRF的防御</h3><ul>
-<li>所有的表单都包含一个统一的伪随机值，因为攻击者无法读取到 Cookie 的内容，所以也就无法伪造表单了。</li>
-<li>每个 post 请求都需要用户填写一个图片验证码。</li>
+<h3 id="5-3、CSRF的防御"><a href="#5-3、CSRF的防御" class="headerlink" title="5.3、CSRF的防御"></a>5.3、CSRF的防御</h3><h4 id="5-3-1、双重Cookie验证"><a href="#5-3-1、双重Cookie验证" class="headerlink" title="5.3.1、双重Cookie验证"></a>5.3.1、双重Cookie验证</h4><p>利用CSRF攻击不能获取到用户Cookie的特点，可以要求在请求中携带一个Cookie中的值。</p>
+<p>双重Cookie采用以下流程：</p>
+<ul>
+<li>在用户访问网站页面时，服务端生成加密Token并存入Cookie中</li>
+<li>在前端向后端发起请求时，携带Cookie，并从Cookie中取出Token拼接到URL中</li>
+<li>后端接口验证Cookie中的Token字段与URL参数中的Token字段是否一致，不一致则拒绝。</li>
+</ul>
+<h4 id="5-3-2、CSRF-Token"><a href="#5-3-2、CSRF-Token" class="headerlink" title="5.3.2、CSRF Token"></a>5.3.2、CSRF Token</h4><ul>
+<li>用户登陆时，服务端生成加密Token并发送给客户端，同时自己也将该Token存储（可存入Sesson）</li>
+<li>客户端存储Token（可存入Local Storage）在每次请求时取出Token添加到自定义请求头中</li>
+<li>服务端收到请求比较请求头中的Token和自己保存的Token，若不一致拒绝访问</li>
+</ul>
+<p><strong>分布式校验</strong></p>
+<p>上方的Token通常是一个随机字符串，在分布式场景中需要存入redis中，随着用户增多每次读取验证需要较大的开销。目前主流使用的是将UserID和时间戳通过加密生成Token，之后服务端收到Token解密，拿到UserID与当前用户的UserID比较，拿到时间戳与当前时间比较来验证Token有效性。</p>
+<p>这种通过密码算法加解密的方式无需查询数据库，减轻服务端压力；同时在分布式场景中只要每个节点使用相同算法及密钥就可进行解密操作，易于扩展。</p>
+<h2 id="6、跨站脚本攻击-xss"><a href="#6、跨站脚本攻击-xss" class="headerlink" title="6、跨站脚本攻击 xss"></a>6、跨站脚本攻击 xss</h2><h3 id="6-1、攻击"><a href="#6-1、攻击" class="headerlink" title="6.1、攻击"></a>6.1、攻击</h3><p>恶意攻击者往Web页面里插入恶意Script代码，当用户浏览该页面时，嵌入Web里面的Script代码会被执行，从而达到恶意攻击用户的目的。</p>
+<p>在发表评论或填写信息时，填入一段恶意脚本，如：<code>&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code>，如果应用程序对提交的内容没有进行过滤，那么这段恶意脚本就会存储在服务端的数据库中，当有其他用户访问这条评论时，服务端会将这条恶意脚本连同页面一起返回给前端，浏览器解析并执行这条脚本就会获取用户cookie并发送给攻击者的服务器，攻击者获取到cookie就可以冒充合法用户了。</p>
+<p>以上是储存型xss，另外还有反射性xss，这个不要主动提，只要知道是需要诱导用户点击恶意链接，嵌入到恶意链接中的恶意脚本会进行攻击。</p>
+<h3 id="6-2、防御"><a href="#6-2、防御" class="headerlink" title="6.2、防御"></a>6.2、防御</h3><ul>
+<li>对上传的数据进行过滤，如将 <code>&lt;script&gt;</code>等关键字替换为空。</li>
+<li>设置Cookie中的HTTP Only属性来禁止客户端的 js 读写Cookie。注：Cookie的HTTP Only属性只能由服务端设置，客户端不能设置</li>
 </ul>
 
       
@@ -183,7 +201,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%A1%B9%E7%9B%AE/">项目</a></li></ul>
     </div>
   </div>
 
@@ -211,6 +229,10 @@
       <ul>
         
           <li>
+            <a href="/2022/06/21/%E9%A1%B9%E7%9B%AE/%E7%A7%92%E6%9D%80%E9%A1%B9%E7%9B%AE/">秒杀项目</a>
+          </li>
+        
+          <li>
             <a href="/2022/06/06/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/Kuberbetes/Kuberbetes%E5%9F%BA%E7%A1%80/">Kuberbetes基础</a>
           </li>
         
@@ -224,10 +246,6 @@
         
           <li>
             <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/Nginx/Nginx%E5%9F%BA%E7%A1%80/">Nginx基础</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">分布式锁</a>
           </li>
         
       </ul>
