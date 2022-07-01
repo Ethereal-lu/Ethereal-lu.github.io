@@ -356,11 +356,8 @@
 <h2 id="十、相关知识点"><a href="#十、相关知识点" class="headerlink" title="十、相关知识点"></a>十、相关知识点</h2><h3 id="10-1、幂等性"><a href="#10-1、幂等性" class="headerlink" title="10.1、幂等性"></a>10.1、幂等性</h3><p>在编程中一个幂等操作的特点是其任意多次执行所产生的影响均与一次执行的影响相同。HTTP方法的幂等性是指一次和多次请求某一个资源应该具有同样的副作用。简之：<strong>一个请求，不管重复来多少次，结果是不会改变的。</strong></p>
 <p>消费者在消费 MQ 中的消息时，MQ 已把消息发送给消费者，消费者在给 MQ 返回 ack 时网络中断，故 MQ  未收到确认信息，该条消息会重新发给其他的消费者，或者在网络重连后再次发送给该消费者，但实际上该消费者已成功消费了该条消息，造成消费者消费了重复的消息；注意，RabbitMQ 这种消息重试(补偿)机制是默认的。</p>
 <p>@RabbitListener 底层使用 AOP 进行异常通知拦截，如果程序没有抛出异常信息，那么就会自动提交事务；如果 AOP  异常通知拦截有捕获到异常信息的话，就会自动实现重试(补偿)机制，同时，这个补偿机制的消息会缓存到 RabbitMQ  服务器端进行存放，一直重试到不抛出异常为止。</p>
-<p>解决方式有两种：</p>
-<ul>
-<li>全局唯一ID</li>
-<li>redis 的 setnx 命令，天然具有幂等性。推荐</li>
-</ul>
+<p>解决方式：</p>
+<p>为每个消息分配全局唯一ID，消费前通过 redis 的 setnx 命令写入消息的ID，若写入成功就消费，否则丢弃，此时不论是否消费都应发送ack。</p>
 <h3 id="10-2、优先级队列"><a href="#10-2、优先级队列" class="headerlink" title="10.2、优先级队列"></a>10.2、优先级队列</h3><p>队列的特点是先进先出，但是有些场景下需要对队列中的消息赋予优先级，使得优先级高的消息越快被消费。优先级队列底层是大顶堆。</p>
 <p>由于种种原因，RabbitMQ到目前为止，官方<strong>还没有实现优先级队列</strong>，只实现了Consumer的优先级处理。即每次对队列中的消息按优先级排序后取出优先级最高的消息。</p>
 <p>当然，在消费端速度大于生产端速度，且broker中没有消息堆积的话，对发送的消息设置优先级也没什么实际意义，没机会排序。</p>
@@ -479,7 +476,7 @@
 <p><strong>那么同步阻塞、同步非阻塞和异步非阻塞又代表什么意思呢？</strong></p>
 <p>在等待返回结果前如果什么也不干就是同步阻塞；如果可以做一些其他的事只需要以轮询的方式查看结果是否返回就是同步非阻塞；如果不需要等待返回结果就是异步非阻塞。</p>
 <p>举个生活中简单的例子，你妈妈让你烧水，小时候你比较笨啊，在哪里傻等着水开（<strong>同步阻塞</strong>）。等你稍微再长大一点，你知道每次烧水的空隙可以去干点其他事，然后只需要时不时来看看水开了没有（<strong>同步非阻塞</strong>）。后来，你们家用上了水开了会发出声音的壶，这样你就只需要听到响声后就知道水开了，在这期间你可以随便干自己的事情，你需要去倒水了（<strong>异步非阻塞</strong>）。</p>
-<h2 id="1-BIO-Blocking-I-O"><a href="#1-BIO-Blocking-I-O" class="headerlink" title="1. BIO (Blocking I/O)"></a>1. BIO (Blocking I/O)</h2><p>同步阻塞I/O模式，数据的读取写入必须阻塞在一个线程内等待其完成。</p>
+<h2 id="1-BIO-Blocking-I-O"><a href="#1-BIO-Blocking-I-O" class="headerlink" title="1. BIO (Blocking I/O)"></a>1. BIO (Blocking I/O)</h2><p>最传统的一种IO模型，即在读写数据过程中会发生阻塞现象。<br>   当用户线程发出IO请求之后，内核会去查看数据是否就绪，如果没有就绪就会等待数据就绪，而用户线程就会处于阻塞状态，用户线程交出CPU。当数据就绪之后，内核会将数据拷贝到用户线程，并返回结果给用户线程，用户线程才解除block状态。<br>   典型的阻塞IO模型的例子为 <code>data = socket.read(); </code>如果数据没有就绪，就会一直阻塞在read方法。</p>
 <h3 id="1-1-传统-BIO"><a href="#1-1-传统-BIO" class="headerlink" title="1.1 传统 BIO"></a>1.1 传统 BIO</h3><p>BIO通信（一请求一应答）模型图如下(图源网络，原出处不明)：</p>
 <p><img src="https://img-blog.csdnimg.cn/2019042212100021.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L20wXzM4MTA5MDQ2,size_16,color_FFFFFF,t_70" alt="img"></p>
 <p>采用 <strong>BIO 通信模型</strong> 的服务端，通常由一个独立的 Acceptor 线程负责监听客户端的连接。我们一般通过在 <code>while(true)</code> 循环中服务端会调用 <code>accept()</code> 方法等待接收客户端的连接的方式监听请求，请求一旦接收到一个连接请求，就可以建立通信套接字在这个通信套接字上进行读写操作，此时不能再接收其他客户端连接请求，只能等待同当前连接的客户端的操作执行完成， 不过可以通过多线程来支持多个客户端的连接，如上图所示。</p>
@@ -491,7 +488,8 @@
 <p><img src="https://img-blog.csdnimg.cn/20190422121019666.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L20wXzM4MTA5MDQ2,size_16,color_FFFFFF,t_70" alt="img"></p>
 <p>采用线程池和任务队列可以实现一种叫做伪异步的 I/O 通信框架，它的模型图如上图所示。当有新的客户端接入时，将客户端的 Socket 封装成一个Task（该任务实现java.lang.Runnable接口）投递到后端的线程池中进行处理，JDK 的线程池维护一个消息队列和 N 个活跃线程，对消息队列中的任务进行处理。由于线程池可以设置消息队列的大小和最大线程数，因此，它的资源占用是可控的，无论多少个客户端并发访问，都不会导致资源的耗尽和宕机。</p>
 <p>伪异步I/O通信框架采用了线程池实现，因此避免了为每个请求都创建一个独立线程造成的线程资源耗尽问题。不过因为它的底层任然是同步阻塞的BIO模型，因此无法从根本上解决问题。</p>
-<h2 id="2-NIO-New-I-O"><a href="#2-NIO-New-I-O" class="headerlink" title="2. NIO (New I/O)"></a>2. NIO (New I/O)</h2><h3 id="2-1-NIO-简介"><a href="#2-1-NIO-简介" class="headerlink" title="2.1 NIO 简介"></a>2.1 NIO 简介</h3><p>NIO是一种同步非阻塞的I/O模型，在Java 1.4 中引入了NIO框架，对应 java.nio 包，提供了 Channel , Selector，Buffer等抽象。</p>
+<h2 id="2-NIO-New-I-O"><a href="#2-NIO-New-I-O" class="headerlink" title="2. NIO (New I/O)"></a>2. NIO (New I/O)</h2><p>​        当用户线程发起一个read操作后，并不需要等待，而是马上就得到了一个结果。如果结果是一个error时，它就知道数据还没有准备好，于是它可以再次发送read操作。一旦内核中的数据准备好了，并且又再次收到了用户线程的请求，那么它马上就将数据拷贝到了用户线程，然后返回。<br>   所以事实上，在非阻塞IO模型中，用户线程需要不断地询问内核数据是否就绪，也就说非阻塞IO不会交出CPU，而会一直占用CPU。</p>
+<h3 id="2-1-NIO-简介"><a href="#2-1-NIO-简介" class="headerlink" title="2.1 NIO 简介"></a>2.1 NIO 简介</h3><p>NIO是一种同步非阻塞的I/O模型，在Java 1.4 中引入了NIO框架，对应 java.nio 包，提供了 Channel , Selector，Buffer等抽象。Java NIO实际上就是多路复用IO。</p>
 <p>NIO中的N可以理解为Non-blocking，不单纯是New。它支持面向缓冲的，基于通道的I/O操作方法。 NIO提供了与传统BIO模型中的 <code>Socket</code> 和 <code>ServerSocket</code> 相对应的 <code>SocketChannel</code> 和 <code>ServerSocketChannel</code> 两种不同的套接字通道实现,两种通道都支持阻塞和非阻塞两种模式。阻塞模式使用就像传统中的支持一样，比较简单，但是性能和可靠性都不好；非阻塞模式正好与之相反。对于低负载、低并发的应用程序，可以使用同步阻塞I/O来提升开发速率和更好的维护性；对于高负载、高并发的（网络）应用，应使用 NIO 的非阻塞模式来开发。</p>
 <h3 id="2-2-NIO的特性-NIO与IO区别"><a href="#2-2-NIO的特性-NIO与IO区别" class="headerlink" title="2.2 NIO的特性/NIO与IO区别"></a>2.2 NIO的特性/NIO与IO区别</h3><p>如果是在面试中回答这个问题，我觉得首先肯定要从 NIO 流是非阻塞 IO 而 IO 流是阻塞 IO 说起。然后，可以从 NIO 的3个核心组件/特性为 NIO 带来的一些改进来分析。如果，你把这些都回答上了我觉得你对于 NIO 就有了更为深入一点的认识，面试官问到你这个问题，你也能很轻松的回答上来了。</p>
 <p>1)Non-blocking IO（非阻塞IO）</p>
@@ -1210,11 +1208,28 @@
 <h3 id="5-2、覆盖索引"><a href="#5-2、覆盖索引" class="headerlink" title="5.2、覆盖索引"></a>5.2、覆盖索引</h3><p><strong>但不使用主键索引不一定需要回表</strong>：覆盖索引</p>
 <p>如果辅助索引上已经存在我们需要的数据,那么引擎就不会去主键上去搜索数据了。 —- 这个就是所谓的”<strong>覆盖索引</strong>“</p>
 <p>普通索引、唯一索引、组合索引都可以是覆盖索引，只要满足所查询的字段全部都在辅助索引就行，这样就无需回表。</p>
-<h3 id="5-3、为什么数据库中建议使用自增主键"><a href="#5-3、为什么数据库中建议使用自增主键" class="headerlink" title="5.3、为什么数据库中建议使用自增主键"></a>5.3、为什么数据库中建议使用自增主键</h3><ol>
+<h3 id="5-3、索引下推"><a href="#5-3、索引下推" class="headerlink" title="5.3、索引下推"></a>5.3、索引下推</h3><h2 id="6、为什么数据库中建议使用自增主键"><a href="#6、为什么数据库中建议使用自增主键" class="headerlink" title="6、为什么数据库中建议使用自增主键"></a>6、为什么数据库中建议使用自增主键</h2><ol>
 <li>自增主键往往占用空间比较小，int 占 4 个字节，bigint 占 8 个字节。由于辅助索引的叶子节点存储的就是主键，所以如果主键占用空间小，则辅助索引的叶子节点占用的空间就小；同时主键索引的非叶子节点存储的就是主键值，如果主键占用空间小那么一个非叶子节点能指向的子节点更多，从而降低 B+Tree 的高度，提高搜索效率。</li>
-<li>自增主键插入的时候比较快，直接插入即可，不会涉及到叶子节点分裂等问题（不需要挪动其他记录）；而其他非自增主键插入的时候，可能要插入到两个已有的数据中间，就有可能导致叶子节点分裂等问题，插入效率低（要挪动其他记录）。</li>
+<li>自增主键插入的时候比较快，直接插入即可，即使最右侧的节点分裂也不需要挪动其他记录；而其他非自增主键插入的时候，可能要插入到两个已有的数据中间，就有可能导致节点分裂等问题，插入效率低，需要挪动其他记录。</li>
 </ol>
+<h2 id="7、索引创建"><a href="#7、索引创建" class="headerlink" title="7、索引创建"></a>7、索引创建</h2><h3 id="7-1、创建索引"><a href="#7-1、创建索引" class="headerlink" title="7.1、创建索引"></a>7.1、创建索引</h3><p><strong>建表时创建</strong>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE 表名(</span><br><span class="line">字段名 数据类型 [完整性约束条件],</span><br><span class="line">       ……，</span><br><span class="line">[UNIQUE | PRIMARY] INDEX | KEY</span><br><span class="line">[索引名](字段名1 [(长度)] [ASC | DESC]) [USING 索引方法]</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
 
+<p>UNIQUE：唯一索引；PRIMARY：主键索引；什么都不加就是普通索引。INDEX和KEY作用一样，可以相互替换</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE projectfile (</span><br><span class="line">	id INT AUTO_INCREMENT COMMENT &#39;附件id&#39;,</span><br><span class="line">	projectid INT COMMENT &#39;项目id;此列受project表中的id列约束&#39;,</span><br><span class="line">	filename VARCHAR (512) COMMENT &#39;附件名&#39;,</span><br><span class="line">	filesize BIGINT COMMENT &#39;附件大小，单位Byte&#39;,</span><br><span class="line">	-- 主键索引</span><br><span class="line">    PRIMARY KEY (id),</span><br><span class="line">	-- 唯一索引</span><br><span class="line">	UNIQUE KEY (projectid),</span><br><span class="line">	-- 普通索引</span><br><span class="line">	KEY (filename)</span><br><span class="line">    -- 组合索引</span><br><span class="line">	KEY (filename, filesize)</span><br><span class="line">) ENGINE &#x3D; INNODB DEFAULT CHARSET &#x3D; utf8 COMMENT &#39;项目附件表&#39;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>建表后创建：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE 表名 ADD [UNIQUE | PRIMARY]  INDEX | KEY  </span><br><span class="line">[索引名] (字段名1 [(长度)] [ASC | DESC]) [USING 索引方法]；</span><br></pre></td></tr></table></figure>
+
+<p>字段名后的长度用于创建前缀索引，只能用于字符串类型，上方一样。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE projectfile ADD KEY (filename, filesize);</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-2、查看已创建的索引"><a href="#7-2、查看已创建的索引" class="headerlink" title="7.2、查看已创建的索引"></a>7.2、查看已创建的索引</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show index from 表名;</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-3、删除索引"><a href="#7-3、删除索引" class="headerlink" title="7.3、删除索引"></a>7.3、删除索引</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE 表名 DROP INDEX 索引名</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-4、查看SQL语句对索引的使用情况"><a href="#7-4、查看SQL语句对索引的使用情况" class="headerlink" title="7.4、查看SQL语句对索引的使用情况"></a>7.4、查看SQL语句对索引的使用情况</h3><p>在select语句前加上EXPLAIN即可。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EXPLAIN SELECT * FROM &#96;projectfile&#96; pf WHERE pf.filename &#x3D; &#39;Jane&#39;;</span><br></pre></td></tr></table></figure>
       
     </div>
     <footer class="article-footer">

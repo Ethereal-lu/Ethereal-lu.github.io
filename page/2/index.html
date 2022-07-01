@@ -527,7 +527,7 @@
 <p> 浮点类型有两种，分别是单精度浮点数（<strong>FLOAT</strong>）和双精度浮点数（<strong>DOUBLE</strong>）；定点类型只有一种，就是 <strong>DECIMAL</strong>。</p>
 <p> 浮点类型和定点类型都可以用<code>(M, D)</code>来表示，其中<code>M</code>称为精度，表示总共的位数；<code>D</code>称为标度，表示小数的位数。</p>
 <p>CPU 原生支持浮点运算，但是不支持 DECIMAl 类型的计算，因此 DECIMAL 的计算比浮点类型需要更高的代价。</p>
-<h3 id="3、字符串"><a href="#3、字符串" class="headerlink" title="3、字符串"></a>3、字符串</h3><p>主要有 CHAR 和 VARCHAR 两种类型，一种是定长的，一种是变长的。因此，当char类型的长度不够时，会以空格填充。</p>
+<h3 id="3、字符串"><a href="#3、字符串" class="headerlink" title="3、字符串"></a>3、字符串</h3><p>主要有 CHAR 和 VARCHAR 两种类型，一种是定长的，一种是变长的。因此，当char类型的长度不够时，会以空格填充。当插入的字符串长度超过括号中设置的长度时报错。</p>
 <h4 id="3-1、varchar-n"><a href="#3-1、varchar-n" class="headerlink" title="3.1、varchar(n)"></a>3.1、varchar(n)</h4><p>varchar是动态字符串（跟上面的int不一样）长度是在括号里面指定的，即只能存储小于等于指定长度的字符串，以 varchar(255)举例，该字段最多只能存储255个字符。</p>
 <h4 id="3-2、varchar-255"><a href="#3-2、varchar-255" class="headerlink" title="3.2、varchar(255)"></a>3.2、varchar(255)</h4><p>那为什么会经常性设置成varchar(255)呢？</p>
 <p>首先我们要知道一个概念：InnoDB存储引擎的表索引的前缀长度最长是767字节(bytes)，前缀长度意思就是索引中数据的长度，即若给一个varchar类型的字段建索引，则该varchar中最长的字符长度不能超过767字节。</p>
