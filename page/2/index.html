@@ -73,6 +73,130 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-分布式/Zookeeper/ZAB协议" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/ZAB%E5%8D%8F%E8%AE%AE/" class="article-date">
+  <time class="dt-published" datetime="2022-05-08T11:42:15.000Z" itemprop="datePublished">2022-05-08</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Zookeeper/">Zookeeper</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/ZAB%E5%8D%8F%E8%AE%AE/">ZAB协议</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="1、ZAB协议介绍"><a href="#1、ZAB协议介绍" class="headerlink" title="1、ZAB协议介绍"></a>1、ZAB协议介绍</h1><p>Zookeeper Atomic Broadcast，是 Zookeeper 专门设计的一种支持崩溃恢复的原子广播协议。用来实现分布式数据一致性。包含两种基本模式，分别是 崩溃恢复、原子广播。</p>
+<p>当整个集群在启动时，或当leader 节点崩溃时，ZAB协议就会进入恢复模式并选举产生新的leader，当leader选举出来后，并且集群中有过半机器和该leader节点完成数据同步后，ZAB协议就会退出恢复模式进入消息广播模式。</p>
+<h1 id="2、崩溃恢复"><a href="#2、崩溃恢复" class="headerlink" title="2、崩溃恢复"></a>2、崩溃恢复</h1><p>崩溃恢复阶段的任务主要为 Leader 选举和数据同步。</p>
+<h2 id="1、选举基本原则"><a href="#1、选举基本原则" class="headerlink" title="1、选举基本原则"></a>1、选举基本原则</h2><ol>
+<li>选举投票必须在同一轮次中进行</li>
+<li>事务ID 大的节点优先成为 Leader</li>
+<li>服务器ID大的节点优先成为 Leader</li>
+</ol>
+<h2 id="2、相关参数"><a href="#2、相关参数" class="headerlink" title="2、相关参数"></a>2、相关参数</h2><ul>
+<li>SID：服务器ID</li>
+<li>ZXID：事务ID。在集群范围内全局唯一单调递增，是一个64位的数字，高 32 位是Epoch，低 32 位是单调递增的计数器。每次选举会使 Epoch 加 1，每个写操作会使计数器加1，由于写操作全部由Leader执行，故Leader 节点总是保持着最大的事务 ID，然后根据一致性协议向 Flower 同步数据。由于各 Flower 与 Leader 通信的时差，可能某些 Flower 中保存的数据不是最新的，即各 Flower 的事务 ID 可能不同。事务ID越大说明其保存的数据越新。</li>
+<li>Epoch：选举轮次。每个服务器都会维护一个名为<code>logicClock</code>的变量，用于标识当前选举的轮次。每开始一次Leader选举，服务器都会将自己存储的<code>logicClock</code>执行加一操作，并且投票时会附带上这个<code>logicClock</code>。如果其他服务器收到了一个带有旧的<code>logicClock</code>的投票，则会直接忽略这个投票。若一个节点中途宕机之后又连接上，由于其保存的是旧的<code>logicClock</code>，则其不能参与本次选举。**<code>logicClock</code>变量只在一次Leader选举开始时执行一次递增操作，一次选举中的多轮投票并不会改变<code>logicClock</code>变量的值。**</li>
+</ul>
+<h2 id="3、节点状态"><a href="#3、节点状态" class="headerlink" title="3、节点状态"></a>3、节点状态</h2><ul>
+<li>LOOKING：正在选举。在选举阶段集群不能对外提供服务。</li>
+<li>FOLLOWING：跟随者状态。</li>
+<li>LEADING：领导者状态。</li>
+<li>OBSERVING：观察者状态。</li>
+</ul>
+<h2 id="4、选举流程"><a href="#4、选举流程" class="headerlink" title="4、选举流程"></a>4、选举流程</h2><ol>
+<li>自增选举轮次：每开始一次新的选举，节点先将自己的<code>logicClock</code>加 1，并且投票时会附带上这个<code>logicClock</code>。</li>
+<li>初始化选票：每个服务器在广播自己的选票前，会将自己的投票箱清空。投票箱记录了所收到的选票。票箱中只会记录每一个投票者的最新的选票。实际上投票箱是一个 Map，节点 id 为键，选票为值，如果收到某个节点的新选票，更新该 Map 即可。</li>
+<li>发送选票：节点给自己投票，将投给自己的选票放入投票箱，然后广播该选票，用于与其它节点交换选票信息。</li>
+<li>接收其他节点广播的选票：对于接收到的其他节点的选票进行<code>logicClock</code>的校验<ul>
+<li>如果收到的选票中的<code>logicClock</code>大于自己的<code>logicClock</code>，则清空自己的投票箱，并更新自己的<code>logicClock</code>，然后进行步骤5</li>
+<li>如果收到的选票中的<code>logicClock</code>小于自己的<code>logicClock</code>，直接丢弃</li>
+<li>如果收到的选票中的<code>logicClock</code>等于自己的<code>logicClock</code>，进行步骤5</li>
+</ul>
+</li>
+<li>选票比较：首先比较 ZXID，如果收到的选票中的 ZXID 较大，则更新自己的选票。如果 ZXID 一致，则比较 SID，如果收到的选票中的 SID较大，则更新自己的选票。将收到的选票存入投票箱。</li>
+<li>再次发送选票：进过步骤 5 的选票比较，如果自己的选票需要改变，则修改自己的选票并更新到投票箱，然后再次广播出去。</li>
+<li>统计选票：统计自己的投票箱，如果超过半数的节点投票一致，则终止投票。否则继续接收其他节点的投票。</li>
+<li>更新节点状态：若过半的票投给了自己，则将自己的服务器状态更新为LEADING，否则将自己的状态更新为FOLLOWING。</li>
+</ol>
+<h2 id="6、选举时机"><a href="#6、选举时机" class="headerlink" title="6、选举时机"></a>6、选举时机</h2><p>当集群第一次启动时会发起一次选举；当 Leader 崩溃后会发起一次选举。</p>
+<h3 id="6-1、第一次启动"><a href="#6-1、第一次启动" class="headerlink" title="6.1、第一次启动"></a>6.1、第一次启动</h3><p>假设Zookeeper 集群中有 5 个ZooKeeper节点，且是第一次启动，都不包含数据。节点按从 1 到 5 的顺序依次启动，则选举流程如下：</p>
+<ol>
+<li>① 启动，发起一次选举。① 投自己一票。此时 ① 票数为1，不够半数以上（5÷2=2.5，3票），选举无法完成，① 状态保持为<code>LOOKING</code>；</li>
+<li>② 启动，再发起一次选举。① 和 ② 分别投自己一票并交换选票信息：此时 ① 发现 ② 的<code>myid</code>比自己的<code>myid</code>大，把自己的票数投给了 ②。此时 ① 票数为0票， ② 票数为2票，没有半数以上结果，选举无法完成，①、 ② 状态保持为<code>LOOKING</code></li>
+<li>③ 启动，发起一次选举。此时服务器1和2都会更改选票为服务器3。此次投票结果：① 为0票，② 为0票，服务器3为3票。此时 ③ 的票数已经超过半数，服务器3当选Leader。①，② 状态更改为FOLLOWING，③ 更改状态为<code>LEADING</code>；</li>
+<li>④ 启动，发起一次选举。此时①，②，③已经不是<code>LOOKING</code>状态，不会更改选票信息。交换选票信息结果：③ 为3票，④ 为1票。此时 ④ 服从多数，更改选票信息为 ③，并更改状态为<code>FOLLOWING</code>；</li>
+<li>⑤ 启动，同 ④ 一样，最终 ③ 为<code>leader</code>，其他为<code>follower</code>。</li>
+</ol>
+<h3 id="6-2、-Leader-崩溃"><a href="#6-2、-Leader-崩溃" class="headerlink" title="6.2、 Leader 崩溃"></a>6.2、 Leader 崩溃</h3><p>Leader 选举成功后，Leader 会周期性地向 follower 发送心跳（ping命令，没有内容的 socket）。当 Leader 崩溃后，Follower 发现通道关闭，则 Follower 的状态变为 LOOKING，开始进行选举。</p>
+<p><img src="%E9%9D%9E%E7%AC%AC%E4%B8%80%E6%AC%A1%E5%90%AF%E5%8A%A8%E9%80%89%E4%B8%BE.png" alt="非第一次启动选举"></p>
+<h2 id="7、数据同步"><a href="#7、数据同步" class="headerlink" title="7、数据同步"></a>7、数据同步</h2><p>在选举结束后还需要进行数据同步。先同步 epoch，然后 Follower 将自己的 ZXID 发送给 Leader，当收到半数以上的 Follower 发送的 ZXID 后，Leader 根据 ZXID 对每个 Follower 给出不同的同步策略。</p>
+<ul>
+<li>DIFF：如果 Follower 的记录和 Leader 的记录相差的不多，使用增量同步的方式将一个一个写请求发送给 Follower</li>
+<li>SNAP：如果 Follower 的记录和当前 Leader 相差太多，Leader 直接将自己的整个内存数据发送给 Follower</li>
+<li>TRUNC：如果 Follower 的记录比 Leader 的记录更全，Follower 自行把多余的部分给截断，降级到和 Leader 一致</li>
+<li>TRUNC+DIFF：先把多余的部分截断，再进行增量同步</li>
+</ul>
+<h3 id="7-1、DIFF（直接差异化同步）"><a href="#7-1、DIFF（直接差异化同步）" class="headerlink" title="7.1、DIFF（直接差异化同步）"></a>7.1、DIFF（直接差异化同步）</h3><p>每个 ZK 节点将写请求存储在写请求队列，如果队列达到上限，将 ZXID 最小的写请求移除。</p>
+<p>如果 Follower 上报的 ZXID 在写请求队列的 minZXID 和 maxZXID 之间，就将 ZXID 之后的写请求一条一条地发送给 Follower 。</p>
+<h3 id="7-2、SNAP（全量同步）"><a href="#7-2、SNAP（全量同步）" class="headerlink" title="7.2、SNAP（全量同步）"></a>7.2、SNAP（全量同步）</h3><p>如果 Follower 上报的 ZXID 在小于 minZXID，Leader 将内存中的数据全部序列化并发送给 Follower 。Follower 会将自己的数据全部清空并将接收到的数据反序列化存储。</p>
+<h3 id="7-3、TRUNC（仅回滚同步）"><a href="#7-3、TRUNC（仅回滚同步）" class="headerlink" title="7.3、TRUNC（仅回滚同步）"></a>7.3、TRUNC（仅回滚同步）</h3><p>如果 Follower 上报的 ZXID 在大于 maxZXID，Follower 自行把多余的数据截断。</p>
+<p>出现这种情况可能是 Leader 掉线了一段时间，在此期间各 Follower 已经重新选举了新的Leader，当旧Leader上线后自动成为Follower，但是新的 Leader 的 ZXID 小于自己。</p>
+<h3 id="7-4、TRUNC-DIFF（先回滚再差异化同步）"><a href="#7-4、TRUNC-DIFF（先回滚再差异化同步）" class="headerlink" title="7.4、TRUNC+DIFF（先回滚再差异化同步）"></a>7.4、TRUNC+DIFF（先回滚再差异化同步）</h3><p>这是一种罕见的情况。假如有A、B、C三台机器，B是Leader，此时的Leader_epoch为5，当前已经被集群中大部分机器都提交的ZXID包括：0x500000001和0x500000002。此时，Leader正要处理0x500000003，并且已经将该事务写入到了Leader本地的事务日志中，就在Leader要将该Proposal发送给其他Follower机器进行投票的时候，Leader服务器挂了，开始新一轮选举，同时Leader_epoch变更为6，之后A和C继续对外进行服务，又提交了0x600000001和0x600000002两个事务。此时B再次启动，并开始数据同步，那么 B 需要先回滚到 0x500000002，再差异化同步到0x600000002。</p>
+<p>当数据同步之后，Zookeeper 集群才可以对外开放服务。根据 CAP 理论，如果在数据同步阶段允许对外开放服务，就是 AP 模型；否则是 CP 模型，Zookeeper 显然是 CP 模型。</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/xueweihan/p/14575954.html">数据同步详见此处</a></p>
+<h1 id="3、消息广播"><a href="#3、消息广播" class="headerlink" title="3、消息广播"></a>3、消息广播</h1><p>在 Zookeeper 集群中，任何一个写事务都是分布式事务。在消息广播阶段 Zookeeper 通过类似于 2PC 的方式处理<strong>主从数据同步</strong>。</p>
+<p>客户端会随机连接 Zookeeper 集群中的节点 ，如果集群中的follewer接收到来自客户端的写请求，follower会将请求转发给 leader，统一交给leader来处理。</p>
+<p>主从数据同步步骤如下：</p>
+<ol>
+<li>客户端向主节点发起事务请求</li>
+<li>主节点将事务写到本地事务日志，并给自己返回一个 ACK，同时将数据发送给从节点</li>
+<li>从节点将事务写到本地事务日志，并给主节点返回一个 ACK</li>
+<li>主节点统计收到的 ACK 数，加上自己的 ACK，如果收到的 ACK 数量超过集群总数的一半，则向从节点发送 commit，同时本地也提交事务。</li>
+<li>各节点接收到 commit 后提交事务，将事务操作应用到内存中。</li>
+</ol>
+<p>之所以说该过程类似于 2PC，是因为 2PC 要求所有的节点全部执行成功才提交事务，而 ZAB 只需要超过半数节点执行成功就可以提交</p>
+<p>Observer 不参与投票过程，不会返回 ack，但其必须要与 Leader 保持数据一致性。</p>
+<h1 id="4、数据一致性"><a href="#4、数据一致性" class="headerlink" title="4、数据一致性"></a>4、数据一致性</h1><p>根据上方数据同步过程可知，Leader 总是与超过半数的从节点保持强一致性，但是与其他的从节点并没有保持强一致性。</p>
+<p>Zookeeper 在数据同步时追求的并不是强一致性，而是<strong>顺序一致性</strong>。</p>
+<h2 id="1、顺序一致性"><a href="#1、顺序一致性" class="headerlink" title="1、顺序一致性"></a>1、顺序一致性</h2><p>Zookeeper 的所有写操作都通过主节点进行，这样所有节点的事务执行顺序都和主节点相同，不会出现某个节点的事务执行顺序与其它节点不同的情况。</p>
+<p>Zookeeper 是通过 ZXID 来保证顺序一致性的，由于在同一任期内 zxid 是连续递增的，每个节点都会通过比较自身的最新 zxid 和 当前提案的 zxid 是否差1来保证事务严格按照顺序生效。Leader 会将所有未提交的事务存储在 ConcurrentHashMap 中，键为 zxid，值为提案的信息，当事务提交后就删除这个键值对。每次 Leader 要提交事务时都先查看 ConcurrentHashMap 是否存在 zxid - 1 的键，若存在说明在它之前还有事务没有提交，则当前事务就不能提交，如此保证事务执行的顺序一致性。</p>
+<p>但是Zookeeper 允许客户端从从节点读取数据，因此如果客户端在读取过程中连接了不同的节点，则顺序一致性就得不到保证了，即客户端先在一个节点读取了新的数据，然后到另一个节点读取到了旧数据。为了解决这种情况，Zookeeper 保证了单一视图。</p>
+<h2 id="2、单一视图"><a href="#2、单一视图" class="headerlink" title="2、单一视图"></a>2、单一视图</h2><p>对于客户端的每次请求，服务器都会返回自己当前最新的事务id。当客户端与服务器断开之后又重新连接时，会将自己记录的事务id 发送给服务端，服务端如果发现收到的事务 id 在本地不存在，就会拒绝连接请求，之后客户端再尝试连接其他服务器。从而保证客户端不会连接到数据版本比自己之前看到的旧的服务器上，保证了单一视图特性。</p>
+<h1 id="5、Zookeeper的脑裂问题"><a href="#5、Zookeeper的脑裂问题" class="headerlink" title="5、Zookeeper的脑裂问题"></a>5、Zookeeper的脑裂问题</h1><p>脑裂问题是指由于网络等原因导致集群被分割为俩个团体，团体内部可以通信，团体之间不可以通信。这时必然有一个团体内是没有 Leader 的，于是该团体就会选举一个 Leader。这样，原本作为一个整体的集群出现了两个 Leader，这就脑裂现象。</p>
+<p>Zookeeper 由于实行半数原则，如果出现两个团体，则要么这两个团体的成员数量都不过半，此时两个团体都选举 Leader 失败，即整个集群不能提供服务；要么一个团体成员数量过半，另一个不过半，此时过半的团体正常提供服务，而不过半的团体则无法选举 leader 不能提供服务。</p>
+<p>因此 Zookeeper 不存在脑裂问题。</p>
+<p>假设: leader发生了假死, followers选举出了一个新的leader.当旧的leader复活并认为自己仍然是leader, 它向其他followers发出写请求时, 会被拒绝.—— 因为ZooKeeper维护了一个叫epoch的变量, 每当新leader产生时, epoch都会递增, followers如果确认了新的leader存在, 同时也会知道其epoch的值 —— 它们会拒绝epoch小于现任leader的epoch的所有旧leader的任何请求.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/ZAB%E5%8D%8F%E8%AE%AE/" data-id="cl40o2cex0009mgaq7itkd43j" data-title="ZAB协议" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-分布式/Kafka/Kafka基础" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Kafka/Kafka%E5%9F%BA%E7%A1%80/" class="article-date">
@@ -863,78 +987,6 @@
 
 
   
-    <article id="post-数据库/Redis/Redis哨兵机制" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/05/02/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/" class="article-date">
-  <time class="dt-published" datetime="2022-05-02T07:39:41.000Z" itemprop="datePublished">2022-05-02</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Redis/">Redis</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/05/02/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/">Redis哨兵机制</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>由于主从模式是读写分离的，如果主节点故障，那么将没有主节点来执行写操作，也没有主节点给从节点进行数据同步了。若是每次主节点故障都需要人工切换主从节点太繁琐，于是哨兵机制出现了。哨兵的核心功能是主节点的自动故障转移。</p>
-<h2 id="1、哨兵集群的组建"><a href="#1、哨兵集群的组建" class="headerlink" title="1、哨兵集群的组建"></a>1、哨兵集群的组建</h2><p>哨兵实例之间可以相互发现，要归功于 Redis 提供的发布 / 订阅机制。</p>
-<ol>
-<li>首先主节点的信息配置在哨兵(Sentinel)的配置文件中</li>
-<li>哨兵节点会和配置的主节点建立起连接</li>
-<li>哨兵每10秒会向主节点发送info命令，主节点会返回自己的run_id和自己的从节点信息。</li>
-<li>哨兵会对这些从节点也建立连接。之后<strong>每10秒会向主节点和从节点都发送info命令</strong>以获取最新的拓扑结构。</li>
-<li>每个哨兵都订阅主节点的<code>_sentinel:hello</code>频道，且<strong>每2秒向该频道发布自己的信息</strong>，各哨兵由此与其他哨兵建立连接。</li>
-<li><strong>每隔1秒每个哨兵会向主节点、从节点、其他哨兵发送ping命令，做心跳检测。</strong></li>
-</ol>
-<p>上述 6 点中，加粗部分为每个哨兵的三个定时任务。</p>
-<h2 id="2、主库下线的判定"><a href="#2、主库下线的判定" class="headerlink" title="2、主库下线的判定"></a>2、主库下线的判定</h2><ul>
-<li><strong>主观下线</strong>：哨兵节点每隔1秒向各节点发送PING命令，如果在规定时间内没有收到有效响应，哨兵就会将该节点标记为主观下线。</li>
-<li><strong>客观下线</strong>：当某个哨兵判断主库主观下线后，就会给其他哨兵发起询问，其他哨兵会根据自己和主库的连接情况，做出赞成或反对的响应。如果赞成票数大于等于哨兵配置文件中的配置项 <code>quorum</code> 的值, 则判定主库客观下线。<code>quorum</code> 的值一般为哨兵个数 / 2 + 1。</li>
-</ul>
-<h2 id="3、新主库选取"><a href="#3、新主库选取" class="headerlink" title="3、新主库选取"></a>3、新主库选取</h2><p>根据以下规则选取新主库：</p>
-<ol>
-<li>过滤掉网络状态不好的：redis 有一个参数用于表示主从节点的通信超时时间，如果从节点的超时次数超过10次，说明这个从节点的网络状况不好，不适合作为新主节点。</li>
-<li>选择从节点优先级最高的（redis.conf 中有一个配置项<code>salve-priority</code>表示从节点优先级）</li>
-<li>优先级相同时选择复制偏移量最大的</li>
-<li>若优先级和偏移量都相同，则选择 id 号小的</li>
-</ol>
-<h2 id="4、选举Leader哨兵"><a href="#4、选举Leader哨兵" class="headerlink" title="4、选举Leader哨兵"></a>4、选举Leader哨兵</h2><p>新主库选取选举之后需要进行故障转移，但是哨兵节点有多个，需要选举一个 leader 哨兵来负责进行主从切换。</p>
-<p><strong>选举算法</strong><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/32052223">Raft选举算法</a>：哪个哨兵节点判断主节点为「客观下线」，这个哨兵节点就是候选者。候选者会向其他哨兵发送命令，表明希望成为 Leader 来执行主从切换，并让所有其他哨兵对它进行投票。每个哨兵只有一次投票机会，如果用完后就不能参与投票了，可以投给自己或投给别人，但是只有候选者才能把票投给自己。若只有一个候选者，则其他哨兵会将票投给它，若有多个候选者，即多个哨兵同时判断主节点为「客观下线」，此时其他非候选者哨兵会对它收到的第一个拉票候选者投票，对后续收到的其他拉票请求给予拒绝。</p>
-<p>一个候选者若能成为 Leader ，那它获得的赞成票必须既大于哨兵节点的一半又大于<code>quorum</code>的值。如果所有候选者都不满足，则发起下一轮选举。</p>
-<p>若有超过一半的哨兵宕机，则无法完成Leader哨兵的选举。</p>
-<h2 id="5、故障转移"><a href="#5、故障转移" class="headerlink" title="5、故障转移"></a>5、故障转移</h2><ol>
-<li>通过 <code>slave of no one</code> 命令将 4 中选举的从节点变为主节点。</li>
-<li>通过<code>replicaof</code>命令将其他从节点和旧的主节点都成为新主节点的从节点。</li>
-</ol>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/05/02/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/" data-id="cl3ir9vvl002ckkaqf3yi3jc0" data-title="Redis哨兵机制" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -965,7 +1017,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">七月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
     </div>
   </div>
 
@@ -978,7 +1030,11 @@
       <ul>
         
           <li>
-            <a href="/2022/06/21/%E9%A1%B9%E7%9B%AE/%E7%A7%92%E6%9D%80%E9%A1%B9%E7%9B%AE/">秒杀项目</a>
+            <a href="/2022/07/09/Java/Netty/">Netty</a>
+          </li>
+        
+          <li>
+            <a href="/2022/06/21/%E9%A1%B9%E7%9B%AE/%E6%A0%A1%E6%8B%9B%E5%87%86%E5%A4%87%E9%A1%B9%E7%9B%AE/">搁置项目</a>
           </li>
         
           <li>
@@ -991,10 +1047,6 @@
         
           <li>
             <a href="/2022/06/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/HTTP/">HTTP</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/Nginx/Nginx%E5%9F%BA%E7%A1%80/">Nginx基础</a>
           </li>
         
       </ul>

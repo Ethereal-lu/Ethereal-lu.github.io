@@ -73,6 +73,150 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-小碎片知识/编码" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/08/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/" class="article-date">
+  <time class="dt-published" datetime="2022-04-08T15:08:18.000Z" itemprop="datePublished">2022-04-08</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/04/08/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/">编码</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="1、为什么使用编码"><a href="#1、为什么使用编码" class="headerlink" title="1、为什么使用编码"></a>1、为什么使用编码</h2><p>人类的语言并不适合计算机使用，所以就需要发明一种适合计算机的语言，这就是二进制。电脑读不懂人类语言，所以需要将人类语言转换为二进制语言，这就是编码；人类读不懂电脑的二进制语言，所以需要转换为人类语言，这就是解码。</p>
+<h2 id="2、为什么会乱码"><a href="#2、为什么会乱码" class="headerlink" title="2、为什么会乱码"></a>2、为什么会乱码</h2><p>编码与解码使用的规则不一样，就会乱码。即解码的时候，解码器不知道如何将当前的二进制转换为人类语言，就会乱码。</p>
+<h2 id="3、字符集的历史"><a href="#3、字符集的历史" class="headerlink" title="3、字符集的历史"></a>3、字符集的历史</h2><h3 id="3-1、百花齐放"><a href="#3-1、百花齐放" class="headerlink" title="3.1、百花齐放"></a>3.1、百花齐放</h3><p><code>ASCII</code> 码占用了 0~127，即一个字节中的后 7 位。</p>
+<p><code>IOS-8859-n</code> 编码家族占用了 128~255，即利用了 <code>ASCII</code> 码未使用的第 1 位，因此<code>IOS-8859-n</code> 编码家族兼容<code>ASCII</code> 码。</p>
+<hr>
+<p>至此一个字节的 8 位已全部占用，后来的编码必须使用多个字节。</p>
+<hr>
+<p><code>GB2312</code>：<code>GB2312</code> 并不兼容 <code>ISO-8859-n</code> 编码集，但是兼容 <code>ASCII</code> 编码。因为 <code>ASCII</code> 编码中的单字节字符一定是小于 <code>128</code> 的，所以最后我们就决定，中文的双字节字符都从 <code>128</code> 之后开始，也就是当发现字符连续两位都大于 <code>128</code> 时，就说明这是一个中文，指定了之后我们就把这种编码方式称之为 <code>GB2312</code> 编码。</p>
+<p><code>GB2312</code> 中收录的中文汉字都是简体字和常用字，对于一些生僻字以及繁体字没有收录，于是乎 <code>GBK</code> 出现了。</p>
+<p><code>GBK</code>： <code>GBK</code> 只要求第一位是大于 <code>128</code>，第二位可以小于 <code>128</code>，只要发现一个字节大于 <code>128</code>，那么紧随其后的一个字节就是和其作为一个整体作为中文字符。<code>GBK</code>兼容<code>GB2312</code>、<code>ASCII</code>，不兼容<code>IOS-8859-n</code> 。</p>
+<h3 id="3-2、Unicode"><a href="#3-2、Unicode" class="headerlink" title="3.2、Unicode"></a>3.2、Unicode</h3><p><code>Unicode</code> 不兼容以上任何编码。<code>Unicode</code> 字符最开始采用的是 <code>UCS-2</code> 标准，<code>UCS-2</code> 标准规定一个字符至少使用 <code>2</code> 个字节来表示。由于无法攘括全世界所有字符，后来又有了 <code>UCS-4</code> 标准，可以用 <code>4</code> 个字节来存储一个字符。</p>
+<p><code>Unicode</code> 编码只是定义了字符集，对于字符集具体应该如何存储并没有做要求。</p>
+<p><code>UTF</code> 系列编码就是对 <code>Unicode</code> 字符集的实现，只不过实现的方式有所区别，其中主要有：<code>UTF-8</code>，<code>UTF-16</code>，<code>UTF-32</code> 等类型。</p>
+<h4 id="3-2-1、UTF-32-编码"><a href="#3-2-1、UTF-32-编码" class="headerlink" title="3.2.1、UTF-32 编码"></a>3.2.1、UTF-32 编码</h4><p><code>UTF-32</code> 编码基本按照 <code>Unicode</code>字符集标准来实现，任何一个符号都占用 <code>4</code> 个字节。浪费严重。</p>
+<h4 id="3-2-2、UTF-16-编码"><a href="#3-2-2、UTF-16-编码" class="headerlink" title="3.2.2、UTF-16 编码"></a>3.2.2、UTF-16 编码</h4><p><code>UTF-16</code> 编码相比较 <code>UTF-32</code> 做了一点改进，其采用 <code>2</code> 个字节或者 <code>4</code> 个字节来存储。大部分情况下 <code>UTF-16</code> 编码都是采用 <code>2</code> 个字节来存储，而当 <code>2</code> 个字节存储时，<code>UTF-16</code> 编码会将 <code>Unicode</code> 字符直接转成二进制进行存储，对于另外一些生僻字或者使用较少的符号，<code>UTF-16</code> 编码会采用 <code>4</code> 个字节来存储，但是采用四个字节存储时需要做一次编码转换。</p>
+<p>下表就是 <code>UTF-16</code> 编码的存储格式：</p>
+<table>
+<thead>
+<tr>
+<th>Unicode 编码范围（16 进制）</th>
+<th>UTF-16 编码的二进制存储格式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x0000 0000 - 0x0000 FFFF</td>
+<td>xxxxxxxx xxxxxxxx</td>
+</tr>
+<tr>
+<td>0x0001 0000 - 0x0010 FFFF</td>
+<td>110110xx xxxxxxxx 110111xx xxxxxxxx</td>
+</tr>
+</tbody></table>
+<p>即二字节存储时，直接存 <code>Unicode</code> 码，四字节时将 <code>Unicode</code> 码依次填充到表中的 x 处。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">一个汉字在 UTF-16 编码 中占 2 个或 4 个字节。</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-2-3、UTF-8-编码"><a href="#3-2-3、UTF-8-编码" class="headerlink" title="3.2.3、UTF-8 编码"></a>3.2.3、UTF-8 编码</h4><p><code>UTF-8</code> 是一种变长的编码，兼容了 <code>ASCII</code> 编码，为了实现变长这个特性，那么就必须要有一个规范来规定存储格式，这样当程序读了 <code>2</code> 个或者多个字节时能解析出这到底是表示多个单字节字符还是一个多字节字符。</p>
+<p><code>UTF-8</code> 编码的存储规范如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>Unicode 编码范围（16 进制）</th>
+<th>UTF-8 编码的二进制存储格式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x0000 0000 - 0x0000 007F</td>
+<td>0xxxxxxx</td>
+</tr>
+<tr>
+<td>0x0000 0080 - 0x0000 07FF</td>
+<td>110xxxxx 10xxxxxx</td>
+</tr>
+<tr>
+<td>0x0000 0800 - 0x0000 FFFF</td>
+<td>1110xxxx 10xxxxxx 10xxxxxx</td>
+</tr>
+<tr>
+<td>0x0001 0000 - 0x0010 FFFF</td>
+<td>11110xxx 10xxxxxx 10xxxxxx 10xxxxxx</td>
+</tr>
+</tbody></table>
+<p>接下来我们以 <code>双</code> 字为例来进行说明：</p>
+<p>双：对应的 <code>Unicode</code> 编码为 <code>\u53cc</code>，转成二进制就是：<code>101001111001100</code>，这时候表格中的第一行只有 <code>7</code> 位存不下去，第二列也只有 <code>11</code> 位，也不够存储，所以只能存储到第三列，第三列有 <code>16</code> 位，从后往前依次填补 <code>x</code> 的位置，填完之后还有一位空余，直接补 <code>0</code>，最终得到：<strong>1110</strong>0101 <strong>10</strong>001111 <strong>10</strong>001100，所以<code>双</code> 字就占用了 <code>3</code> 个字节，当然，有些生僻字会占用到四个字节。</p>
+<p>所以上面的 <code>UTF-16</code> 编码也是同理，如果当前字符采用的是两字节存储，那么直接转成二进制存储即可，位数不足直接补 <code>0</code> 即可，而当采用 <code>4</code> 个字节存储时，则需要和 <code>UTF-8</code> 一样进行一次转换，也就是说只能将其填充到 <code>x</code> 的位置，<code>x</code> 之外的是固定格式。</p>
+<p>需要注意的是：在 <code>UTF-16</code> 编码中，<code>2</code> 个字节也可能出现 <code>4</code> 字节中 <code>110110xx</code> 或者 <code>110111xx</code> 开头的格式，这两部分对应的区间分别是：<code>D800~DBFF</code> 和 <code>DC00~DFFF</code>，所以为了避免这种歧义的发生，这两部分区间是是专门空出来的，没有进行编码。</p>
+<p><code>UTF-8</code>存储中，若字节的第一位是 0，表示一个字节即一个<code>Unicode</code> 字符；否则字节开头 1 有几个，就表示该<code>Unicode</code> 字符由几个字节组成。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">一个汉字在 UTF-8 编码 中占 3 个或 4 个字节。</span><br></pre></td></tr></table></figure>
+
+<h2 id="4、为什么有时候乱码都是-号"><a href="#4、为什么有时候乱码都是-号" class="headerlink" title="4、为什么有时候乱码都是 ? 号"></a>4、为什么有时候乱码都是 ? 号</h2><p>在 <code>Java</code> 开发中，经常会碰到乱码显示为 <code>?</code> 号，比如下面这个例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">String name = <span class="string">&quot;双子孤狼&quot;</span>;</span><br><span class="line"><span class="keyword">byte</span>[] bytes = name.getBytes(StandardCharsets.ISO_8859_1);</span><br><span class="line">System.out.println(<span class="keyword">new</span> String(bytes));<span class="comment">//输出：????</span></span><br></pre></td></tr></table></figure>
+
+<p>这个输出结果的原因是中文无法用 <code>ISO_8859_1</code> 编码进行存储，而示例中却强制用 <code>ISO_8859_1</code> 编码进行解码。</p>
+<p>在 <code>Java</code> 中提供了一个 <code>ISO_8859_1</code> 类用来解码，解码时当发现当前字符转成十进制之后大于 <code>255</code> 时就会直接不进行解码，转而直接赋一个默认值 <code>63</code>，所以上面的示例中的 <code>byte</code> 数组结果就是 <code>63 63 63 63</code>，而<code>63</code> 在 <code>ASCII</code> 中就恰好就对应了 <code>?</code> 号。</p>
+<p>所以一般我们看到编码出现 <code>?</code> 基本就说明当前是采用 <code>ISO_8859_1</code> 进行的解码，而当前的字符又大于 <code>255</code>。</p>
+<h2 id="5、代码点和代码单元"><a href="#5、代码点和代码单元" class="headerlink" title="5、代码点和代码单元"></a>5、代码点和代码单元</h2><p>在 <code>Java</code> 中的字符串是由 <code>char</code> 序列组成，而 <code>char</code> 又是采用 <code>UTF-16</code> 表示的 <code>Unicode</code> 代码点的代码单元。</p>
+<ul>
+<li>代码点：一个代码点等同于一个 <code>Unicode</code> 字符。</li>
+<li>代码单元：在 <code>UTF-16</code> 中，两个字节表示一个代码单元，代码单元是最小的不可拆分的部分，所以如果在 <code>UTF-8</code> 中，一个代码单元就是一个字节，因为 <code>UTF-8</code> 中可以用一个字节表示一个字符。</li>
+</ul>
+<p>平常我们调用字符串的 <code>length()</code> 方法，返回的就是代码单元数量，而不是代码点数量，所有如果碰到一些需要用 <code>4</code> 个字节来表示的繁体字，那么代码单元数就会大于代码点数，而想要获取代码点数量，可以通过其他方法获取，获取方式如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">String name = <span class="string">&quot;𤭢&quot;</span>;<span class="comment">//\uD852\uDF62</span></span><br><span class="line">System.out.println(name.length());<span class="comment">//代码单元数，输出2</span></span><br><span class="line">System.out.println(name.codePointCount(<span class="number">0</span>, name.length()));<span class="comment">//代码点数，输出1</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="6、Java-默认编码"><a href="#6、Java-默认编码" class="headerlink" title="6、Java 默认编码"></a>6、Java 默认编码</h2><ul>
+<li><p>文件编码：即用记事本或IDE打开文件后右下角的编码，一般为 <code>UTF-8</code>。</p>
+</li>
+<li><p>编译编码：用 javac 编译源文件时，默认使用本地编码，即下方的<code>file.encoding</code>的值。但是若文件出现特殊字符，可能会编译失败，报错如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Test.java:<span class="number">9</span>: 错误: 编码GBK的不可映射字符</span><br><span class="line">        String s = <span class="string">&quot;鈫?1&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>此时必须指定与文件编码一致的编码方式编译 <code>javac -encoding UTF-8 Test.java</code>。</p>
+<p><strong>注意：编译需要先将原始文件中的字符解码，然后编译，最后统一使用<code>UTF-8</code>编码存为 class 文件，即 class 文件的文件编码一定是<code>UTF-8</code>编码。上述所说的本地编码和指定的编码都是对源文件解码的过程，报错也是在该解码阶段包的错。</strong></p>
+</li>
+<li><p>运行编码：<strong>字符在JVM运行时统一采用<code>UTF-16</code>格式进行编码存储</strong>，当对字符串 <code>getBytes(Charset charset)</code>获取字节数组时，若没有参数默认使用的本地编码。注意：String 内部是用 char 数组存储的，而数组中的每个字符是按<code>UTF-16</code>格式存储的，通过getBytes获取时，会先将字符按<code>UTF-16</code>解码获取其中的内容，再按参数指定的编码方式编码，将编码结果存放到byte数组中。</p>
+</li>
+</ul>
+<p>Java 按照如下顺序获取默认编码<code>defaultCharset</code>也即本地编码：</p>
+<ol>
+<li><p>获取系统属性 <code>file.encoding</code>的值。如果获取到值就用其对应的编码方式，否则转2。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">System.out.println(System.getProperty(<span class="string">&quot;file.encoding&quot;</span>));      <span class="comment">// GBK</span></span><br></pre></td></tr></table></figure></li>
+<li><p>如果没有获取到该属性的值，就使用 <code>UTF-8</code>。</p>
+</li>
+</ol>
+<p>本文大部分摘自<a target="_blank" rel="noopener" href="https://www.cnblogs.com/lonely-wolf/p/14676335.html">为了彻底理解乱码问题，一怒之下我把字符集历史扒了个底朝天 - 双子孤狼 - 博客园 (cnblogs.com)</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/04/08/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/" data-id="cl1zs7vsm000dzwaq4qy0c3cu" data-title="编码" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Linux/ubuntu的ufw与iptables" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/04/07/Linux/ubuntu%E7%9A%84ufw%E4%B8%8Eiptables/" class="article-date">
@@ -637,6 +781,12 @@
 <li>系统B去认证中心验证这个Token是否正确，如果正确，则系统B和用户建立局部会话。到此，系统B和用户已经是登录状态了。</li>
 </ol>
 <p>用户与系统A、B建立会话后，每次请求携带Token，系统A、B再去认证中心认证Token是否正确。（是的吧）</p>
+<h2 id="9、ThreadLocal"><a href="#9、ThreadLocal" class="headerlink" title="9、ThreadLocal"></a>9、ThreadLocal</h2><h3 id="9-1、概述"><a href="#9-1、概述" class="headerlink" title="9.1、概述"></a>9.1、概述</h3><p><code>ThreadLocal</code> 存放的是本地线程变量，也就是共享变量的副本，其他线程无权访问该变量。</p>
+<p><code>ThreadLocal</code> 内部包含一个<code>ThreadLocalMap</code>的内部静态类。该内部类存放从<code>ThreadLocal</code> 到本地线程变量的映射。同时每个线程都持有一个<code>ThreadLocalMap</code>的引用，存放该线程所有的本地线程变量，注：一个<code>ThreadLocal</code>只能保存一个变量，而一个线程可以使用多个<code>ThreadLocal</code>来保存多个变量，每个线程只能访问到自己的<code>ThreadLocalMap</code>。</p>
+<h3 id="9-2、get和set"><a href="#9-2、get和set" class="headerlink" title="9.2、get和set"></a>9.2、get和set</h3><p>set方法首先获取到当前线程的<code>ThreadLocalMap</code>，如果当前线程是第一次使用<code>ThreadLocal</code>，即<code>ThreadLocalMap</code>为null，就会新建<code>ThreadLocalMap</code>并直接存入键值对；如果当前线程之前已经使用过<code>ThreadLocal</code>，现在又用一个新的<code>ThreadLocal</code>来存储其他的值，则<code>ThreadLocalMap</code>就不为null，通过<code>hash</code>定位到槽，如果槽为空，直接存入，否则以线性探测的方式解决碰撞，在探测的过程中如果发现键为null但值还存在，就将当前映射存储或迁移（当前<code>ThreadLocal</code>可能在之前由于碰撞存储在了后边，现在将他向前迁移，一边以后get时可以减少探测次数）到这个槽中，并对<code>ThreadLocalMap</code>进行一次死亡映射的清除。</p>
+<p>get方法首先获取到当前线程的<code>ThreadLocalMap</code>，然后以线性探测的方式找到键值对。同样在探测过程中清除死亡映射。</p>
+<h3 id="9-3、内存泄漏"><a href="#9-3、内存泄漏" class="headerlink" title="9.3、内存泄漏"></a>9.3、内存泄漏</h3><p>当我们通过 <code>ThreadLocal&lt;?&gt; local = new ThreadLocal&lt;&gt;();</code>创建一个<code>ThreadLocal</code>，并通过set存入值的时候，<code>ThreadLocal</code>就包含了两个引用，一个是我们显式声明的强引用，一个是存储在<code>ThreadLocalMap</code>中的弱引用。当<code>ThreadLocal</code>由程序员手动设置为null后，强引用就消失了，剩下的弱引用会在下次垃圾回收时清理掉，此时<code>ThreadLocalMap</code>中的键就为null，根据上方的get和set方法，他们会清理掉键为null的值，所以这种情况不会发生内存泄漏。</p>
+<p>但是如果使用的是线程池，线程使用后不会回收，则<code>ThreadLocal</code>一直保持着强引用也不会回收，那么其对应的值也不会回收，这时就会内存泄漏，同时由于使用了上一个线程的<code>ThreadLocal</code>，还可能引起逻辑错误。</p>
 <h2 id="998、场景设计类题目"><a href="#998、场景设计类题目" class="headerlink" title="998、场景设计类题目"></a>998、场景设计类题目</h2><h3 id="1、设计一个秒杀场景可能会遇到什么问题？"><a href="#1、设计一个秒杀场景可能会遇到什么问题？" class="headerlink" title="1、设计一个秒杀场景可能会遇到什么问题？"></a>1、设计一个秒杀场景可能会遇到什么问题？</h3><p>这条搭配着下一题看把。</p>
 <p>从流量入口出发，秒杀场景会有大量请求同时到达服务器，而服务器只有有限资源处理这些请求，同时还要尽可能快地处理，在入口处可能需要做一些鉴权、限流、缓存、日志和监控等。流量进入入口之后，需要做一些流量削峰、资源隔离、服务器优化和负载均衡，之后还有服务降级、服务限流、拒绝请求。到达扣减库存时，需要有缓存以及用分布式锁控制并发读写，同时考虑用阻塞队列、线程池的方式让用户先拿到秒杀资格，再通过异步计算返回给客户。</p>
 <h3 id="2、如何设计秒杀场景？"><a href="#2、如何设计秒杀场景？" class="headerlink" title="2、如何设计秒杀场景？"></a>2、如何设计秒杀场景？</h3><p>秒杀场景的关键就是面对大量的请求可以正常提供服务并做出快速响应，同时保证数据的一致性。</p>
@@ -916,13 +1066,18 @@
 <p>redis提供6中数据淘汰策略，可在redis.conf中配置：maxmemory-policy noeviction</p>
 <ul>
 <li>noeviction：禁止驱逐数据。默认配置都是这个。当内存使用达到阀值的时候，所有引起申请内存的命令都会报错。</li>
-<li>volatile-lru：从设置了过期时间的数据集中挑选最近最少使用的数据淘汰。</li>
+<li>volatile-lru：从设置了过期时间的数据集中挑选最近最久未使用的数据淘汰。</li>
 <li>volatile-ttl：从已设置了过期时间的数据集中挑选即将要过期的数据淘汰。</li>
 <li>volatile-random：从已设置了过期时间的数据集中任意选择数据淘汰。</li>
-<li>allkeys-lru：从数据集中挑选最近最少使用的数据淘汰。</li>
+<li>allkeys-lru：从数据集中挑选最近最久未使用的数据淘汰。</li>
 <li>allkeys-random：从数据集中任意选择数据淘汰。</li>
 </ul>
 <p>当Redis确定好要驱逐某个键值对后，会删除这个数据，并将这个数据变更消息同步到本地和从机。</p>
+<p><strong>LRU和LFU区别</strong>：</p>
+<p>LRU是最近最久未使用，LFU是最近最少使用。</p>
+<p>举例：若页框数量为 3，页面顺序如：<code>1 2 1 2 3 4</code>；则4号页面进入时会发生页面置换。若使用LRU置换的是1；若使用LFU置换的是3</p>
+<p>LRU是从时间上看，最后一次调用到页面置换时刻间隔最久的置换出去；LRU可通过HashMap＋双向链表实现。</p>
+<p>LFU是从使用频次上看，内存中的所有页面中使用频次最少的置换出去；LFU可通过HashMap＋PriorityQueue实现。</p>
 
       
     </div>
@@ -1024,23 +1179,23 @@
     <div class="e-content article-entry" itemprop="articleBody">
       
         <p>锁机制用于管理对共享资源的并发访问。</p>
-<h2 id="1、锁粒度"><a href="#1、锁粒度" class="headerlink" title="1、锁粒度"></a>1、锁粒度</h2><h3 id="表锁"><a href="#表锁" class="headerlink" title="表锁"></a>表锁</h3><p>表锁是MySQL中最大粒度的锁定机制，会锁定整张表，可以很好的避免死锁，是 MySQL 中最大颗粒度的锁定机制。</p>
-<p>表锁由 MySQL Server 实现，一般在执行 DDL 语句时会对整个表进行加锁，比如说<code>ALTER TABLE</code>等操作。在执行 DML 语句时，也可以通过<code>LOCK TABLES</code>显式指定对某个表进行加锁。</p>
-<h3 id="页锁"><a href="#页锁" class="headerlink" title="页锁"></a>页锁</h3><p>页级锁是 MySQL 中比较独特的一种锁定级别，在其他数据库管理软件中并不常见。</p>
-<p>页级锁的颗粒度介于行级锁与表级锁之间，所以获取锁定所需要的资源开销，以及所能提供的并发处理能力同样也是介于上面二者之间。另外，页级锁和行级锁一样，会发生死锁。</p>
-<p>页级锁主要应用于 BDB 存储引擎。</p>
-<h3 id="行锁"><a href="#行锁" class="headerlink" title="行锁"></a>行锁</h3><p>行级锁的锁定颗粒度在 MySQL 中是最小的，只针对操作的当前行进行加锁，所以行级锁发生锁定资源争用的概率也最小。只有通过索引进行检索的时候才会使用行级锁，否则会使用表级锁。</p>
-<p>InnoDB 默认使用行级锁。</p>
+<h2 id="1、锁粒度"><a href="#1、锁粒度" class="headerlink" title="1、锁粒度"></a>1、锁粒度</h2><ul>
+<li><p><strong>表锁</strong>是MySQL中最大粒度的锁定机制，会锁定整张表，可以很好的避免死锁，是 MySQL 中最大颗粒度的锁定机制。表锁由 MySQL Server 实现，一般在执行 DDL 语句时会对整个表进行加锁，比如说<code>ALTER TABLE</code>等操作。在执行 DML 语句时，也可以通过<code>LOCK TABLES</code>显式指定对某个表进行加锁。</p>
+</li>
+<li><p><strong>页级锁</strong>锁定一页，主要应用于 BDB 存储引擎。</p>
+</li>
+<li><p><strong>行级锁</strong>的锁定颗粒度在 MySQL 中是最小的，只针对操作的当前行进行加锁，所以行级锁发生锁定资源争用的概率也最小。只有通过索引进行检索的时候才会使用行级锁，否则会使用表级锁。InnoDB 默认使用行级锁。</p>
+</li>
+</ul>
 <h2 id="2、行锁详解"><a href="#2、行锁详解" class="headerlink" title="2、行锁详解"></a>2、行锁详解</h2><p>InnoDB默认使用行锁，实现了两种标准的行锁——共享锁与排他锁；</p>
 <p><img src="%E5%85%B1%E4%BA%AB%E9%94%81%E4%B8%8E%E6%8E%92%E4%BB%96%E9%94%81.png" alt="共享锁与排他锁"></p>
 <p>1、除了显式加锁的情况，其他情况下的加锁与解锁都无需人工干预。<br>2、InnoDB所有的行锁算法都是基于索引实现的，锁定的也都是索引或索引区间</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 加锁方式：共享锁</span></span><br><span class="line">SELECT...LOCK <span class="keyword">IN</span> SHARE MODE</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 加锁方式：排它锁</span></span><br><span class="line">SELECT...FOR UPDATE </span><br></pre></td></tr></table></figure>
-
-<h2 id="3、当前读与快照读"><a href="#3、当前读与快照读" class="headerlink" title="3、当前读与快照读"></a>3、当前读与快照读</h2><p><strong>1、当前读：</strong>即加锁读，读取记录的最新版本，会加锁保证其他并发事务不能修改当前记录，直至获取锁的事务释放锁；</p>
-<p>使用当前读的操作主要包括：显式加锁的读操作与插入/更新/删除等写操作，如下所示：</p>
-<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ? <span class="keyword">lock</span> <span class="keyword">in</span> <span class="keyword">share mode</span>;</span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ? <span class="keyword">for</span> <span class="keyword">update</span>;</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> <span class="keyword">table</span> <span class="keyword">values</span> (…);</span><br><span class="line"><span class="keyword">update</span> <span class="keyword">table</span> <span class="keyword">set</span> ? <span class="keyword">where</span> ?;</span><br><span class="line"><span class="keyword">delete</span> <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ?;</span><br></pre></td></tr></table></figure>
-
-<p>注：当Update SQL被发给MySQL后，MySQL Server会根据where条件，读取第一条满足条件的记录，然后InnoDB引擎会将第一条记录返回，并加锁，待MySQL Server收到这条加锁的记录之后，会再发起一个Update请求，更新这条记录。一条记录操作完成，再读取下一条记录，直至没有满足条件的记录为止。因此，Update操作内部，就包含了当前读。同理，Delete操作也一样。Insert操作会稍微有些不同，简单来说，就是Insert操作可能会触发Unique Key的冲突检查，也会进行一个当前读。</p>
+<p><strong>lock in share mode</strong>与<strong>for update</strong>的区别：</p>
+<ol>
+<li>lock in share mode 是共享锁；for update 是排他锁</li>
+<li>没有覆盖索引时，两种锁都需要即锁辅助索引又锁主键索引；当有覆盖索引时，lock in share mode 只锁辅助索引，而 for update 即锁辅助索引又锁主键索引。</li>
+</ol>
+<h2 id="3、当前读与快照读"><a href="#3、当前读与快照读" class="headerlink" title="3、当前读与快照读"></a>3、当前读与快照读</h2><p><strong>1、当前读：</strong>即加锁读，读取记录的最新版本，会加锁保证其他并发事务不能修改当前记录，直至获取锁的事务释放锁；使用当前读的操作主要包括：显式加锁的读操作与插入/更新/删除等写操作。</p>
 <p><strong>2、快照读</strong>：即不加锁读，读取记录的快照版本而非最新版本，通过MVCC实现；</p>
 <p>InnoDB默认的RR事务隔离级别下，不显式加『lock in share mode』与『for update』的『select』操作都属于快照读，保证事务执行过程中只有第一次读之前提交的修改和自己的修改可见，其他的均不可见；</p>
 <h2 id="4、MVCC"><a href="#4、MVCC" class="headerlink" title="4、MVCC"></a>4、MVCC</h2><p>MVCC『多版本并发控制』，与之对应的是『基于锁的并发控制』；</p>
@@ -1048,16 +1203,11 @@
 <p><img src="mvcc.png" alt="mvcc"></p>
 <h2 id="5、锁算法"><a href="#5、锁算法" class="headerlink" title="5、锁算法"></a>5、锁算法</h2><p>InnoDB主要实现了三种行锁算法：</p>
 <p><img src="%E4%B8%89%E7%A7%8D%E8%A1%8C%E9%94%81%E7%AE%97%E6%B3%95.png" alt="三种行锁算法"></p>
-<p><strong>记录锁、间隙锁、临键锁都是排它锁</strong></p>
 <h3 id="5-1、记录锁"><a href="#5-1、记录锁" class="headerlink" title="5.1、记录锁"></a>5.1、记录锁</h3><p><code>记录锁(Record Locks)</code>也称为行锁，顾名思义，表示对某一行记录加锁。</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> test <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">1</span> <span class="keyword">FOR</span> UPDATE;</span><br></pre></td></tr></table></figure>
-
-<p>它会在 id=1 的记录上加上记录锁，以阻止其他事务插入，更新，删除 id=1 这一行。</p>
-<p>记录锁总是锁定索引记录（SELECT和UPDATE都会加锁），即使表没有定义索引。对于这种情况， InnoDB创建一个隐藏的聚集索引并使用该索引进行记录锁定。</p>
-<h3 id="5-2、间隙锁"><a href="#5-2、间隙锁" class="headerlink" title="5.2、间隙锁"></a>5.2、间隙锁</h3><p>Gap锁，锁定的是索引记录之间的间隙，是防止幻读的关键；并发事务插入新数据前会先检测间隙中是否已被加锁，防止幻读的出现；</p>
+<h3 id="5-2、间隙锁"><a href="#5-2、间隙锁" class="headerlink" title="5.2、间隙锁"></a>5.2、间隙锁</h3><p>Gap锁，锁定的是索引记录之间的间隙，是防止幻读的关键；并发事务插入新数据前会先检测间隙中是否已被加锁，防止幻读的出现；间隙锁与间隙锁不互斥。</p>
 <p>注意！间隙锁锁住的是一个区间，而不仅仅是这个区间中目前仅存在的数据行。</p>
 <ul>
-<li><code>插入意向锁(Insert Intention Locks)</code>是在插入一条记录行前，由 <code>INSERT</code> 操作产生的一种<code>间隙锁</code>。该锁用以表示插入意向，当多个事务在同一区间插入位置不同的多条数据时，事务之间不需要互相等待。假设存在两条值分别为 4 和 7 的记录，两个不同的事务分别试图插入值为 5 和 6 的两条记录，每个事务在获取插入行上独占的（排他）锁前，都会获取（4，7）之间的间隙锁，但是因为数据行之间并不冲突，所以两个事务之间并不会产生冲突（阻塞等待）。</li>
+<li><code>插入意向锁(Insert Intention Locks)</code>是在插入一条记录行前，由 <code>INSERT</code> 操作产生的一种<code>间隙锁</code>。该锁用以表示插入意向，当多个事务在同一区间插入位置不同的多条数据时，事务之间不需要互相等待。假设存在两条值分别为 4 和 7 的记录，两个不同的事务分别试图插入值为 5 和 6 的两条记录，每个事务在获取插入行上排他锁前，都会获取（4，7）之间的间隙锁，但是因为数据行之间并不冲突，所以两个事务之间并不会产生冲突（阻塞等待）。</li>
 </ul>
 <h3 id="5-3、临键锁"><a href="#5-3、临键锁" class="headerlink" title="5.3、临键锁"></a>5.3、临键锁</h3><p><strong>临键锁</strong>，是<strong>记录锁与间隙锁的组合</strong>，它的封锁范围，既包含索引记录，又包含索引区间。通过临键锁可以解决幻读的问题。</p>
 <h2 id="6、表级锁"><a href="#6、表级锁" class="headerlink" title="6、表级锁"></a>6、表级锁</h2><h3 id="6-1、意向锁"><a href="#6-1、意向锁" class="headerlink" title="6.1、意向锁"></a>6.1、意向锁</h3><p><code>意向锁（Intention Locks）</code>是<strong>表级锁</strong>，指示事务稍后需要对表中的行使用哪种类型的锁（共享锁或独占锁）。</p>
@@ -1072,6 +1222,14 @@
 <li>在事务获得表中行的排他锁之前，它必须首先获得<code>IX</code> 表的锁。</li>
 </ul>
 <h3 id="6-2、自增锁"><a href="#6-2、自增锁" class="headerlink" title="6.2、自增锁"></a>6.2、自增锁</h3><p><code>自增锁(auto-inc Locks)</code>是一种特殊的表级锁，主要用于事务中插入自增字段，也就是我们最常用的自增主键id。在最简单的情况下，如果一个事务正在向表中插入值，则任何其他事务都必须等待自己插入到该表中，以便第一个事务插入的行接收连续的主键值。</p>
+<h2 id="7、加锁规则"><a href="#7、加锁规则" class="headerlink" title="7、加锁规则"></a>7、加锁规则</h2><ul>
+<li>原则1：加锁的基本单位是next-key lock。next-key lock是前开后闭区间。</li>
+<li>原则2：查找过程中访问到的对象才会加锁。</li>
+<li>原则3：索引上的等值查询，给唯一索引加锁的时候，next-key lock退化为行锁。</li>
+<li>原则4：索引上的等值查询，向右遍历时且最后一个值不满足等值条件的时候，next-key lock退化为间隙锁。</li>
+<li>原则5：唯一索引上的范围查询会访问到不满足条件的第一个值为止。</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/WSYW126/article/details/105324239">具体案例</a></p>
 
       
     </div>
@@ -1137,114 +1295,6 @@
 
 
   
-    <article id="post-数据库/MySQL/MySQL索引" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E7%B4%A2%E5%BC%95/" class="article-date">
-  <time class="dt-published" datetime="2022-03-27T09:39:41.000Z" itemprop="datePublished">2022-03-27</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E7%B4%A2%E5%BC%95/">MySQL索引</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>索引对于InnoDB（对索引支持行级锁）非常重要，因为它可以让查询锁更少的元组。</p>
-<h2 id="1、索引类型"><a href="#1、索引类型" class="headerlink" title="1、索引类型"></a>1、索引类型</h2><ul>
-<li>普通索引：最基本的索引，可以在任意一列或多列的组合上加普通索引。允许存在重复值以及空值。</li>
-<li>唯一索引：与普通索引不同的是，索引列的值必须唯一，但允许有空值。如果是组合索引，则列值的组合必须唯一。</li>
-<li>主键索引：与唯一索引不同的是，不允许有空值。</li>
-<li>组合索引：组合索引与单列索引相对应，只包含一个字段的索引叫做单列索引，包含两个或以上字段的索引叫做复合索引（或组合索引）。上述三种索引既可以是单列索引也可以是组合索引。</li>
-</ul>
-<h2 id="2、聚集索引"><a href="#2、聚集索引" class="headerlink" title="2、聚集索引"></a>2、聚集索引</h2><p><strong>聚簇索引</strong>的叶子节点就是数据节点，而<strong>非聚簇索引</strong>的叶子节点仍然是索引节点，只不过有指向对应数据块的指针。</p>
-<p>怎么理解呢？</p>
-<p><strong>聚簇索引的顺序，就是数据在硬盘上的物理顺序。一般情况下主键就是默认的聚簇索引。</strong></p>
-<p>一张表<strong>只允许存在一个</strong>聚簇索引，因为真实数据的物理顺序只能有一种。如果一张表上还没有聚簇索引，为它新创建聚簇索引时，就需要对已有数据重新进行排序，所以对表进行修改速度较慢是聚簇索引的缺点，对于<strong>经常更新的列不宜建立聚簇索引</strong>。</p>
-<p>聚簇索引性能最好，因为一旦具有第一个索引值的记录被找到，具有连续索引值的记录也一定物理地紧跟其后。一张表只能有一个聚簇索引，所以非常珍贵，必须慎重设置，一般要根据这个表最常用的SQL查询方式选择某个（或多个）字段作为聚簇索引（<strong>或复合聚簇索引</strong>）。</p>
-<ol>
-<li>InnoDB对主键建立聚簇索引。</li>
-<li>如果你不指定主键，InnoDB会用一个具有唯一且非空值的索引来代替。</li>
-<li>如果不存在这样的索引，InnoDB会定义一个隐藏的主键，然后对其建立聚簇索引。</li>
-</ol>
-<h2 id="3、索引的最左匹配"><a href="#3、索引的最左匹配" class="headerlink" title="3、索引的最左匹配"></a>3、索引的最左匹配</h2><p>最左前缀匹配原则，非常重要的原则，建立一个索引，对于索引中的字段，mysql会一直向右匹配直到遇到范围查询(&gt;、&lt;、between、like)就停止匹配，比如a = 1 and b = 2 and c &gt; 3 and d = 4 如果建立(a,b,c,d)顺序的索引，d是用不到索引的，如果建立(a,b,d,c)的索引则都可以用到，a,b,d的顺序可以任意调整。<br>=和in可以乱序，比如a = 1 and b = 2 and c = 3 建立(a,b,c)索引可以任意顺序，mysql的查询优化器会帮你优化成索引可以识别的形式。</p>
-<p>mysql创建复合索引的规则是首先会对复合索引的最左边的，也就是第一个name字段的数据进行排序，在第一个字段的排序基础上，然后再对后面第二个的cid字段进行排序。其实就相当于实现了类似 order by name cid这样一种排序规则。<br>所以：第一个name字段是绝对有序的，而第二字段就是无序的了。所以通常情况下，直接使用第二个cid字段进行条件判断是用不到索引的。</p>
-<p>在第一个值等值匹配的前提下，第二个值是有序的，因此mysql索引规则中要求复合索引要想使用第二个索引，必须先使用第一个索引的原因。（而且第一个索引必须是<strong>等值匹配</strong>）。</p>
-<p><code>order by</code>也会用到索引，但前提是 <code>where</code>子句必须用到索引；如果 <code>where</code>子句的字段没有索引，即使<code>order by</code>的字段有索引也不会用到。<code>where</code>和<code>order by</code>使用的索引可以是同一个组合索引，同样符合最左匹配原则，比如 <code>select * from tb_user where name = &quot;lu&quot; and age &lt; 21 order by score</code>，如果有 <code>(name, age, score)</code> 的组合索引，由于 <code>age</code> 使用了范围搜索，<code>score</code> 索引就会失效。</p>
-<h2 id="4、InnoDB-的-B-Tree"><a href="#4、InnoDB-的-B-Tree" class="headerlink" title="4、InnoDB 的 B+Tree"></a>4、InnoDB 的 B+Tree</h2><p>B-Tree 和 B+Tree 的区别在于：</p>
-<ol>
-<li>B-Tree 中，所有节点都会带有指向具体记录的指针；B+Tree 中只有叶子结点会带有指向具体记录的指针。</li>
-<li>B-Tree 中不同的叶子之间没有连在一起；B+Tree 中所有的叶子结点通过指针连接在一起。</li>
-<li>B-Tree 中可能在非叶子结点就拿到了指向具体记录的指针，搜索效率不稳定；B+Tree 中，一定要到叶子结点中才可以获取到具体记录的指针，搜索效率稳定。</li>
-</ol>
-<p>基于上面分析，可以得出如下结论：</p>
-<ol>
-<li>B+Tree 中，由于非叶子结点不带有指向具体记录的指针，所以非叶子结点中可以存储更多的索引项，这样就可以有效降低树的高度，进而提高搜索的效率。</li>
-<li>B+Tree 中，叶子结点通过指针连接在一起，这样如果有范围扫描的需求，那么实现起来将非常容易，而对于 B-Tree，范围扫描则需要不停的在叶子结点和非叶子结点之间移动。</li>
-</ol>
-<figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">计算机在存储数据的时候，最小存储单元是扇区，一个扇区的大小是 512 字节，而文件系统（例如 XFS/EXT4）最小单元是块，一个块的大小是 4KB。InnoDB 引擎存储数据的时候，是以页为单位的，每个数据页的大小默认是 16KB，即四个块。</span><br></pre></td></tr></table></figure>
-
-<p><strong>非叶子结点存储的是主键值+指针</strong></p>
-<p>由于一页存储一个非叶子节点，主键值为 4 或 8 字节，InnoDB 的指针为 6 字节，因此，一个非叶子节点约可以指向 1000+ 个页。若按一条数据 1 KB 计算，则一个三层的b+树约可以存储 2100 万条数据。</p>
-<p>在 InnoDB 存储引擎中，B+Tree 的高度一般为 2-4 层，这就可以满足千万级的数据的存储，查找数据的时候，一次页的查找代表一次 IO，那我们通过主键索引查询的时候，其实最多只需要 2-4 次 IO 操作就可以了。</p>
-<h2 id="5、回表"><a href="#5、回表" class="headerlink" title="5、回表"></a>5、回表</h2><h3 id="5-1、回表"><a href="#5-1、回表" class="headerlink" title="5.1、回表"></a>5.1、回表</h3><ol>
-<li>如果是通过主键索引来查询数据，只需要搜索主键索引的 B+Tree 就可以找到数据。</li>
-<li>如果是通过非主键索引来查询数据，例如 <code>select * from user where username=&#39;javaboy&#39;</code>，那么此时需要先搜索 username 这一列索引的 B+Tree，搜索完成后得到主键的值，然后再去搜索主键索引的 B+Tree，就可以获取到一行完整的数据。</li>
-</ol>
-<p>对于第二种查询方式而言，一共搜索了两棵 B+Tree，<strong>第一次搜索 B+Tree 拿到主键值后再去搜索主键索引的 B+Tree，这个过程就是所谓的回表。</strong></p>
-<h3 id="5-2、覆盖索引"><a href="#5-2、覆盖索引" class="headerlink" title="5.2、覆盖索引"></a>5.2、覆盖索引</h3><p><strong>但不使用主键索引不一定需要回表</strong>：覆盖索引</p>
-<p>如果辅助索引上已经存在我们需要的数据,那么引擎就不会去主键上去搜索数据了。 —- 这个就是所谓的”<strong>覆盖索引</strong>“</p>
-<p>普通索引、唯一索引、组合索引都可以是覆盖索引，只要满足所查询的字段全部都在辅助索引就行，这样就无需回表。</p>
-<h3 id="5-3、索引下推"><a href="#5-3、索引下推" class="headerlink" title="5.3、索引下推"></a>5.3、索引下推</h3><h2 id="6、为什么数据库中建议使用自增主键"><a href="#6、为什么数据库中建议使用自增主键" class="headerlink" title="6、为什么数据库中建议使用自增主键"></a>6、为什么数据库中建议使用自增主键</h2><ol>
-<li>自增主键往往占用空间比较小，int 占 4 个字节，bigint 占 8 个字节。由于辅助索引的叶子节点存储的就是主键，所以如果主键占用空间小，则辅助索引的叶子节点占用的空间就小；同时主键索引的非叶子节点存储的就是主键值，如果主键占用空间小那么一个非叶子节点能指向的子节点更多，从而降低 B+Tree 的高度，提高搜索效率。</li>
-<li>自增主键插入的时候比较快，直接插入即可，即使最右侧的节点分裂也不需要挪动其他记录；而其他非自增主键插入的时候，可能要插入到两个已有的数据中间，就有可能导致节点分裂等问题，插入效率低，需要挪动其他记录。</li>
-</ol>
-<h2 id="7、索引创建"><a href="#7、索引创建" class="headerlink" title="7、索引创建"></a>7、索引创建</h2><h3 id="7-1、创建索引"><a href="#7-1、创建索引" class="headerlink" title="7.1、创建索引"></a>7.1、创建索引</h3><p><strong>建表时创建</strong>：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE 表名(</span><br><span class="line">字段名 数据类型 [完整性约束条件],</span><br><span class="line">       ……，</span><br><span class="line">[UNIQUE | PRIMARY] INDEX | KEY</span><br><span class="line">[索引名](字段名1 [(长度)] [ASC | DESC]) [USING 索引方法]</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
-
-<p>UNIQUE：唯一索引；PRIMARY：主键索引；什么都不加就是普通索引。INDEX和KEY作用一样，可以相互替换</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE projectfile (</span><br><span class="line">	id INT AUTO_INCREMENT COMMENT &#39;附件id&#39;,</span><br><span class="line">	projectid INT COMMENT &#39;项目id;此列受project表中的id列约束&#39;,</span><br><span class="line">	filename VARCHAR (512) COMMENT &#39;附件名&#39;,</span><br><span class="line">	filesize BIGINT COMMENT &#39;附件大小，单位Byte&#39;,</span><br><span class="line">	-- 主键索引</span><br><span class="line">    PRIMARY KEY (id),</span><br><span class="line">	-- 唯一索引</span><br><span class="line">	UNIQUE KEY (projectid),</span><br><span class="line">	-- 普通索引</span><br><span class="line">	KEY (filename)</span><br><span class="line">    -- 组合索引</span><br><span class="line">	KEY (filename, filesize)</span><br><span class="line">) ENGINE &#x3D; INNODB DEFAULT CHARSET &#x3D; utf8 COMMENT &#39;项目附件表&#39;;</span><br></pre></td></tr></table></figure>
-
-<p><strong>建表后创建：</strong></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE 表名 ADD [UNIQUE | PRIMARY]  INDEX | KEY  </span><br><span class="line">[索引名] (字段名1 [(长度)] [ASC | DESC]) [USING 索引方法]；</span><br></pre></td></tr></table></figure>
-
-<p>字段名后的长度用于创建前缀索引，只能用于字符串类型，上方一样。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE projectfile ADD KEY (filename, filesize);</span><br></pre></td></tr></table></figure>
-
-<h3 id="7-2、查看已创建的索引"><a href="#7-2、查看已创建的索引" class="headerlink" title="7.2、查看已创建的索引"></a>7.2、查看已创建的索引</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show index from 表名;</span><br></pre></td></tr></table></figure>
-
-<h3 id="7-3、删除索引"><a href="#7-3、删除索引" class="headerlink" title="7.3、删除索引"></a>7.3、删除索引</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE 表名 DROP INDEX 索引名</span><br></pre></td></tr></table></figure>
-
-<h3 id="7-4、查看SQL语句对索引的使用情况"><a href="#7-4、查看SQL语句对索引的使用情况" class="headerlink" title="7.4、查看SQL语句对索引的使用情况"></a>7.4、查看SQL语句对索引的使用情况</h3><p>在select语句前加上EXPLAIN即可。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EXPLAIN SELECT * FROM &#96;projectfile&#96; pf WHERE pf.filename &#x3D; &#39;Jane&#39;;</span><br></pre></td></tr></table></figure>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E7%B4%A2%E5%BC%95/" data-id="cl3ir9vvf0022kkaqagb9b06f" data-title="MySQL索引" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -1275,7 +1325,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">七月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
     </div>
   </div>
 
@@ -1288,7 +1338,11 @@
       <ul>
         
           <li>
-            <a href="/2022/06/21/%E9%A1%B9%E7%9B%AE/%E7%A7%92%E6%9D%80%E9%A1%B9%E7%9B%AE/">秒杀项目</a>
+            <a href="/2022/07/09/Java/Netty/">Netty</a>
+          </li>
+        
+          <li>
+            <a href="/2022/06/21/%E9%A1%B9%E7%9B%AE/%E6%A0%A1%E6%8B%9B%E5%87%86%E5%A4%87%E9%A1%B9%E7%9B%AE/">搁置项目</a>
           </li>
         
           <li>
@@ -1301,10 +1355,6 @@
         
           <li>
             <a href="/2022/06/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/HTTP/">HTTP</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/Nginx/Nginx%E5%9F%BA%E7%A1%80/">Nginx基础</a>
           </li>
         
       </ul>

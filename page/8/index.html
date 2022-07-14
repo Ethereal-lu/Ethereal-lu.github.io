@@ -73,6 +73,277 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-数据库/MySQL/MySQL笔记" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/05/22/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E7%AC%94%E8%AE%B0/" class="article-date">
+  <time class="dt-published" datetime="2021-05-22T09:39:41.000Z" itemprop="datePublished">2021-05-22</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2021/05/22/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E7%AC%94%E8%AE%B0/">MySQL概述</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="基本命令"><a href="#基本命令" class="headerlink" title="基本命令"></a>基本命令</h3><ul>
+<li><code>show columns from user</code> == <code>describe user</code> == <code>desc user</code>查询user表的结构</li>
+<li>sql的注释为两个杠 <code>--</code>，多行注释为/*  */</li>
+<li>创建表：<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 表明和字段名用反引号引起来是为了防止与sql的关键字相同，更规范</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> IF <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> `<span class="keyword">user</span>` (   <span class="comment">-- IF NOT EXISTS 为可选</span></span><br><span class="line">  <span class="comment">-- COMMENT 为注释，在表中看不到，但是调出创建表的命令时，可以直观看到字段的含义</span></span><br><span class="line">  `id` <span class="type">int</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span> AUTO_INCREMENT COMMENT <span class="string">&#x27;学号&#x27;</span>,   </span><br><span class="line">  `name` <span class="type">varchar</span>(<span class="number">30</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span> COMMENT <span class="string">&#x27;名字&#x27;</span>,</span><br><span class="line">  `birthday` DATETIME <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span> COMMENT <span class="string">&#x27;出生日期&#x27;</span>, </span><br><span class="line">  `passwd` <span class="type">varchar</span>(<span class="number">30</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span> COMMENT <span class="string">&#x27;密码&#x27;</span>,</span><br><span class="line">  `perms` <span class="type">varchar</span>(<span class="number">100</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">&#x27;normal&#x27;</span> COMMENT <span class="string">&#x27;权限&#x27;</span>,</span><br><span class="line">  <span class="keyword">PRIMARY</span> KEY (`id`)</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB <span class="keyword">DEFAULT</span> CHARSET<span class="operator">=</span>utf8  <span class="comment">-- 显示声明引擎和默认字符集（可在my.ini中修改）</span></span><br><span class="line"><span class="comment">-- 真实开发中还需要有，version（乐观锁）、deleted（逻辑删除）、gmt_create（创建时间）、</span></span><br><span class="line">					<span class="comment">-- gmt_modified（修改时间）</span></span><br></pre></td></tr></table></figure></li>
+<li>修改表</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> teacher RENAME <span class="keyword">AS</span> teacher1    <span class="comment">-- 修改表名</span></span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> teacher <span class="keyword">ADD</span> age <span class="type">INT</span>           <span class="comment">-- 添加字段</span></span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> teacher MODIFY age <span class="type">VARCHAR</span>(<span class="number">11</span>)    <span class="comment">-- 修改字段的约束</span></span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> teacher CHANGE 旧名 新名 <span class="type">INT</span>   <span class="comment">-- 修改字段名（可以同时修改约束）</span></span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> teacher <span class="keyword">DROP</span> age              <span class="comment">-- 删除字段</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>删除表</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> IF <span class="keyword">EXISTS</span> teacher              <span class="comment">-- 加上判断的删除</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>查看相关历史命令语句<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SHOW</span> <span class="keyword">CREATE</span> DATABASE mybatis <span class="comment">-- 查看创建数据库的语句</span></span><br><span class="line"><span class="keyword">SHOW</span> <span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `<span class="keyword">user</span>`     <span class="comment">-- 查看创建数据表的语句</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<h3 id="数据表类型（引擎）"><a href="#数据表类型（引擎）" class="headerlink" title="数据表类型（引擎）"></a>数据表类型（引擎）</h3><ul>
+<li>MYISAM   早期使用          InnoDB 默认使用</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>MYISAM</th>
+<th>InnoDB</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>事务支持</td>
+<td>不支持</td>
+<td>支持</td>
+</tr>
+<tr>
+<td>数据行锁定</td>
+<td>不支持</td>
+<td>支持</td>
+</tr>
+<tr>
+<td>外键约束</td>
+<td>不支持</td>
+<td>支持</td>
+</tr>
+<tr>
+<td>全文检索</td>
+<td>支持</td>
+<td>现在支持</td>
+</tr>
+<tr>
+<td>表空间大小</td>
+<td>较小</td>
+<td>较大，约两倍</td>
+</tr>
+</tbody></table>
+<ul>
+<li>主要区别<ul>
+<li>MYISAM   节约空间，速度较快</li>
+<li>InnoDB     安全性高，支持事务，多表多用户操作</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="数据管理"><a href="#数据管理" class="headerlink" title="数据管理"></a>数据管理</h3><ul>
+<li><strong>DDL</strong>，Data Definition Language，数据库定义语言<br>用于定义和管理数据库所有对象的语言，包括：CREATE，ALERT，DROP，TRUNCATE</li>
+<li><strong>DML</strong>，Data Manipulation Language，数据库操作语言<br>SQL中处理数据等操作，包括：SELECT，INSERT，UPDATE，DELETE，CALL，EXPLAIN PLAN，LOCK</li>
+<li><strong>DCL</strong>，Data Control Language，数据库控制语言<br>用来授予或回收访问数据库和某种特权并控制数据库操纵事务发生的时间及效果，对数据库实行监控，包括：COMMIT，SAVEPOINT，ROLLBACK，SET TRANSACTION</li>
+</ul>
+<hr>
+<h3 id="delete和truncate的区别"><a href="#delete和truncate的区别" class="headerlink" title="delete和truncate的区别"></a>delete和truncate的区别</h3><p><code>TRUNCATE student</code> == <code>DELETE FROM student</code> 清空表内容</p>
+<ul>
+<li>DELETE 会一行一行地删除，产生大量事务日志。</li>
+<li>TRUNCATE 速度快；TRUNCATE之后的自增字段从头开始计数，而DELETE的仍保留原来的最大数值 </li>
+<li>truncate和delete只删除数据，而drop则删除整个表（结构和数据）。</li>
+</ul>
+<hr>
+<h3 id="查询数据"><a href="#查询数据" class="headerlink" title="查询数据"></a>查询数据</h3><ul>
+<li>SELECT完整语法（注意顺序，不能错）</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> [<span class="keyword">ALL</span><span class="operator">|</span><span class="keyword">DISTINCT</span>]</span><br><span class="line">&#123;* | talbe.* | [table.]field1[AS alias1][,[table.]field2[AS alias2][,…]]&#125;</span><br><span class="line"><span class="keyword">FROM</span> table_name [<span class="keyword">as</span> table_alias]</span><br><span class="line">	[<span class="keyword">left</span> <span class="operator">|</span> <span class="keyword">right</span> <span class="operator">|</span> <span class="keyword">inner</span> <span class="keyword">join</span> table_name2]</span><br><span class="line">    [<span class="keyword">WHERE</span>…]</span><br><span class="line">    [<span class="keyword">GROUP</span> <span class="keyword">BY</span>…[<span class="keyword">HAVING</span>…]]</span><br><span class="line">    [<span class="keyword">ORDER</span> <span class="keyword">BY</span>…[<span class="keyword">ASC</span><span class="operator">|</span><span class="keyword">DESC</span>]]</span><br><span class="line"><span class="comment">-- 用中括号([])括起来的部分表示是可选的，用大括号(&#123;&#125;)括起来的部分是表示必须从中选择其中的一个。</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>起别名：字段名和表名都可以起别名</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> `id` <span class="keyword">AS</span> 学号, `name` <span class="keyword">AS</span> 名字 <span class="keyword">FROM</span> student <span class="keyword">AS</span> 学生表</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>函数  concat(a, b) 拼接。如下语句的查询结果为“ 姓名：驯鹿 ”</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> CONCAT(<span class="string">&#x27;姓名：&#x27;</span>, name) <span class="keyword">FROM</span> student</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>去重：对查询的结果进行去重</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">DISTINCT</span> `id` <span class="keyword">FROM</span> student    <span class="comment">-- 若表中id字段有多个相同值，则只显示一个</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>其他操作：SELECT后可以跟文本值、字段、null、函数、计算表达式、系统变量……</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> VERSION()                     <span class="comment">-- 查询SQL版本</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="number">2</span> <span class="operator">*</span> <span class="number">3</span> <span class="operator">+</span> <span class="number">6</span> <span class="keyword">AS</span> 计算结果          <span class="comment">-- 计算</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>逻辑运算符：与或非</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 成绩在95到100之间 (与)</span></span><br><span class="line"><span class="keyword">SELECT</span> id, `name`, grade <span class="keyword">FROM</span> student <span class="keyword">WHERE</span> grade <span class="keyword">BETWEEN</span> <span class="number">95</span> <span class="keyword">AND</span> <span class="number">100</span></span><br><span class="line"><span class="comment">-- 成绩大于95或小于60</span></span><br><span class="line"><span class="keyword">SELECT</span> id, `name`, grade <span class="keyword">FROM</span> student <span class="keyword">WHERE</span> grade <span class="operator">&gt;=</span> <span class="number">95</span> <span class="keyword">OR</span> grade <span class="operator">&lt;=</span> <span class="number">60</span></span><br><span class="line"><span class="comment">-- 学号不等于10  （非）</span></span><br><span class="line"><span class="keyword">SELECT</span> id, `name`, grade <span class="keyword">FROM</span> student <span class="keyword">WHERE</span> <span class="keyword">NOT</span> id <span class="operator">=</span> <span class="number">10</span>   <span class="comment">-- 注意：相等只有一个等号</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>模糊查询：like<ul>
+<li>模糊查询是利用“_”表示单个字符和“%”表示任意个字符进行匹配的。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> 字段 <span class="keyword">FROM</span> 表 <span class="keyword">WHERE</span> 某字段 <span class="keyword">Like</span> 条件      <span class="comment">-- 模糊查询一般格式</span></span><br><span class="line"><span class="comment">-- 1、% ：表示任意0个或多个字符。可匹配任意类型和长度的字符，ASCII下若是中文，请使用两个百分号（%%）表示。</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> student <span class="keyword">WHERE</span> name <span class="keyword">LIKE</span> <span class="string">&#x27;%三%&#x27;</span></span><br><span class="line"><span class="comment">-- 2、_ ： 表示任意单个字符。</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> student <span class="keyword">WHERE</span> name <span class="keyword">LIKE</span> <span class="string">&#x27;_三_&#x27;</span></span><br><span class="line"><span class="comment">-- 3、[ ] ：表示括号内所列字符中的一个（类似正则表达式）。</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> student <span class="keyword">WHERE</span> name <span class="keyword">LIKE</span> <span class="string">&#x27;[张李王]三&#x27;</span></span><br><span class="line"><span class="comment">-- 4、[^ ] ：表示不在括号所列之内的单个字符。</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> student <span class="keyword">WHERE</span> name <span class="keyword">LIKE</span> <span class="string">&#x27;[^张李王]三&#x27;</span></span><br><span class="line"><span class="comment">-- 5、查询内容包含通配符时，通配符前用\转义</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>类似模糊查询：in、is null（为空）、is not null（不为空）、betweent and（在…之间）<ul>
+<li>in类似于上方模糊查询第三条</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> student <span class="keyword">WHERE</span> age <span class="keyword">IN</span> (<span class="number">18</span>, <span class="number">19</span>, <span class="number">20</span>)   <span class="comment">-- 年龄为18或19或20</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>联表查询</strong>（从多张表中查数据）<ul>
+<li>数据库在通过连接两张或多张表来返回记录时，都会生成一张中间的临时表，然后再将这张临时表返回给用户。</li>
+<li>on和where的区别：<ul>
+<li><strong>on</strong> 条件是在<strong>生成</strong>临时表<strong>时</strong>使用的条件。不满足on条件的元组的属性值被置为null，但不会删除该元组</li>
+<li><strong>where</strong> 条件是在临时表<strong>生成后</strong>，再对临时表进行过滤的条件。不满足where条件的元组直接删除</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img src="%E4%B8%83%E7%A7%8Djoin%E7%90%86%E8%AE%BA.png" alt="七种join理论"></p>
+<ul>
+<li><p>七种join理论</p>
+<ul>
+<li>内连接：两表的交集</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> tab1 <span class="keyword">INNER</span> <span class="keyword">JOIN</span> tab2 <span class="keyword">WHERE</span> tab1.size <span class="operator">=</span> tab2.size</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>左连接：左独有</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> tab1 <span class="keyword">LEFT</span> <span class="keyword">JOIN</span> tab2 <span class="keyword">ON</span> (tab1.size <span class="operator">=</span> tab2.size) <span class="keyword">WHERE</span> tab2.size <span class="keyword">IS</span> <span class="keyword">NULL</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>右连接：右独有</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> tab1 <span class="keyword">RIGHT</span> <span class="keyword">JOIN</span> tab2 <span class="keyword">ON</span> (tab1.size <span class="operator">=</span> tab2.size) <span class="keyword">WHERE</span> tab1.size <span class="keyword">IS</span> <span class="keyword">NULL</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>左外连接：左都有，右不满足的为null</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> tab1 <span class="keyword">LEFT</span> <span class="keyword">JOIN</span> tab2 <span class="keyword">ON</span> (tab1.size <span class="operator">=</span> tab2.size)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>右外连接：右都有，左不满足的为null</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> tab1 <span class="keyword">RIGHT</span> <span class="keyword">JOIN</span> tab2 <span class="keyword">ON</span> (tab1.size <span class="operator">=</span> tab2.size)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>全外连接：并集</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> tab1 <span class="keyword">LEFT</span> <span class="keyword">JOIN</span> tab2 <span class="keyword">ON</span> (tab1.size <span class="operator">=</span> tab2.size)</span><br><span class="line"><span class="keyword">UNION</span> </span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> tab1 <span class="keyword">RIGHT</span> <span class="keyword">JOIN</span> tab2 <span class="keyword">ON</span> (tab1.size <span class="operator">=</span> tab2.size)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>两表独有的数据集：左连接和右连接的并</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> tab1 <span class="keyword">LEFT</span> <span class="keyword">JOIN</span> tab2 <span class="keyword">ON</span> (tab1.size <span class="operator">=</span> tab2.size) <span class="keyword">WHERE</span> tab2.size <span class="keyword">IS</span> <span class="keyword">NULL</span></span><br><span class="line"><span class="keyword">UNION</span> </span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> `tab1` <span class="keyword">RIGHT</span> <span class="keyword">JOIN</span> `tab2` <span class="keyword">ON</span> (tab1.size <span class="operator">=</span> tab2.size) <span class="keyword">WHERE</span> tab1.size <span class="keyword">IS</span> <span class="keyword">NULL</span></span><br></pre></td></tr></table></figure></li>
+<li><p>分页和排序</p>
+<ul>
+<li>排序：ASC升序、DESC降序</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> student <span class="keyword">ORDER</span> <span class="keyword">BY</span> grade <span class="keyword">ASC</span>     <span class="comment">-- 升序（默认）</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> student <span class="keyword">ORDER</span> <span class="keyword">BY</span> grade <span class="keyword">ASC</span>     <span class="comment">-- 降序</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>分页：语法<code>select * from user limit 起始项， 页大小</code></li>
+</ul>
+</li>
+<li><p>嵌套查询（子查询）</p>
+</li>
+</ul>
+<hr>
+<h3 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h3><ul>
+<li><p>常用函数（许多与Java相同，用到时查）</p>
+</li>
+<li><p><strong>聚合函数</strong>（用的多）</p>
+</li>
+<li><p>加密函数（如AES、MD5、SHA等）</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> `<span class="keyword">user</span>` <span class="keyword">VALUES</span> (<span class="number">1</span>, xunlu, MD5(<span class="number">123456</span>))   <span class="comment">-- 对密码进行MD5加密</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<h3 id="事务"><a href="#事务" class="headerlink" title="事务"></a>事务</h3><ul>
+<li>概念</li>
+<li>ACID特性<ul>
+<li>原子性（Atomicity）原子性是指事务包括的所有操作要么成功，要么全部失败回滚</li>
+<li>一致性（Consistency） 事务执行之前和执行之后都必须处于一致性状态。举例来说，假设用户A和用户B两者的钱加起来一共是1000，那么不管A和B之间如何转账、转几次账，事务结束后两个用户的钱相加起来应该还得是1000，这就是事务的一致性。</li>
+<li>隔离性（Isolation）多个并发事务之间要相互隔离</li>
+<li>持久性（Durability）事务一旦被提交了，对数据库中的数据是永久性的</li>
+</ul>
+</li>
+</ul>
+<h3 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h3><ul>
+<li>分类：<ul>
+<li>普通索引：这是最基本的索引，它没有任何限制。普通索引（由关键字KEY或INDEX定义的索引）的唯一任务是加快对数据的访问速度。因此，应该只为那些最经常出现在查询条件(WHERE column = …)或排序条件(ORDER BY column)中的数据列创建索引。（一张表可以有多个）</li>
+<li>唯一索引：它与前面的普通索引类似，不同的就是：普通索引允许被索引的数据列包含重复的值。而唯一索引列的值必须唯一，但允许有空值。（一张表可以有多个）</li>
+<li>主键索引：它是一种特殊的唯一索引，不允许有空值。一个表只能有一个主键。（一张表只能有一个）</li>
+<li>全文索引：全文索引是一个特殊索引类型，它查找的是文本中的关键词，主要用于全文检索。</li>
+</ul>
+</li>
+<li>索引设置原则<ul>
+<li>索引不是越多越好</li>
+<li>不要对经常变动的数据增加索引</li>
+<li>小数据量的表不需要索引</li>
+<li>索引一般加在常用来查询的字段上</li>
+</ul>
+</li>
+<li>[索引的数据结构](<a target="_blank" rel="noopener" href="http://blog.codinglabs.org/articles/theory-of-mysql-index.html">CodingLabs - MySQL索引背后的数据结构及算法原理</a>)</li>
+</ul>
+<h3 id="权限管理和备份"><a href="#权限管理和备份" class="headerlink" title="权限管理和备份"></a>权限管理和备份</h3><ul>
+<li>用户管理</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> 用户名 IDENTIFIED <span class="keyword">BY</span> <span class="string">&#x27;密码&#x27;</span>        <span class="comment">-- 创建用户</span></span><br><span class="line"><span class="keyword">SET</span> PASSWORD <span class="operator">=</span> PASSWORD(<span class="string">&#x27;new password&#x27;</span>)        <span class="comment">-- 修改当前用户的密码</span></span><br><span class="line"><span class="keyword">SET</span> PASSWORD <span class="keyword">FOR</span> 用户名 <span class="operator">=</span> PASSWORD(<span class="string">&#x27;new password&#x27;</span>)        <span class="comment">-- 修改指定用户的密码</span></span><br><span class="line">RENAME <span class="keyword">USER</span> 旧用户名 <span class="keyword">TO</span> 新用户名               <span class="comment">-- 重命名</span></span><br><span class="line"><span class="keyword">GRANT</span> 权限名 <span class="keyword">ON</span> 表名 <span class="keyword">TO</span> 用户名                 <span class="comment">-- 授权</span></span><br><span class="line"><span class="keyword">SHOW</span> GRANTS <span class="keyword">FOR</span> 用户名						  <span class="comment">-- 查看用户权限</span></span><br><span class="line"><span class="keyword">REVOKE</span> 权限名 <span class="keyword">ON</span> 表名 <span class="keyword">FROM</span> 用户名               <span class="comment">-- 撤销权限</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>备份：备份物理文件、用可视化工具备份、命令行备份（mysqldump命令）</li>
+</ul>
+<h3 id="设计规范"><a href="#设计规范" class="headerlink" title="设计规范"></a>设计规范</h3><p>整数用 bigint(11)，用于做标志的整数用 tinyint(1)，created_time 和 modified_time。</p>
+<p><img src="%E6%95%B0%E6%8D%AE%E8%A1%A8%E8%AE%BE%E8%AE%A1%E6%A0%B7%E4%BE%8B.jpg" alt="数据表设计示例"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2021/05/22/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E7%AC%94%E8%AE%B0/" data-id="cl3ir9vvd001wkkaq6neg3kvn" data-title="MySQL概述" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Java/java笔记" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2021/05/20/Java/java%E7%AC%94%E8%AE%B0/" class="article-date">
@@ -1148,53 +1419,6 @@ jdbc.properties文件如下：其中jdbc.url字段特别容易引发错误<figur
 
 
   
-    <article id="post-小碎片知识/tomcat" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2021/04/20/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/tomcat/" class="article-date">
-  <time class="dt-published" datetime="2021-04-20T09:20:53.000Z" itemprop="datePublished">2021-04-20</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/04/20/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/tomcat/">Tomcat启动一闪而过以及报java.lang.IllegalStateException: 无输出目录以及乱码</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h4 id="黑屏一闪而过"><a href="#黑屏一闪而过" class="headerlink" title="黑屏一闪而过"></a>黑屏一闪而过</h4><p><strong>问题</strong>：环境变量中没有JAVA_HOME变量。<br><strong>解决</strong>：添加该变量，值为jdk的根目录，例如  D:\java\jdk</p>
-<hr>
-<h4 id="报java-lang-IllegalStateException-无输出目录"><a href="#报java-lang-IllegalStateException-无输出目录" class="headerlink" title="报java.lang.IllegalStateException: 无输出目录"></a>报java.lang.IllegalStateException: 无输出目录</h4><p><strong>问题</strong>：Tomcat文件的权限不够，导致不能正常编译。<br><strong>解决</strong>：将Tomcat文件的权限提升为完全控制</p>
-<hr>
-<h4 id="乱码"><a href="#乱码" class="headerlink" title="乱码"></a>乱码</h4><p><strong>问题</strong>：编码格式的问题<br><strong>解决</strong>：将tomcat下的conf\logging.properties中的java.util.logging.ConsoleHandler.encoding的值从UTF-8修改为GBK</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2021/04/20/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/tomcat/" data-id="cl3ir9vut000mkkaq3ef60odo" data-title="Tomcat启动一闪而过以及报java.lang.IllegalStateException: 无输出目录以及乱码" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -1225,7 +1449,7 @@ jdbc.properties文件如下：其中jdbc.url字段特别容易引发错误<figur
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">七月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
     </div>
   </div>
 
@@ -1238,7 +1462,11 @@ jdbc.properties文件如下：其中jdbc.url字段特别容易引发错误<figur
       <ul>
         
           <li>
-            <a href="/2022/06/21/%E9%A1%B9%E7%9B%AE/%E7%A7%92%E6%9D%80%E9%A1%B9%E7%9B%AE/">秒杀项目</a>
+            <a href="/2022/07/09/Java/Netty/">Netty</a>
+          </li>
+        
+          <li>
+            <a href="/2022/06/21/%E9%A1%B9%E7%9B%AE/%E6%A0%A1%E6%8B%9B%E5%87%86%E5%A4%87%E9%A1%B9%E7%9B%AE/">搁置项目</a>
           </li>
         
           <li>
@@ -1251,10 +1479,6 @@ jdbc.properties文件如下：其中jdbc.url字段特别容易引发错误<figur
         
           <li>
             <a href="/2022/06/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/HTTP/">HTTP</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/Nginx/Nginx%E5%9F%BA%E7%A1%80/">Nginx基础</a>
           </li>
         
       </ul>

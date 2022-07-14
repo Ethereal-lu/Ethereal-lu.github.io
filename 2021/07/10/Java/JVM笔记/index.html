@@ -20,7 +20,7 @@
 <meta property="og:image" content="https://ethereal-lu.github.io/2021/07/10/Java/JVM%E7%AC%94%E8%AE%B0/Klass%E6%A8%A1%E5%9E%8B.png">
 <meta property="og:image" content="https://ethereal-lu.github.io/2021/07/10/Java/JVM%E7%AC%94%E8%AE%B0/Tomcat%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8.jpg">
 <meta property="article:published_time" content="2021-07-10T11:42:15.000Z">
-<meta property="article:modified_time" content="2022-06-28T11:49:36.322Z">
+<meta property="article:modified_time" content="2022-07-11T05:45:26.400Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://ethereal-lu.github.io/2021/07/10/Java/JVM%E7%AC%94%E8%AE%B0/%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8.jpg">
@@ -162,9 +162,14 @@
 <h5 id="3-1-2、死里逃生"><a href="#3-1-2、死里逃生" class="headerlink" title="3.1.2、死里逃生"></a>3.1.2、死里逃生</h5><p>在可达性分析算法中判定为不可达的对象离对象真正死亡，至少要经历两次标记过程：如果对象在进行可达性分析后发现没有与GC Roots相连接的引用链，那它将会被第一次标记，随后进行一次筛选，筛选的条件是此对象是否有必要执行finalize()方法。假如对象没有覆盖finalize()方法，或者finalize()方法已经被虚拟机调用过，那么虚拟机将这两种情况都视为“没有必要执行”，此时直接判定死亡。</p>
 <p>如果这个对象被判定为确有必要执行finalize()方法，则该对象可以在该方法中将自己（this）引用到其他对象从而死里逃生，否则被第二次标记，然后被回收。</p>
 <p>不建议使用finalize()方法。</p>
-<h5 id="3-1-3、回收方法区"><a href="#3-1-3、回收方法区" class="headerlink" title="3.1.3、回收方法区"></a>3.1.3、回收方法区</h5><p>方法区垃圾收集的“性价比”比较低。</p>
-<p>方法区的垃圾收集主要回收两部分内容：废弃的常量和不再使用的类型。</p>
-<p>判定一个常量是否“废弃”还是相对简单，而要判定一个类型是否属于“不再被使用的类”的条件比较苛刻。</p>
+<h5 id="3-1-3、回收方法区"><a href="#3-1-3、回收方法区" class="headerlink" title="3.1.3、回收方法区"></a>3.1.3、回收方法区</h5><p>方法区的垃圾回收主要包含  </p>
+<p>  1、废弃的常量，包括：字符串常量、接口方法 和 字段的符号引用。</p>
+<p>  2、不再使用的类，满以下三个要求可以被回收但并非必然。  </p>
+<ul>
+<li>堆中不存在类及其子类的实例对象</li>
+<li>该类的加载器已被回收</li>
+<li>Class 对象未被引用，也无法反射访问</li>
+</ul>
 <h4 id="3-2、垃圾收集算法"><a href="#3-2、垃圾收集算法" class="headerlink" title="3.2、垃圾收集算法"></a>3.2、垃圾收集算法</h4><p>从如何判定对象消亡的角度出发，垃圾收集算法可以划分为“引用计数式垃圾收集”（Reference Counting GC）和“追踪式垃圾收集”（Tracing GC）两大类。本节介绍的所有算法均属于追踪式垃圾收集的范畴。</p>
 <h5 id="3-2-1、分代收集理论"><a href="#3-2-1、分代收集理论" class="headerlink" title="3.2.1、分代收集理论"></a>3.2.1、分代收集理论</h5><p>当前商业虚拟机的垃圾收集器，大多数都遵循了“分代收集”（Generational Collection）的理论进行设计，它建立在两个分代假说之上：</p>
 <ul>
@@ -305,6 +310,7 @@
 <h5 id="3-5-2、大对象直接进入老年代"><a href="#3-5-2、大对象直接进入老年代" class="headerlink" title="3.5.2、大对象直接进入老年代"></a>3.5.2、大对象直接进入老年代</h5><p>大对象就是指需要大量连续内存空间的Java对象，最典型的大对象便是那种很长的字符串，或者元素数量很庞大的数组。</p>
 <p>在Java虚拟机中要避免大对象的原因是，在分配空间时，它容易导致内存明明还有不少空间时就提前触发垃圾收集，以获取足够的连续空间才能安置好它们；在之后的垃圾收集时，还需在Eden区及两个Survivor区之间来回复制，产生大量的内存复制操作。</p>
 <h5 id="3-5-3、长期存活的对象将进入老年代"><a href="#3-5-3、长期存活的对象将进入老年代" class="headerlink" title="3.5.3、长期存活的对象将进入老年代"></a>3.5.3、长期存活的对象将进入老年代</h5><p>默认熬过 15 次 Minor GC 的对象会进入老年代。</p>
+<p>为什么是15次？ 因为对象头是用 4 个 bit 位存储年龄的。</p>
 <h5 id="3-5-4、动态对象年龄判定"><a href="#3-5-4、动态对象年龄判定" class="headerlink" title="3.5.4、动态对象年龄判定"></a>3.5.4、动态对象年龄判定</h5><p>为了能更好地适应不同程序的内存状况，如果在Survivor空间中相同年龄所有对象大小的总和大于 Survivor空间的一半，年龄大于或等于该年龄的对象就可以直接进入老年代。</p>
 <h5 id="3-5-5、空间分配担保"><a href="#3-5-5、空间分配担保" class="headerlink" title="3.5.5、空间分配担保"></a>3.5.5、空间分配担保</h5><p>在发生Minor GC之前，虚拟机必须先检查老年代最大可用的连续空间是否大于新生代所有对象总空间或者大于历次晋升到老年代对象的平均大小，如果大于，将进行Minor GC（如果回收失败，进行Full GC），否则，进行Full GC。</p>
 <h2 id="虚拟机执行子系统"><a href="#虚拟机执行子系统" class="headerlink" title="虚拟机执行子系统"></a>虚拟机执行子系统</h2><h3 id="4、类文件结构"><a href="#4、类文件结构" class="headerlink" title="4、类文件结构"></a>4、类文件结构</h3><p>随着建立在虚拟机之上的程序语言的发展， 将程序编译成二进制本地机器码已不再是唯一的选择，越来越多的程序语言选择了与操作系统和机器指令集无关的、平台中立的格式作为程序编译后的存储格式。</p>
@@ -464,7 +470,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">七月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
     </div>
   </div>
 
@@ -477,7 +483,11 @@
       <ul>
         
           <li>
-            <a href="/2022/06/21/%E9%A1%B9%E7%9B%AE/%E7%A7%92%E6%9D%80%E9%A1%B9%E7%9B%AE/">秒杀项目</a>
+            <a href="/2022/07/09/Java/Netty/">Netty</a>
+          </li>
+        
+          <li>
+            <a href="/2022/06/21/%E9%A1%B9%E7%9B%AE/%E6%A0%A1%E6%8B%9B%E5%87%86%E5%A4%87%E9%A1%B9%E7%9B%AE/">搁置项目</a>
           </li>
         
           <li>
@@ -490,10 +500,6 @@
         
           <li>
             <a href="/2022/06/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/HTTP/">HTTP</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/Nginx/Nginx%E5%9F%BA%E7%A1%80/">Nginx基础</a>
           </li>
         
       </ul>
