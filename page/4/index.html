@@ -73,6 +73,392 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-数据库/Redis/Redis分布式锁" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/12/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" class="article-date">
+  <time class="dt-published" datetime="2022-04-12T14:39:41.000Z" itemprop="datePublished">2022-04-12</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Redis/">Redis</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/04/12/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">Redis分布式锁</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="1、什么是分布式锁"><a href="#1、什么是分布式锁" class="headerlink" title="1、什么是分布式锁"></a>1、什么是分布式锁</h2><p>分布式锁，顾名思义，就是分布式项目开发中用到的锁，可以用来控制分布式系统之间同步访问共享资源，一般来说，分布式锁需要满足的特性有这么几点：</p>
+<p>1、互斥性：在任何时刻，对于同一条数据，只有一台应用可以获取到分布式锁；</p>
+<p>2、高可用性：在分布式场景下，一小部分服务器宕机不影响正常使用，这种情况就需要将提供分布式锁的服务以集群的方式部署；</p>
+<p>3、防止锁超时：如果客户端没有主动释放锁，服务器会在一段时间之后自动释放锁，防止客户端宕机或者网络不可达时产生死锁；</p>
+<p>4、独占性：加锁解锁必须由同一台服务器进行，也就是锁的持有者才可以释放锁，不能出现你加的锁，别人给你解锁了；</p>
+<h2 id="2、实现分布式锁"><a href="#2、实现分布式锁" class="headerlink" title="2、实现分布式锁"></a>2、实现分布式锁</h2><p><code>Redis</code>分布式锁主要是通过<code>SETNX</code>和<code>SETEX</code>这两个命令实现的。这两个命令都是原子操作。</p>
+<p>核心思想就是每次想要获取锁的时候，就对一个固定的 key 值以 <code>SETNX</code>的方式存放，如果成功，就说明获取锁成功，否则以自旋的方式持续获取锁，直到超时获取失败。</p>
+<p>解锁通过 LUA 代码实现，LUA是原子性的。</p>
+<p>注：下方代码只体现实现锁的思想，不能实际使用。实际开发中使用 Redisson 。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 代码通过 Jedis 编写，已经过时，重要的是实现方式，不是具体代码实现</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedisLock</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 竞争该 key 值</span></span><br><span class="line">    <span class="keyword">private</span> String LOCK_KEY = <span class="string">&quot;redis_lock&quot;</span>;`</span><br><span class="line">    <span class="comment">// key的持有时间，5ms`</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> EXPIRE_TIME = <span class="number">5</span>;`</span><br><span class="line">    <span class="comment">// 等待超时时间，1s`</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> TIME_OUT = <span class="number">1000</span>;`</span><br><span class="line">    <span class="comment">// redis命令参数，相当于nx和px的命令合集`</span></span><br><span class="line">    <span class="keyword">private</span> SetParams params = SetParams.setParams().nx().px(EXPIRE_TIME);`</span><br><span class="line">    <span class="comment">// redis连接池，连的是本地的redis客户端`</span></span><br><span class="line">    JedisPool jedisPool = <span class="keyword">new</span> JedisPool(<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">6379</span>);`</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 加锁</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">lock</span><span class="params">(String id)</span> </span>&#123;</span><br><span class="line">        Long start = System.currentTimeMillis();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">for</span> (; ; ) &#123;</span><br><span class="line">                <span class="comment">//SET命令返回OK ，则证明获取锁成功</span></span><br><span class="line">                String lock = jedis.set(LOCK_KEY, id, params);</span><br><span class="line">                <span class="keyword">if</span> (<span class="string">&quot;OK&quot;</span>.equals(lock)) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//否则循环等待，在timeout时间内仍未获取到锁，则获取失败</span></span><br><span class="line">                <span class="keyword">long</span> l = System.currentTimeMillis() - start;</span><br><span class="line">                <span class="keyword">if</span> (l &gt;= timeout) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    Thread.sleep(<span class="number">100</span>);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            jedis.close();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 解锁</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">unlock</span><span class="params">(String id)</span> </span>&#123;</span><br><span class="line">        String script =</span><br><span class="line">            <span class="comment">// KEYS[1] 就是 LOCK_KEY，ARGV[1] 就是锁拥有者设置的值，表明只有锁拥有者才能解锁</span></span><br><span class="line">                <span class="string">&quot;if redis.call(&#x27;get&#x27;,KEYS[1]) == ARGV[1] then&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;   return redis.call(&#x27;del&#x27;,KEYS[1]) &quot;</span> +</span><br><span class="line">                        <span class="string">&quot;else&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;   return 0 &quot;</span> +</span><br><span class="line">                        <span class="string">&quot;end&quot;</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            String result = jedis.eval(script, Collections.singletonList(LOCK_KEY), </span><br><span class="line">                                       Collections.singletonList(id)).toString();</span><br><span class="line">            <span class="keyword">return</span> <span class="string">&quot;1&quot;</span>.equals(result) ? <span class="keyword">true</span> : <span class="keyword">false</span>;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            jedis.close();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3、分布式锁的缺陷"><a href="#3、分布式锁的缺陷" class="headerlink" title="3、分布式锁的缺陷"></a>3、分布式锁的缺陷</h2><p>一、客户端长时间阻塞导致锁失效问题</p>
+<p>客户端1得到了锁，因为网络问题或者GC等原因导致长时间阻塞，然后业务程序还没执行完锁就过期了，这时候客户端2也能正常拿到锁，可能会导致线程安全的问题。</p>
+<p>二、redis服务器时钟漂移问题</p>
+<p>如果redis服务器的机器时钟发生了向前跳跃，就会导致这个key过早超时失效，比如说客户端1拿到锁后，key的过期时间是12:02分，但redis服务器本身的时钟比客户端快了2分钟，导致key在12:00的时候就失效了，这时候，如果客户端1还没有释放锁的话，就可能导致多个客户端同时持有同一把锁的问题。</p>
+<p>三、单点实例安全问题</p>
+<p>如果redis是单master模式的，当这台机宕机的时候，那么所有的客户端都获取不到锁了，为了提高可用性，可能就会给这个master加一个slave，但是因为redis的主从同步是异步进行的，可能会出现客户端1设置完锁后，master挂掉，但此时数据还没有同步给slave 节点，当slave提升为master后，客户端1设置的锁丢失了，这时候客户端2设置锁也能够成功，导致客户端1和客户端2同时拥有锁。因此 reids 实现的分布式锁是 AP 模型。</p>
+<p>针对上述问题，官方推出了 RedLock 算法，但是依然无法完全解决。</p>
+<p>对此只能说，鱼和熊掌不可兼得，我们之所以用Redis作为分布式锁的工具，很大程度上是因为Redis本身效率高且单进程的特点，即使在高并发的情况下也能很好的保证性能，但很多时候，性能和安全不能完全兼顾，如果你一定要保证锁的安全性的话，可以用其他的中间件如db、zookeeper来做控制，这些工具能很好的保证锁的安全，但性能方面只能说是差强人意，否则大家早就用上了。</p>
+<p>本文摘自<a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000038988087">面试官：你真的了解Redis分布式锁吗？ - SegmentFault 思否</a> </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/04/12/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" data-id="cl3ir9vvj002akkaq0ytt5w19" data-title="Redis分布式锁" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-数据库/Redis/Redis持久化" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/09/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/" class="article-date">
+  <time class="dt-published" datetime="2022-04-09T15:39:41.000Z" itemprop="datePublished">2022-04-09</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Redis/">Redis</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/04/09/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/">Redis持久化</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="1、Redis-核心主流程"><a href="#1、Redis-核心主流程" class="headerlink" title="1、Redis 核心主流程"></a>1、Redis 核心主流程</h2><p>AOF 和 RDB 的持久化过程中，有不少操作是在时间事件 serverCron 中被触发的。所以，这边有必要先了解下 Redis 中的事件核心流程。</p>
+<p>Redis 的服务器进程就是一个事件循环，最重要的有两个事件：文件事件和时间事件。Redis 在服务器初始化后，会无限循环，处理产生的文件事件和时间事件。</p>
+<p>文件事件常见的有：接受连接（accept）、读取（read）、写入（write）、关闭连接（close）等。使用 IO 多路复用处理。</p>
+<p>时间事件中常见的就是 serverCron，redis 核心流程中通常也只有这个时间事件。serverCron 默认配置下每100ms会被触发一次，在该时间事件中，会执行很多操作：清理过期键、AOF 后台重写、RDB 的 save point 的检查、将 aof_buf 内容写到磁盘上（flushAppendOnlyFile 函数）等等。</p>
+<h2 id="2、Redis持久化"><a href="#2、Redis持久化" class="headerlink" title="2、Redis持久化"></a>2、Redis持久化</h2><p>Redis是内存数据库，若不持久化到磁盘中，则redis进程一旦退出，数据就会丢失，因此需要持久化。</p>
+<p>Redis 的持久化机制有以下三种：</p>
+<ul>
+<li>RDB</li>
+<li>AOF</li>
+<li>混合持久化（redis4.0引入）</li>
+</ul>
+<h3 id="2-1、RDB-Redis-DataBase"><a href="#2-1、RDB-Redis-DataBase" class="headerlink" title="2.1、RDB(Redis DataBase)"></a>2.1、RDB(Redis DataBase)</h3><p>描述：类似于快照。在某个时间点，将 Redis 在内存中的数据保存到磁盘里面。RDB 持久化功能生成的 RDB 文件是经过压缩的二进制文件。恢复时将快照文件直接读入内存。</p>
+<p>rdb保存的文件是dump.rdb。同样可以在redis.conf中修改</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">在redis.conf中对自动保存的间隔进行设置</span><br><span class="line"><span class="comment"># save 3600 1        After 3600 seconds (an hour) if at least 1 key changed</span></span><br><span class="line"><span class="comment"># save 300 100       After 300 seconds (5 minutes) if at least 100 keys changed</span></span><br><span class="line"><span class="comment"># save 60 10000      After 60 seconds if at least 10000 keys changed</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-1-1、触发条件"><a href="#2-1-1、触发条件" class="headerlink" title="2.1.1、触发条件"></a>2.1.1、触发条件</h4><p><strong>自动触发</strong>（全部是BGSAVE）</p>
+<ul>
+<li><p>满足上方save的规则</p>
+</li>
+<li><p>执行flushall，生成的 dump.rdb 为空。</p>
+</li>
+<li><p>退出reids</p>
+</li>
+</ul>
+<p><strong>手动触发</strong></p>
+<ul>
+<li>SAVE：生成 RDB 快照文件，但是会阻塞主进程，服务器将无法处理客户端发来的命令请求，所以通常不会直接使用该命令。</li>
+<li>BGSAVE：fork 子进程来生成 RDB 快照文件，阻塞只会发生在 fork 子进程的时候，之后主进程可以正常处理请求。会先将数据保存进一个临时文件中，待持久化过程结束了，再将这个临时文件替换上次持久化的文件。</li>
+</ul>
+<h4 id="2-1-2、恢复rdb文件"><a href="#2-1-2、恢复rdb文件" class="headerlink" title="2.1.2、恢复rdb文件"></a>2.1.2、恢复rdb文件</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 若rdb文件在下方目录下，则启动时会自动回复其中的数据</span></span><br><span class="line">127.0.0.1:6379&gt; CONFIG GET dir</span><br><span class="line">1) <span class="string">&quot;dir&quot;</span></span><br><span class="line">2) <span class="string">&quot;/usr/local/bin&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-1-3、RDB-的优缺点"><a href="#2-1-3、RDB-的优缺点" class="headerlink" title="2.1.3、RDB 的优缺点"></a>2.1.3、RDB 的优缺点</h4><p><strong>RDB 的优点：</strong></p>
+<ul>
+<li>RDB 文件是是经过压缩的二进制文件，占用空间很小，它保存了 Redis 某个时间点的数据集，很适合用于做备份。 </li>
+<li>RDB 非常适用于灾难恢复：它只有一个文件，并且内容都非常紧凑，可以（在加密后）将它传送到别的数据中心。</li>
+<li>RDB 可以最大化 redis 的性能。父进程在保存 RDB 文件时唯一要做的就是 fork 出一个子进程，然后这个子进程就会处理接下来的所有保存工作，父进程无须执行任何磁盘 I/O 操作。</li>
+<li>RDB 在恢复大数据集时的速度比 AOF 的恢复速度要快。</li>
+</ul>
+<p><strong>RDB 的缺点：</strong></p>
+<ul>
+<li><p>RDB 在服务器故障时容易造成数据的丢失。RDB 允许我们通过修改 save point 配置来控制持久化的频率。但是，因为 RDB 文件需要保存整个数据集的状态， 所以它是一个比较重的操作，如果频率太频繁，可能会对 Redis 性能产生影响。所以通常可能设置至少5分钟才保存一次快照，这时如果 Redis 出现宕机等情况，则意味着最多可能丢失5分钟数据。</p>
+</li>
+<li><p>RDB 保存时使用 fork 子进程进行数据的持久化，如果数据比较大的话，fork 可能会非常耗时，造成 Redis 停止处理服务N毫秒。如果数据集很大且 CPU 比较繁忙的时候，停止服务的时间甚至会到一秒。</p>
+</li>
+<li><p>Linux fork 子进程采用的是 copy-on-write 的方式。在 Redis 执行 RDB 持久化期间，如果 client 写入数据很频繁，那么将增加 Redis 占用的内存，最坏情况下，内存的占用将达到原先的2倍。刚 fork 时，主进程和子进程共享内存，但是随着主进程需要处理写操作，主进程需要将修改的页面拷贝一份出来，然后进行修改。极端情况下，如果所有的页面都被修改，则此时的内存占用是原先的2倍。</p>
+</li>
+</ul>
+<h3 id="2-2、AOF-Append-Only-File"><a href="#2-2、AOF-Append-Only-File" class="headerlink" title="2.2、AOF(Append Only File)"></a>2.2、AOF(Append Only File)</h3><p>将所有写命令都记录到文件中，恢复时把该文件再执行一遍，只允许追加该记录文件，不允许修改。该记录文件的名字为<code>appendonly.aof</code>。该功能默认不开启，可以通过配置：appendonly yes 开启， appendonly no 关闭。</p>
+<h4 id="2-2-1、AOF的实现"><a href="#2-2-1、AOF的实现" class="headerlink" title="2.2.1、AOF的实现"></a>2.2.1、AOF的实现</h4><p>AOF 持久化功能的实现可以分为三个步骤：命令追加、文件写入、文件同步。</p>
+<p>命令追加：当 AOF 持久化功能打开时，服务器在执行完一个写命令之后，会将被执行的写命令追加到服务器状态的 aof 缓冲区（aof_buf）的末尾。</p>
+<p>文件写入：将 aof_buf 的内容写到页缓存</p>
+<p>文件同步：将页缓存刷盘到硬盘</p>
+<p> serverCron 时间事件中会触发 flushAppendOnlyFile 函数，该函数会根据服务器配置的 appendfsync 参数值，来决定是否将 aof_buf 缓冲区的内容写入和保存到 AOF 文件。</p>
+<p><strong>appendfsync 参数有三个选项：</strong></p>
+<ul>
+<li><p>always：每个命令都刷盘。</p>
+</li>
+<li><p>everysec：每秒刷盘1次，这个操作是异步的，由一个后台线程专门负责执行。</p>
+</li>
+<li><p>no：不执行刷盘，让操作系统自己执行刷盘。</p>
+</li>
+</ul>
+<h4 id="2-2-2、AOF-的优缺点"><a href="#2-2-2、AOF-的优缺点" class="headerlink" title="2.2.2、AOF 的优缺点"></a>2.2.2、AOF 的优缺点</h4><p><strong>AOF 的优点</strong></p>
+<ul>
+<li><p>AOF 比 RDB可靠。可以设置不同的 fsync 策略：no、everysec 和 always。默认是 everysec，在这种配置下，redis 仍然可以保持良好的性能，并且就算发生故障停机，也最多只会丢失一秒钟的数据。</p>
+</li>
+<li><p>AOF文件是一个纯追加的日志文件。即使日志因为某些原因而包含了未写入完整的命令（比如写入时磁盘已满，写入中途停机等等）， 我们也可以使用 redis-check-aof 工具也可以轻易地修复这种问题。</p>
+</li>
+<li><p>当 AOF文件太大时，Redis 会自动在后台进行重写：重写后的新 AOF 文件包含了恢复当前数据集所需的最小命令集合。整个重写是绝对安全，因为重写是在一个新的文件上进行，同时 Redis 会继续往旧的文件追加数据。当新文件重写完毕，Redis 会把新旧文件进行切换，然后开始把数据写到新文件上。</p>
+</li>
+<li><p>易读</p>
+</li>
+</ul>
+<p><strong>AOF 的缺点</strong></p>
+<ul>
+<li><p>对于相同的数据集，AOF 文件的大小一般会比 RDB 文件大。</p>
+</li>
+<li><p>根据所使用的 fsync 策略，AOF 的速度可能会比 RDB 慢。通常 fsync 设置为每秒一次就能获得比较高的性能，而关闭 fsync 可以让 AOF 的速度和 RDB 一样快。</p>
+</li>
+<li><p>AOF 在过去曾经发生过这样的 bug ：因为个别命令的原因，导致 AOF 文件在重新载入时，无法将数据集恢复成保存时的原样。（举个例子，阻塞命令 BRPOPLPUSH 就曾经引起过这样的 bug ） 。</p>
+</li>
+</ul>
+<h3 id="2-3、混合持久化"><a href="#2-3、混合持久化" class="headerlink" title="2.3、混合持久化"></a>2.3、混合持久化</h3><p>混合持久化只发生于 AOF 重写过程。使用了混合持久化，重写后的新 AOF 文件前半段是 RDB 格式的全量数据，后半段是 AOF 格式的增量数据。</p>
+<p>混合持久化本质是通过 AOF 后台重写（bgrewriteaof 命令）完成的，不同的是当开启混合持久化时，fork 出的子进程先将当前全量数据以 RDB 方式写入新的 AOF 文件，然后再将 AOF 重写缓冲区（aof_rewrite_buf_blocks）的增量命令以 AOF 方式写入到文件，写入完成后通知主进程将新的含有 RDB 格式和 AOF 格式的 AOF 文件替换旧的的 AOF 文件。</p>
+<p>优点：结合 RDB 和 AOF 的优点, 更快的重写和恢复。</p>
+<p>缺点：AOF 文件里面的 RDB 部分不再是 AOF 格式，可读性差。</p>
+<h2 id="3、AOF重写"><a href="#3、AOF重写" class="headerlink" title="3、AOF重写"></a>3、AOF重写</h2><h3 id="3-1、为什么需要-AOF-重写"><a href="#3-1、为什么需要-AOF-重写" class="headerlink" title="3.1、为什么需要 AOF 重写"></a>3.1、为什么需要 AOF 重写</h3><p>AOF 持久化是通过保存被执行的写命令来记录数据库状态的，随着写入命令的不断增加，AOF 文件中的内容会越来越多，文件的体积也会越来越大。</p>
+<p>如果不加以控制，体积过大的 AOF 文件可能会对 Redis 服务器、甚至整个宿主机造成影响，并且 AOF 文件的体积越大，使用 AOF 文件来进行数据还原所需的时间就越多。</p>
+<h3 id="3-2、AOF-重写"><a href="#3-2、AOF-重写" class="headerlink" title="3.2、AOF 重写"></a>3.2、AOF 重写</h3><p>Redis 生成新的 AOF 文件来代替旧 AOF 文件，这个新的 AOF 文件包含重建当前数据集所需的最少命令。具体过程是遍历所有数据库的所有键，从数据库读取键现在的值，然后用一条命令去记录键值对，代替之前记录这个键值对的多条命令。</p>
+<h3 id="3-3、AOF-后台重写一致性问题"><a href="#3-3、AOF-后台重写一致性问题" class="headerlink" title="3.3、AOF 后台重写一致性问题"></a>3.3、AOF 后台重写一致性问题</h3><p>AOF 后台重写使用子进程进行从写，解决了主进程阻塞的问题，但是仍然存在另一个问题：子进程在进行 AOF 重写期间，服务器主进程还需要继续处理命令请求，新的命令可能会对现有的数据库状态进行修改，从而使得当前的数据库状态和重写后的 AOF 文件保存的数据库状态不一致。</p>
+<p>为了解决上述问题，Redis 引入了 AOF 重写缓冲区（aof_rewrite_buf_blocks），这个缓冲区在服务器创建子进程之后开始使用，当 Redis 服务器执行完一个写命令之后，它会同时将这个写命令追加到 AOF 缓冲区和 AOF 重写缓冲区。</p>
+<p>这样，当子进程完成 AOF 重写工作后，父进程会在 serverCron 中检测到子进程已经重写结束，则会执行以下工作：</p>
+<p>1、将 AOF 重写缓冲区中的所有内容写入到新 AOF 文件中，这时新 AOF 文件所保存的数据库状态将和服务器当前的数据库状态一致。</p>
+<p>2、对新的 AOF 文件进行改名，原子的覆盖现有的 AOF 文件，完成新旧两个 AOF 文件的替换。</p>
+<h3 id="3-4、AOF-重写缓冲区内容过多"><a href="#3-4、AOF-重写缓冲区内容过多" class="headerlink" title="3.4、AOF 重写缓冲区内容过多"></a>3.4、AOF 重写缓冲区内容过多</h3><p>将 AOF 重写缓冲区的内容追加到新 AOF 文件的工作是由主进程完成的，所以这一过程会导致主进程无法处理请求，如果内容过多，可能会使得阻塞时间过长，显然是无法接受的。</p>
+<p>Redis 中已经针对这种情况进行了优化：</p>
+<p>1、在进行 AOF 后台重写时，Redis 会创建一组用于父子进程间通信的管道，同时会新增一个文件事件，该文件事件会将写入 AOF 重写缓冲区的内容通过该管道发送到子进程。</p>
+<p>2、在重写结束后，子进程会通过该管道尽量从父进程读取更多的数据，每次等待可读取事件1ms，如果一直能读取到数据，则这个过程最多执行1000次，也就是1秒。如果连续20次没有读取到数据，则结束这个过程。</p>
+<p>通过这些优化，Redis 尽量让 AOF 重写缓冲区的内容更少，以减少主进程阻塞的时间。</p>
+<p>本文摘自<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/340082703">面试必问的 Redis：RDB、AOF、混合持久化 - 知乎 (zhihu.com)</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/04/09/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E6%8C%81%E4%B9%85%E5%8C%96/" data-id="cl3ir9vvn002gkkaq8blr2lb7" data-title="Redis持久化" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Linux/linux创建子进程--fork()方法" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/" class="article-date">
+  <time class="dt-published" datetime="2022-04-09T11:42:15.000Z" itemprop="datePublished">2022-04-09</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Linux/">Linux</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/">linux创建子进程--fork()方法</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="1、fork-的定义"><a href="#1、fork-的定义" class="headerlink" title="1、fork()的定义"></a>1、fork()的定义</h3><p>fork()函数是Unix中派生新进程的唯一方法，子进程和父进程独立运行互不干扰。</p>
+<p>声明如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span> </span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">pid_t</span> <span class="title">fork</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br></pre></td></tr></table></figure>
+
+
+<p>调用一次fork()方法，该方法会返回两次。一次是在父进程中返回一次，返回值是新派生的进程的进程ID。一次是在子进程中返回，返回值是0，代表当前进程为子进程。如果返回值为-1的话，则代表在派生新进程的过程中出错。</p>
+<p>那么在程序中，我们就可以根据此返回值来判断当前进程是父进程还是子进程，来实现一些具体的操作。例如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    <span class="keyword">pid_t</span> pid;  </span><br><span class="line">  </span><br><span class="line">    <span class="keyword">if</span>((pid = fork()) = <span class="number">0</span>)  </span><br><span class="line">    &#123;  </span><br><span class="line">        <span class="comment">// <span class="doctag">TODO:</span> 在子进程中实现具体操作  </span></span><br><span class="line">        <span class="comment">// ...  </span></span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>); <span class="comment">// 结束子进程  </span></span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> 在调用进程(父进程)实现具体操作  </span></span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<h3 id="2、getpid和getppid函数"><a href="#2、getpid和getppid函数" class="headerlink" title="2、getpid和getppid函数"></a>2、getpid和getppid函数</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">pid_t</span> <span class="title">getpid</span><span class="params">(<span class="keyword">void</span>)</span></span>; <span class="comment">// 获取当前进程的pid</span></span><br><span class="line"><span class="function"><span class="keyword">pid_t</span> <span class="title">getppid</span><span class="params">(<span class="keyword">void</span>)</span></span>; <span class="comment">// 获取当前进程父进程的pid</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3、fork-原理"><a href="#3、fork-原理" class="headerlink" title="3、fork() 原理"></a>3、fork() 原理</h3><p>父进程中在调用fork()派生新进程，实际上相当于创建了进程的一个拷贝；即在fork()之前的进程拥有的资源会被复制到新的进程中去。</p>
+<p>​        （1）进程不同于程序是动态运行在内存中的实体，占用系统资源（CPU、内存等），而程序则是存放在磁盘中的静态的资源，占用磁盘空间而不占用系统资源。进程在内存中运行，由CPU分配资源。</p>
+<p>　　（2）与进程相关的两个内存：虚拟内存和物理内存。所谓虚拟内存就是我们程序员视角下的内存，比如int a = 10; &amp;a 所得的值就是虚拟内存，是给我们程序员看的连续的地址空间。（当我们在代码中连续定义几个local object时，通过&amp;可以观察到它们的地址是连续的）相对的，物理内存才是实实在在的存在于计算机硬件中的内存（比如买内存条时我们可以参考的4G、8G等容量参数），当执行 a = 20这条语句时，操作系统就会将 a 的虚拟地址送入 CPU的地址转换单元（MMU），如果a还没有实际的物理单元，则为a分配物理内存，写入20，反之直接将20写入a物理内存单元。</p>
+<p>　　（3）为什么会有虚拟内存？ 虚拟内存的产生源自物理内存的稀缺，买过SSD或者内存条的伙伴都知道，250G的SSD也就是250块左右，而仅仅8G的内存条就要250块，内存的小容量与高价格的反差促使猿们必须节省内存的开销。由此产生了虚拟内存技术，32位系统下，CPU会为每个进程分配4G的虚拟地址单元（地址编号为0-4G），分为用户空间（通常为0-3G）和内核（kernel）空间（3-4G），用户空间存放该进程的堆栈变量、全局变量等，kernel里存放该进程的进程控制块（<strong>PCB，唯一区分每一个进程</strong>）。虚拟内存单元只有在被进程访问后才会映射为物理内存单元（见（2）a=20的执行过程）。</p>
+<p>　　（4）内存使用的一大机制（虚拟内存能实现的原因）：缺页中断（见文章最后）。</p>
+<p>  　　3. fork()是如何产生子进程的？ 上面说了每一个进程都有自己0-4G的虚拟地址空间，因此，fork所做的动作就是在当前进程的基础上产生一个新进程：<strong>（1）复制父进程的0-3G的用户空间（2）创建新进程（子进程）的PCB</strong></p>
+<p>看一个例子吧：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="comment">//global variable</span></span><br><span class="line"><span class="keyword">int</span> globalVar = <span class="number">78</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">pid_t</span> pid = <span class="built_in">getpid</span>();</span><br><span class="line">    <span class="keyword">int</span> k = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; <span class="number">5</span>; ++i)&#123;</span><br><span class="line">        pid = fork();   <span class="comment">// 循环生成5个子进程</span></span><br><span class="line">        <span class="keyword">if</span>(<span class="number">-1</span> == pid)&#123;</span><br><span class="line">            <span class="built_in">perror</span>(<span class="string">&quot;FORK&quot;</span>);</span><br><span class="line">            <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 由于fork()返回两个值，该分支一定会被子进程执行，即每子进程都会跳出循环去执行下方代码，</span></span><br><span class="line">        <span class="comment">// 而父进程一直执行到循环结束，故每个子进程都会执行下方的if(i &lt; 5)，而父进程执行else</span></span><br><span class="line">        <span class="comment">// 所以下方图片输出可表明每个子进程写时都复制父进程的变量再修改，且不影响其他进程。</span></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span>(<span class="number">0</span> == pid)&#123;  </span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">sleep</span>(i); <span class="comment">// 保证父进程最后退出</span></span><br><span class="line">    <span class="keyword">if</span>(i &lt; <span class="number">5</span>)&#123;</span><br><span class="line">        ++k;  <span class="comment">// 写时复制</span></span><br><span class="line">        --globalVar; <span class="comment">//写时复制</span></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;I&#x27;m %dth child, pid = %d, parent is %d, k = %d, globalVar = %d\n&quot;</span>, i, <span class="built_in">getpid</span>(), <span class="built_in">getppid</span>(), k, globalVar);</span><br><span class="line">    &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        ++k;</span><br><span class="line">        --globalVar;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;I&#x27;m parent, pid = %d, k = %d, globalVar = %d\n&quot;</span>, <span class="built_in">getpid</span>(), k, globalVar);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img2020.cnblogs.com/blog/1696980/202007/1696980-20200715102950625-1441570329.png" alt="img"></p>
+<h3 id="4、父子进程共享"><a href="#4、父子进程共享" class="headerlink" title="4、父子进程共享"></a>4、父子进程共享</h3><p>　　<strong>共享的定义是二者可以共同使用一件东西，前提是一件东西，而不是一个东西的两个副本。</strong></p>
+<p>　　fork()完成的动作是子进程拿到了父进程0-3G用户空间的副本而不是原件，因此严格来说父子进程之间是不共享的，那为什么这里还要说到共享呢？前面说到，父进程的0-3G用户空间是虚拟内存空间，<strong>只有我们访问了某个单元时，才会真正在物理内存上分配一份地址空间</strong>，也就是说，这些虚拟内存里总会有一部分被真正的映射到了物理内存中，但是为了节省内存开销，fork在复制0-3G的虚拟内存空间时并不会将父进程中已经映射到物理内存的内存单元再复制一份到物理内存中，而是遵循“<strong>读时共享，写时复制</strong>”的原则，即仅复制虚拟地址空间。</p>
+<p>　　因此这里说的“共享”更大意义上存在于 父子进程共同访问一块内存空间的过程0，比如fork产生的子进程要输出父进程中变量a的值，那么子进程只需要共享父进程提供的变量a的物理单元，取出20这个值输出即可，如果子进程不单要输出a，还要对a执行+1操作，这个时候子进程才会将父进程中变量a的物理内存单元复制一份并执行+1操作，执行完后父进程中的变量a值仍为20，子进程a值为21。</p>
+<p>　　因此可以说fork后父子进程的用户空间是相同的，kernel空间是不同的。</p>
+<p>　　但是fork后父子进程的用户空间遵循的是“读时共享，写时复制”的原则，类似于“父子进程共享栈变量、全局变量”的说法都是不准确的。</p>
+<h3 id="5、缺页中断"><a href="#5、缺页中断" class="headerlink" title="5、缺页中断"></a>5、缺页中断</h3><p>缺页中断：缺页中断的过程其实已经在1.（2）中描述了，缺页中断简单来说就是：先对 待访问数据的虚拟地址进行段表和页表的映射，试图访问其对应的物理内存单元， 然后——待访问的数据在物理内存中吗 ？ （在）访问/修改该物理内存单元 ： （不在）申请一段物理内存存放该数据并完成与虚拟地址的映射，然后访问/修改该内存单元。 （段表和页表是段页式内存管理中记录虚拟地址与物理地址映射关系的表）</p>
+<p>tips：<code>pstree</code> 命令可以查看各进程之间的创建关系。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/04/09/Linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork()%E6%96%B9%E6%B3%95/" data-id="cl1zs7vs10001zwaq2xa7bza2" data-title="linux创建子进程--fork()方法" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Linux/IO" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/09/Linux/IO/" class="article-date">
+  <time class="dt-published" datetime="2022-04-09T11:42:15.000Z" itemprop="datePublished">2022-04-09</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Linux/">Linux</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/04/09/Linux/IO/">IO 多路复用</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="1、概念"><a href="#1、概念" class="headerlink" title="1、概念"></a>1、概念</h2><p><strong>IO多路复用</strong>是一种同步IO模型，实现一个线程可以监视多个文件描述符；一旦某个文件描述符就绪，就能够通知应用程序进行相应的读写操作；没有文件描述符就绪时会阻塞应用程序，交出cpu。多路是指网络连接，复用指的是同一个线程。</p>
+<p>**<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/143847169">文件描述符</a>**：Linux 中一切都可以看作文件，包括普通文件、链接文件、Socket  以及设备驱动等，对其进行相关操作时，都可能会创建对应的文件描述符。文件描述符（file  descriptor）是内核为了高效管理已被打开的文件所创建的索引，用于指代被打开的文件，对文件所有 I/O  操作相关的系统调用都需要通过文件描述符。</p>
+<p>**<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/234806787">Socket</a>**：在Linux 中，Socket 也是文件，发送端将数据写进发送方的 Socket ，再通过网卡、路由到接收方的 Socket ，接收方程序将数据从接收方 Socket 中读出来使用。一个 Socket 由&lt;协议、发送方 IP、发送方 Port、接收方 IP、接收方 Port&gt; 五元组描述。总之，Socket 就是一个文件，同样可以进行读写。</p>
+<h2 id="2、Linux-IO模型"><a href="#2、Linux-IO模型" class="headerlink" title="2、Linux IO模型"></a>2、Linux IO模型</h2><p>目前Linux系统中提供了5种IO处理模型</p>
+<ol>
+<li>阻塞IO</li>
+<li>非阻塞IO</li>
+<li>IO多路复用</li>
+<li>信号驱动IO</li>
+<li>异步IO</li>
+</ol>
+<h4 id="阻塞IO"><a href="#阻塞IO" class="headerlink" title="阻塞IO"></a>阻塞IO</h4><p>阻塞IO意味着当我们发起一次IO操作后一直等待成功或失败之后才返回，在这期间程序不能做其它的事情。阻塞IO操作只能对单个文件描述符进行操作，如果文件描述符不就绪就阻塞。</p>
+<ul>
+<li>服务端采用单线程，当accept一个请求后，在recv或send调用阻塞时，将无法accept其他请求（必须等上一个请求处recv或send完），无法处理并发。</li>
+<li>服务器端采用多线程，当accept一个请求后，开启线程进行recv，可以完成并发处理，但随着请求数增加需要增加系统线程，大量的线程占用很大的内存空间，并且线程切换会带来很大的开销。</li>
+</ul>
+<h4 id="非阻塞IO"><a href="#非阻塞IO" class="headerlink" title="非阻塞IO"></a>非阻塞IO</h4><p>服务器端当accept一个请求后，加入fds集合，每次轮询一遍fds，若IO失败则返回错误，每次轮询所有fd（包括没有发生读写事件的fd）会很浪费cpu</p>
+<h4 id="IO多路复用"><a href="#IO多路复用" class="headerlink" title="IO多路复用"></a>IO多路复用</h4><p>个人认为IO多路复用是吸收了阻塞IO和非阻塞IO的优点的一种IO方式，即同时可以对多个请求进行处理，但当所有请求不就绪时会阻塞，不占用CPU资源。</p>
+<p>服务器端采用单线程通过select/epoll等系统调用获取fd列表，遍历活跃（即有读写事件）的fd进行accept/recv/send，使其能支持更多的并发连接请求。</p>
+<h2 id="3、IO多路复用的实现"><a href="#3、IO多路复用的实现" class="headerlink" title="3、IO多路复用的实现"></a>3、IO多路复用的实现</h2><h3 id="3-1、select"><a href="#3-1、select" class="headerlink" title="3.1、select"></a>3.1、select</h3><ul>
+<li><p>select 每个进程可同时监听的文件描述符数量最大为 1024，虽然可以设置，但是会降低网络效率。</p>
+</li>
+<li><p>每次调用select，都需要把fd集合从用户态拷贝到内核态，这个开销在fd很多时会很大</p>
+</li>
+<li><p>对socket扫描时是线性扫描，采用轮询的方法，效率较低（高并发时）</p>
+</li>
+</ul>
+<p>后面的不重要</p>
+<p>数据结构：<code>fd_set</code>简单地理解为一个长度是1024的比特位，每个比特位表示一个需要处理的FD，如果是1，那么表示这个FD有需要处理的I/O事件，否则没有。</p>
+<p>select 在调用期间会一直阻塞。</p>
+<p>select将监听的文件描述符分为三组，分别是：read_fds是需要进行读操作的文件描述符，write_fds是需要进行写操作的文件描述符，except_fds是需要进行异常事件处理的文件描述符。</p>
+<h3 id="3-2、poll"><a href="#3-2、poll" class="headerlink" title="3.2、poll"></a>3.2、poll</h3><p>poll 仅仅时取消了 1024 的限制，其他和 select 一样，不分为三组。poll 是 fd 数组。</p>
+<h3 id="3-3、epoll"><a href="#3-3、epoll" class="headerlink" title="3.3、epoll"></a>3.3、epoll</h3><p>epoll 底层是红黑树 + 链表。红黑树存储所有需要监听的 fd（文件描述符），链表存储活跃（有读写事件）的fd。</p>
+<p>使用 epoll 主要是使用如下三个系统调用</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建一个 epoll 实例</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_create</span><span class="params">(<span class="keyword">int</span> size)</span></span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">// epoll_ctl 负责把 fd 增加、删除到内核红黑树</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_ctl</span><span class="params">(<span class="keyword">int</span> epfd, <span class="keyword">int</span> op, <span class="keyword">int</span> fd, struct epoll_event *event)</span></span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">// epoll_wait 负责检测可读链表，没有可读 fd 则阻塞进程</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_wait</span><span class="params">(<span class="keyword">int</span> epfd, struct epoll_event * events, <span class="keyword">int</span> maxevents, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>不同于select和poll 的线性扫描，epoll 每次查询只需要看可读链表中是否有元素即可，是 O(1) 的时间复杂度。</p>
+<p><img src="io%E5%A4%8D%E7%94%A8%E5%8C%BA%E5%88%AB.png" alt="io复用区别"></p>
+<p><strong>事件</strong>：</p>
+<p>可读事件，当文件描述符关联的内核读缓冲区可读，则触发可读事件。 (可读：内核缓冲区非空，有数据可以读取)</p>
+<p>可写事件，当文件描述符关联的内核写缓冲区可写，则触发可写事件。 (可写：内核缓冲区不满，有空闲空间可以写入）</p>
+<h4 id="边沿触发vs水平触发"><a href="#边沿触发vs水平触发" class="headerlink" title="边沿触发vs水平触发"></a>边沿触发vs水平触发</h4><p><code>epoll</code>事件有两种模型，边沿触发：edge-triggered (ET)， 水平触发：level-triggered (LT)</p>
+<p><strong>水平触发(level-triggered)</strong></p>
+<ul>
+<li> socket接收缓冲区不为空 有数据可读 读事件一直触发</li>
+<li> socket发送缓冲区不满 可以继续写入数据 写事件一直触发</li>
+</ul>
+<p><strong>边沿触发(edge-triggered)</strong></p>
+<ul>
+<li>socket的接收缓冲区状态变化时触发读事件，即空的接收缓冲区刚接收到数据时触发读事件</li>
+<li>socket的发送缓冲区状态变化时触发写事件，即满的缓冲区刚空出空间时触发读事件</li>
+</ul>
+<p>边沿触发仅触发一次，水平触发会一直触发。</p>
+<p><code>libevent</code> 采用水平触发， <code>nginx</code>  采用边沿触发 </p>
+<p>JDK在Linux已经默认使用epoll方式，但是JDK的epoll采用的是水平触发，而Netty重新实现了epoll机制，采用边缘触发方式。</p>
+<h2 id="4、redis-使用的IO模型"><a href="#4、redis-使用的IO模型" class="headerlink" title="4、redis 使用的IO模型"></a>4、redis 使用的IO模型</h2><p>下面这篇文章可以对 非阻塞IO 与 IO多路复用 的作用解释的更通透。</p>
+<p><a target="_blank" rel="noopener" href="https://researchlab.github.io/2018/10/08/redis-11-redisio/">redis专题11 线程IO模型</a></p>
+<h2 id="5、进程间通信方式"><a href="#5、进程间通信方式" class="headerlink" title="5、进程间通信方式"></a>5、进程间通信方式</h2><h3 id="5-1、管道"><a href="#5-1、管道" class="headerlink" title="5.1、管道"></a>5.1、管道</h3><p>操作系统分为内核态和用户态，管道就是在内核中开辟一块缓冲区，不同的进程通过对这个缓冲取进行读写操作实现IPC。管道具有半双工通信，同步与互斥，提供字节流服务，生命周期随进程的特点。</p>
+<ul>
+<li>匿名管道：父进程调用 pipe 函数在内核中开辟一块缓冲区作为管道，同时得到该管道的文件描述符。然后通过 fork 创建子进程，根据读时共享子进程也会有管道的文件描述符，故父子进程可以通过文件描述符指向的管道通信。由于该管道只是给父进程返回文件描述符，但其自身并没有标识符，因此匿名管道只能用于父子进程。<ul>
+<li>文件描述符：指向内核为每一个进程所维护的该进程打开文件的记录表。</li>
+<li>文件标识符：与特定进程无关，是系统定义的一个结构，包含文件名、文件状态和文件位置等信息。</li>
+</ul>
+</li>
+<li>命名管道：命名管道也是内核中的一块缓冲区，但是这块缓冲区有具体的标识符，不同进程可以通过标识符来对管道进行操作，从而达到通信的目的。</li>
+</ul>
+<h3 id="5-2、共享内存"><a href="#5-2、共享内存" class="headerlink" title="5.2、共享内存"></a>5.2、共享内存</h3><p>共享内存是最快的进程间通信方式。</p>
+<p>共享内存的本质是直接在内核中开辟一块物理内存，多个进程可以将自己的虚拟地址映射到这块内存上面从而达到通信的目的，相比于其他方式，这种方式有效的降低了输入输出数据的拷贝次数，从而提高了效率。</p>
+<h3 id="5-3、Socket"><a href="#5-3、Socket" class="headerlink" title="5.3、Socket"></a>5.3、Socket</h3><p>Socket 即通过 tcp 建立连接的双方使用收发缓冲区进行通信。</p>
+<h3 id="5-4、信号"><a href="#5-4、信号" class="headerlink" title="5.4、信号"></a>5.4、信号</h3><p>如 kill -9 等。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/04/09/Linux/IO/" data-id="cl2inu9cd00022oaq4hb23237" data-title="IO 多路复用" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-小碎片知识/编码" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/04/08/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/" class="article-date">
@@ -382,6 +768,7 @@
 <h4 id="4-2-2、消息持久化"><a href="#4-2-2、消息持久化" class="headerlink" title="4.2.2、消息持久化"></a>4.2.2、消息持久化</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">channel.basicPublish(<span class="string">&quot;&quot;</span>, HELLO, MessageProperties.PERSISTENT_TEXT_PLAIN, message.getBytes());</span><br></pre></td></tr></table></figure>
 
 <p>发布消息时，将消息属性设为持久化，此处设置为文本持久化。但是还不能保证消息不会完全丢失，当 mq 存入磁盘之前就宕机了，仍然会导致消息丢失，可以通过发布确认确保不丢失。</p>
+<p>设置了队列和消息的持久化之后，当broker服务重启的之后，消息依旧存在。单只设置队列持久化，重启之后消息会丢失；单只设置消息的持久化，重启之后队列消失，既而消息也丢失。单单设置消息持久化而不设置队列的持久化显得毫无意义。</p>
 <h3 id="4-3、公平分发"><a href="#4-3、公平分发" class="headerlink" title="4.3、公平分发"></a>4.3、公平分发</h3><p>rabbitmq 默认采用轮询分发。当多个消费者的处理性能相差很多时，若采用轮询分发会降低吞吐率，因此应该使用公平分发。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 消费者端设置</span></span><br><span class="line">channel.basicQos(<span class="keyword">int</span> prefetch_count);</span><br></pre></td></tr></table></figure>
 
@@ -480,10 +867,12 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DelayQueueConfig</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String DELAYED_QUEUE = <span class="string">&quot;delayed_queue&quot;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String DELAYED_EXCHANGE = <span class="string">&quot;delayed_exchange&quot;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String DELAYED_ROUTING_KEY = <span class="string">&quot;delayed_routing_key&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> CustomExchange <span class="title">delayedExchange</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Map&lt;String, Object&gt; arguments = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        arguments.put(<span class="string">&quot;x-delayed-message&quot;</span>, <span class="string">&quot;direct&quot;</span>);  <span class="comment">// 延迟交换机的类型为直连类型</span></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * 1. 交换机名称</span></span><br><span class="line"><span class="comment">         * 2. 交换机类型</span></span><br><span class="line"><span class="comment">         * 3. 是否需要持久化</span></span><br><span class="line"><span class="comment">         * 4. 是否自动删除</span></span><br><span class="line"><span class="comment">         * 5. 其他参数</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> CustomExchange(DELAYED_EXCHANGE, <span class="string">&quot;x-delayed-message&quot;</span>, <span class="keyword">true</span>, <span class="keyword">false</span>, arguments);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Queue <span class="title">delayedQueue</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> QueueBuilder.durable(DELAYED_QUEUE).build();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Binding <span class="title">delayedBinding</span><span class="params">(<span class="meta">@Qualifier(&quot;delayedQueue&quot;)</span> Queue delayedQueue,</span></span></span><br><span class="line"><span class="function"><span class="params">                                  <span class="meta">@Qualifier(&quot;delayedExchange&quot;)</span> CustomExchange delayedExchange)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> BindingBuilder.bind(delayedQueue).to(delayedExchange).with(DELAYED_ROUTING_KEY).noargs();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>使用时传入消息和过期时间。</p>
-<h2 id="九、高级发布确认"><a href="#九、高级发布确认" class="headerlink" title="九、高级发布确认"></a>九、高级发布确认</h2><p>第五章的发布确认和这里的高级发布确认好像完全是一回事，就是这里 RabbitTemplate 对回调函数做了一点封装。但是如果交换机不可达时，第五章的代码直接报错，而这里可以正常运行。</p>
-<h3 id="9-1、发布确认-消息回退"><a href="#9-1、发布确认-消息回退" class="headerlink" title="9.1、发布确认+消息回退"></a>9.1、发布确认+消息回退</h3><p>发布确认：交换机接收到消息后，会直接给消息生产者发送确认消息。但如果发现消息不可路由就会直接丢弃该消息，此时生产者无法感知消息已被丢弃。</p>
+<h2 id="九、高级发布确认"><a href="#九、高级发布确认" class="headerlink" title="九、高级发布确认"></a>九、高级发布确认</h2><p>发布确认机制包括两个部分</p>
+<p>1、交换机确认: 保证 Producer 生产的消息成功投递到交换机上而不发生丢失</p>
+<p>2、消息的回退: 保证交换机成功将消息路由到队列上而不发生消息</p>
+<h3 id="9-1、发布确认-消息回退"><a href="#9-1、发布确认-消息回退" class="headerlink" title="9.1、发布确认+消息回退"></a>9.1、发布确认+消息回退</h3><p>交换机确认：交换机接收到消息后，会直接给消息生产者发送确认消息。但如果发现消息不可路由就会直接丢弃该消息，此时生产者无法感知消息已被丢弃。</p>
 <p>消息回退：交换机向队列传递过程中不可达的消息返回给生产者。</p>
-<p>即发布确认保证发布者到交换机的消息不丢失，消息回退保证交换机到队列的消息不丢失。</p>
+<p>即交换机确认保证发布者到交换机的消息不丢失，消息回退保证交换机到队列的消息不丢失。</p>
 <ol>
 <li><p>开启发布确认模式+消息回退</p>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">rabbitmq:</span></span><br><span class="line">  	<span class="attr">publisher-returns:</span> <span class="literal">true</span>    <span class="comment"># 开启消息回退</span></span><br><span class="line">    <span class="attr">publisher-confirm-type:</span> <span class="string">correlated</span></span><br><span class="line">    <span class="comment"># correlated：开启发布确认，异步确认</span></span><br><span class="line">    <span class="comment"># none：禁用发布确认</span></span><br><span class="line">    <span class="comment"># simple：同步确认，单个确认。可以通过 rabbitTemplate 调用 waitForConfirms() 方法控制逻辑。</span></span><br></pre></td></tr></table></figure></li>
@@ -494,6 +883,7 @@
 </ol>
 <h3 id="9-2、备份交换机"><a href="#9-2、备份交换机" class="headerlink" title="9.2、备份交换机"></a>9.2、备份交换机</h3><p>交换机到队列的路由不可达时可以将消息投放给备份交换机。备份交换机将消息广播给两个队列，分别用作消息的备份与检测报警。</p>
 <p>注意：如果消息无法到达交换机，则直接会由发布确认机制回调交换机不可达函数，消息将不会进入备份交换机。</p>
+<p>如果同时开启了备份交换和消息回退，备份交换机的优先级更高。</p>
 <p><img src="%E5%A4%87%E4%BB%BD%E4%BA%A4%E6%8D%A2%E6%9C%BA.png" alt="备份交换机"></p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConfirmConfig</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String CONFIRM_QUEUE = <span class="string">&quot;confirm_queue&quot;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String CONFIRM_EXCHANGE = <span class="string">&quot;confirm_exchange&quot;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String CONFIRM_ROUTING_KEY = <span class="string">&quot;confirm_routing_key&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String BACKUP_QUEUE = <span class="string">&quot;backup_queue&quot;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String WARNING_QUEUE = <span class="string">&quot;warning_queue&quot;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String BACKUP_EXCHANGE = <span class="string">&quot;backup_exchange&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 声明交换机</span></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> DirectExchange <span class="title">confirmExchange</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 指定备份交换机</span></span><br><span class="line">        <span class="keyword">return</span> ExchangeBuilder.directExchange(CONFIRM_EXCHANGE)</span><br><span class="line">                .alternate(BACKUP_EXCHANGE).build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> FanoutExchange <span class="title">backupExchange</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> FanoutExchange(BACKUP_EXCHANGE);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 声明队列</span></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Queue <span class="title">confirmQueue</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> QueueBuilder.durable(CONFIRM_QUEUE).build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Queue <span class="title">backupQueue</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> QueueBuilder.durable(BACKUP_QUEUE).build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Queue <span class="title">warningQueue</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> QueueBuilder.durable(WARNING_QUEUE).build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 绑定</span></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Binding <span class="title">confirmBinding</span><span class="params">(<span class="meta">@Qualifier(&quot;confirmQueue&quot;)</span> Queue confirmQueue,</span></span></span><br><span class="line"><span class="function"><span class="params">                                  <span class="meta">@Qualifier(&quot;confirmExchange&quot;)</span> DirectExchange confirmExchange)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> BindingBuilder.bind(confirmQueue).to(confirmExchange).with(CONFIRM_ROUTING_KEY);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Binding <span class="title">backToBackBinding</span><span class="params">(<span class="meta">@Qualifier(&quot;backupQueue&quot;)</span> Queue backupQueue,</span></span></span><br><span class="line"><span class="function"><span class="params">                                     <span class="meta">@Qualifier(&quot;backupExchange&quot;)</span> FanoutExchange backupExchange)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> BindingBuilder.bind(backupQueue).to(backupExchange);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Binding <span class="title">warningToBackBinding</span><span class="params">(<span class="meta">@Qualifier(&quot;warningQueue&quot;)</span> Queue warningQueue,</span></span></span><br><span class="line"><span class="function"><span class="params">                                        <span class="meta">@Qualifier(&quot;backupExchange&quot;)</span> FanoutExchange backupExchange)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> BindingBuilder.bind(warningQueue).to(backupExchange);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 监听报警队列</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WarningConsumer</span> </span>&#123;</span><br><span class="line">    <span class="meta">@RabbitListener(queues = ConfirmConfig.WARNING_QUEUE)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">receiveWarningMsg</span><span class="params">(Message message)</span> </span>&#123;</span><br><span class="line">        System.out.printf(<span class="string">&quot;warning! message &#123;%s&#125; does not execute success. &quot;</span>, <span class="keyword">new</span> String(message.getBody()));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -848,442 +1238,38 @@
 <li>接收方读取缓冲区的速度小于接收的速度</li>
 </ul>
 <p>解决方案：由于TCP是按需发送与到达。可以给每条数据都设置固定的开始符与结束符；也可以在每条数据的开头指明该数据包的长度。</p>
+<h3 id="7、java-方法内的局部变量是否安全"><a href="#7、java-方法内的局部变量是否安全" class="headerlink" title="7、java 方法内的局部变量是否安全"></a>7、java 方法内的局部变量是否安全</h3><p>局部变量是存储在线程栈帧的局部变量表中，是线程私有的数据，因此是线程安全的。</p>
+<h3 id="8、Arrays-sort-int-a"><a href="#8、Arrays-sort-int-a" class="headerlink" title="8、Arrays.sort(int[] a)"></a>8、Arrays.sort(int[] a)</h3><p>对于基本数据类型数组的排序，排序算法的选择和数组长度的关系如下：</p>
+<table>
+<thead>
+<tr>
+<th>数组长度</th>
+<th>所使用的排序算法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>length &lt; 47</td>
+<td>插入排序</td>
+</tr>
+<tr>
+<td>47 &lt;= length &lt; 286</td>
+<td>快速排序</td>
+</tr>
+<tr>
+<td>length &gt;= 286 且数组基本有序</td>
+<td>归并排序</td>
+</tr>
+<tr>
+<td>length &gt;= 286 且数组基本无序</td>
+<td>快速排序</td>
+</tr>
+</tbody></table>
+<p>对于引用数组的排序使用了TimSort算法，TimSort是一种归并排序算法，但是在小片段的合并中用了插入排序。因为数据量小时，归并排序需要递归拆分数组并比较，效率比插入排序低。</p>
 
       
     </div>
     <footer class="article-footer">
       <a data-url="https://ethereal-lu.github.io/2022/04/05/%E9%9D%A2%E7%BB%8F/%E9%9D%A2%E8%AF%95%E6%80%BB%E7%BB%93/" data-id="cl3ir9vuz0016kkaqhlbic2p7" data-title="面经碎知识汇总" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-数据库/Redis/Redis笔记" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/04/01/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E7%AC%94%E8%AE%B0/" class="article-date">
-  <time class="dt-published" datetime="2022-04-01T09:39:41.000Z" itemprop="datePublished">2022-04-01</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Redis/">Redis</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/04/01/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E7%AC%94%E8%AE%B0/">Redis基础</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>Redis是什么？</p>
-<p>Redis（Remote Dictionary Server )，即远程字典服务！</p>
-<p>Redis能干吗？  —》 数据库、缓存、中间件</p>
-<ol>
-<li>内存存储、持久化（rdb、aof）</li>
-<li>效率高，可用于缓存</li>
-<li>发布订阅系统</li>
-<li>地图信息分析</li>
-<li>计时器、计数器 。。。</li>
-</ol>
-<p>Redis 通过“Redis序列化协议”（简称“RESP”），实现客户端与服务端之间的连接通信，其底层是通过TCP来完成的。</p>
-<hr>
-<h3 id="Linux安装配置redis"><a href="#Linux安装配置redis" class="headerlink" title="Linux安装配置redis"></a>Linux安装配置redis</h3><p>下载并解压redis后，将解压好的包移动到<code>/usr/local/redis</code>中，然后<code>cd /usr/local/redis</code>，依次在该目录下执行<code>make</code>，<code>make test</code>（也可以不执行）和<code>make install</code>。之后将该目录下的<code>redis.conf</code>备份，再<code>vim redis.conf</code>，将<code>daemonize</code>的值从no改为yes。<code>cd /usr/local/bin</code>，执行<code>redis-server ../redis/redis.conf</code>。配置完成。</p>
-<hr>
-<h3 id="redis-是单线程"><a href="#redis-是单线程" class="headerlink" title="redis 是单线程"></a>redis 是单线程</h3><p>对Redis来说，执行get、set以及eval等API，都是一个一个的任务，这些任务都会由Redis的线程（单线程）去负责执行，任务要么执行成功，要么执行失败，这就是Redis的命令是原子性的原因。</p>
-<h5 id="redis-6-引入了多线程"><a href="#redis-6-引入了多线程" class="headerlink" title="redis 6 引入了多线程"></a>redis 6 引入了多线程</h5><p>redis 5 及之前的版本一直使用的是单线程，多线程是 Redis6.0 推出的一个新特性。 Redis 的核心线程负责网络 IO ，命令处理以及写数据到缓冲，而随着网络硬件的性能提升，单个主线程处理⽹络请求的速度跟不上底层⽹络硬件的速度，导致网络 IO 的处理成为了 Redis 的性能瓶颈。</p>
-<p>而 Redis6.0 就是从单线程处理网络请求到多线程处理，通过多个 IO 线程并⾏处理网络操作提升实例的整体处理性能。需要注意的是对于读写命令，Redis 仍然使⽤单线程来处理，这是因为继续使⽤单线程执行命令操作，就不⽤为了保证 Lua 脚本、事务的原⼦性，额外开发多线程互斥机制了。</p>
-<p>redis 将所有的数据都放在内存中。单线程避免切换上下文，所以快。</p>
-<p>多线程开发中并发访问控制是⼀个难点，需要精细的设计才能处理。如果只是简单地处理，比如简单地采⽤⼀个粗粒度互斥锁，只会出现不理想的结果。即便增加了线程，系统吞吐率也不会随着线程的增加而增加，因为大部分线程还在等待获取访问共享资源的互斥锁。而且，大部分采用多线程开发引入的同步原语保护共享资源的并发访问，也会降低系统代码的易调试性和可维护性。而正是以上这些问题，才让 Redis 采⽤了单线程模式。</p>
-<p>官方解释：因为Redis是基于内存的操作，CPU不是Redis的瓶颈，<strong>Redis的瓶颈最有可能是机器内存的大小或者网络带宽</strong>。既然单线程容易实现，而且CPU不会成为瓶颈，那就顺理成章地采用单线程的方案了（毕竟采用多线程会有很多麻烦)。</p>
-<hr>
-<h3 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h3><p>redis所有命令不区分大小写</p>
-<h5 id="数据库基本命令"><a href="#数据库基本命令" class="headerlink" title="数据库基本命令"></a>数据库基本命令</h5><p>redis默认有16个数据库（0~15），默认使用第0个数据库。数据库之间数据相互隔离</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:6379&gt; SELECT 3      <span class="comment"># 切换数据库</span></span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379[3]&gt; DBSIZE     <span class="comment"># 查看当前数据库大小</span></span><br><span class="line">(<span class="built_in">integer</span>) 0</span><br><span class="line">127.0.0.1:6379&gt; FLUSHDB       <span class="comment"># 清空当前数据库</span></span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; FLUSHALL      <span class="comment"># 清空所有数据库</span></span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; SHUTDOWN      <span class="comment"># 关闭redis服务</span></span><br></pre></td></tr></table></figure>
-
-<h5 id="Redis-key基本命令"><a href="#Redis-key基本命令" class="headerlink" title="Redis-key基本命令"></a>Redis-key基本命令</h5><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:6379&gt; <span class="built_in">set</span> age 18            <span class="comment"># 添加键值对</span></span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; get name              <span class="comment"># 通过key获取value</span></span><br><span class="line"><span class="string">&quot;xunlu&quot;</span></span><br><span class="line">127.0.0.1:6379&gt; KEYS *                <span class="comment"># KEYS + 正则表达式。返回所有符合正则表达式的键</span></span><br><span class="line">1) <span class="string">&quot;age&quot;</span></span><br><span class="line">2) <span class="string">&quot;name&quot;</span></span><br><span class="line">127.0.0.1:6379&gt; EXISTS name           <span class="comment"># 判断是否存在指定的key</span></span><br><span class="line">(<span class="built_in">integer</span>) 1                           <span class="comment"># 返回1则存在，0则不存在</span></span><br><span class="line">127.0.0.1:6379&gt; EXPIRE name 10        <span class="comment"># 设置键name的有效期为10秒</span></span><br><span class="line">(<span class="built_in">integer</span>) 1</span><br><span class="line">127.0.0.1:6379&gt; ttl name              <span class="comment"># 查看键name的有效时间还剩下多少</span></span><br><span class="line">(<span class="built_in">integer</span>) 4</span><br><span class="line">127.0.0.1:6379&gt; MOVE name 1           <span class="comment"># 将键值对移动到指定的数据库中</span></span><br><span class="line">(<span class="built_in">integer</span>) 1</span><br><span class="line">127.0.0.1:6379&gt; DEL name              <span class="comment"># 删除键值对</span></span><br><span class="line">(<span class="built_in">integer</span>) 1</span><br><span class="line">127.0.0.1:6379&gt; TYPE age              <span class="comment"># 获取当前键对应值的类型</span></span><br><span class="line">string</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h3 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h3><h5 id="五种基本数据类型"><a href="#五种基本数据类型" class="headerlink" title="五种基本数据类型"></a>五种基本数据类型</h5><ul>
-<li>String  —&gt;  应用：计数器（如访问量，点赞数等）</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:6379&gt; <span class="built_in">set</span> name xunlu</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; APPEND name feilu              <span class="comment"># 追加字符串，类似StringBuilder的append</span></span><br><span class="line">(<span class="built_in">integer</span>) 10                                   <span class="comment"># 若追加的键不存在，则新建键值对</span></span><br><span class="line">127.0.0.1:6379&gt; get name</span><br><span class="line"><span class="string">&quot;xunlufeilu&quot;</span></span><br><span class="line">-----------------------------------------------</span><br><span class="line">127.0.0.1:6379&gt; STRLEN name					 <span class="comment"># 返回值的长度</span></span><br><span class="line">(<span class="built_in">integer</span>) 10</span><br><span class="line">-----------------------------------------------</span><br><span class="line">127.0.0.1:6379&gt; <span class="built_in">set</span> views 0</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; INCR views                     <span class="comment"># 每执行一次，值就会加1.（只能作用于integer类型）</span></span><br><span class="line">(<span class="built_in">integer</span>) 1</span><br><span class="line">127.0.0.1:6379&gt; INCR views</span><br><span class="line">(<span class="built_in">integer</span>) 2</span><br><span class="line">127.0.0.1:6379&gt; DECR views                     <span class="comment"># 每执行一次，值就会减1.（只能作用于integer类型）</span></span><br><span class="line">(<span class="built_in">integer</span>) 1</span><br><span class="line">127.0.0.1:6379&gt; INCRBY views 10                <span class="comment"># 指定增加的步长</span></span><br><span class="line">(<span class="built_in">integer</span>) 11</span><br><span class="line">127.0.0.1:6379&gt; DECRBY views 10                <span class="comment"># 指定减少的步长</span></span><br><span class="line">(<span class="built_in">integer</span>) 1</span><br><span class="line">-----------------------------------------------</span><br><span class="line">127.0.0.1:6379&gt; <span class="built_in">set</span> name xunlu</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; GETRANGE name 0 2              <span class="comment"># 截取部分值（start和end都包括在内）</span></span><br><span class="line"><span class="string">&quot;xun&quot;</span></span><br><span class="line">127.0.0.1:6379&gt; GETRANGE name 0 -1             <span class="comment"># == get name</span></span><br><span class="line"><span class="string">&quot;xunlu&quot;</span></span><br><span class="line">127.0.0.1:6379&gt; SETRANGE name 0 gao            <span class="comment"># 替换部分字符，起始替换位置 + 替换的值</span></span><br><span class="line">(<span class="built_in">integer</span>) 5</span><br><span class="line">127.0.0.1:6379&gt; get name</span><br><span class="line"><span class="string">&quot;gaolu&quot;</span></span><br><span class="line">-----------------------------------------------</span><br><span class="line"><span class="comment"># setex(set with expire)   【原子性操作】</span></span><br><span class="line"><span class="comment"># setnx(set if not exist)  【原子性操作】</span></span><br><span class="line">127.0.0.1:6379&gt; setex name 30 xunlu            <span class="comment"># 新建键值对，并设置有效期为30秒</span></span><br><span class="line">OK   <span class="comment"># 等同于 set name xunlu ex 30</span></span><br><span class="line">127.0.0.1:6379&gt; setnx gender male              <span class="comment"># nx表示键不存在时才能正确执行，即只能新建</span></span><br><span class="line">OK   <span class="comment"># 等同于 set gender male nx               # 常用于分布式锁</span></span><br><span class="line">127.0.0.1:6379&gt; get gender</span><br><span class="line"><span class="string">&quot;male&quot;</span></span><br><span class="line">127.0.0.1:6379&gt; <span class="built_in">set</span> gender female nx           <span class="comment"># 此时键gender已经存在，执行失败</span></span><br><span class="line">(nil)</span><br><span class="line">-----------------------------------------------</span><br><span class="line">127.0.0.1:6379&gt; MSET k1 v1 k2 v1 k3 v1         <span class="comment"># 批量创建键值对</span></span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; KEYS *</span><br><span class="line">1) <span class="string">&quot;k1&quot;</span>                                        <span class="comment"># msetnx 【原子性操作】</span></span><br><span class="line">2) <span class="string">&quot;k3&quot;</span></span><br><span class="line">3) <span class="string">&quot;k2&quot;</span></span><br><span class="line">127.0.0.1:6379&gt; MGET k1 k2 k3                  <span class="comment"># 批量获取 </span></span><br><span class="line">1) <span class="string">&quot;v1&quot;</span></span><br><span class="line">2) <span class="string">&quot;v1&quot;</span></span><br><span class="line">3) <span class="string">&quot;v1&quot;</span></span><br><span class="line">------------------------------------------------</span><br><span class="line">127.0.0.1:6379&gt; <span class="built_in">set</span> user &#123;id:1,name:xunlu,age:3&#125; <span class="comment"># 可以将值设为json字符串，然后通过json解析</span></span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; mset user:name xunlu user:age 18 <span class="comment"># redis支持键中存在`:`冒号，亦可用于解析</span></span><br><span class="line">OK</span><br><span class="line">------------------------------------------------</span><br><span class="line">127.0.0.1:6379&gt; getset db redis                  <span class="comment"># 先get再set。没有返回nil，再设新值</span></span><br><span class="line">(nil)</span><br><span class="line">127.0.0.1:6379&gt; getset db redis                  <span class="comment"># 有则返回旧值，再设新值</span></span><br><span class="line"><span class="string">&quot;redis&quot;</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>List（双向链表）<ul>
-<li>绝大部分的list命令都以l开头，list的名字也可作为key，故有些redis-key的命令也可用</li>
-<li>应用：消息队列、栈</li>
-</ul>
-</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 添加、范围读取</span></span><br><span class="line">LPUSH key element [element ...]                   <span class="comment"># key为列表的名字，添加到列表的头部</span></span><br><span class="line">RPUSH key element [element ...]                   <span class="comment"># 添加到列表的尾部                 </span></span><br><span class="line">127.0.0.1:6379&gt; LPUSH list mid                    <span class="comment"># 列表名为list，head、mid、tail为元素</span></span><br><span class="line">(<span class="built_in">integer</span>) 1</span><br><span class="line">127.0.0.1:6379&gt; LPUSH list head</span><br><span class="line">(<span class="built_in">integer</span>) 2</span><br><span class="line">127.0.0.1:6379&gt; RPUSH list tail</span><br><span class="line">(<span class="built_in">integer</span>) 3</span><br><span class="line">127.0.0.1:6379&gt; LRANGE list 0 -1</span><br><span class="line">1) <span class="string">&quot;head&quot;</span></span><br><span class="line">2) <span class="string">&quot;mid&quot;</span></span><br><span class="line">3) <span class="string">&quot;tail&quot;</span></span><br><span class="line">127.0.0.1:6379&gt; LRANGE list 0 1                   <span class="comment"># 从头向尾读，没有RRANGE这个命令</span></span><br><span class="line">1) <span class="string">&quot;head&quot;</span></span><br><span class="line">2) <span class="string">&quot;mid&quot;</span></span><br><span class="line">--------------------------------------------------</span><br><span class="line"><span class="comment"># 删除、改变list</span></span><br><span class="line">LPOP key [count]                                  <span class="comment"># 从头部弹出元素</span></span><br><span class="line">RPOP key [count]                                  <span class="comment"># 从尾部弹出元素</span></span><br><span class="line">LREM key count element                            <span class="comment"># 根据值移除元素，count表示从多个相同的值中移除的个数</span></span><br><span class="line">LTRIM key start stop                              <span class="comment"># 将列表截断，只保留[start ~ stop]的值</span></span><br><span class="line">--------------------------------------------------</span><br><span class="line"><span class="comment"># 按下标索引</span></span><br><span class="line">127.0.0.1:6379&gt; LINDEX list 0                     <span class="comment"># 获取list的第i个值</span></span><br><span class="line"><span class="string">&quot;head&quot;</span></span><br><span class="line">127.0.0.1:6379&gt; LINDEX list 1</span><br><span class="line"><span class="string">&quot;mid&quot;</span></span><br><span class="line">--------------------------------------------------</span><br><span class="line"><span class="comment"># 长度</span></span><br><span class="line">127.0.0.1:6379&gt; LLEN list                         <span class="comment"># 获取list的长度</span></span><br><span class="line">(<span class="built_in">integer</span>) 3</span><br><span class="line">--------------------------------------------------</span><br><span class="line"><span class="comment"># 组合命令</span></span><br><span class="line">RPOPLPUSH <span class="built_in">source</span> destination                     <span class="comment"># 从容器source的尾部弹出并添加到容器destination的头部</span></span><br><span class="line"><span class="string">&quot;tail&quot;</span>                                           <span class="comment"># source和destination自然可以是同一个列表</span></span><br><span class="line">-------------------------------------------------</span><br><span class="line"><span class="comment"># 修改列表中的值</span></span><br><span class="line">LSET key index element                           <span class="comment"># 修改列表指定下标处的值</span></span><br><span class="line">127.0.0.1:6379&gt; LSET list 0 prehead</span><br><span class="line">OK</span><br><span class="line">-------------------------------------------------</span><br><span class="line"><span class="comment"># 插值</span></span><br><span class="line">LINSERT key BEFORE|AFTER pivot element          <span class="comment"># pivot为列表中已有的元素，往列表中元素的前或后插入元素</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>Set（无序不重复）（命令都以s打头）</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 添加、查看</span></span><br><span class="line">SADD key member [member ...]                    <span class="comment"># 添加元素（可以批量）</span></span><br><span class="line">127.0.0.1:6379&gt; SADD <span class="built_in">set</span> first second third</span><br><span class="line">(<span class="built_in">integer</span>) 3</span><br><span class="line">127.0.0.1:6379&gt; SMEMBERS <span class="built_in">set</span>                    <span class="comment"># 查看所有元素</span></span><br><span class="line">1) <span class="string">&quot;second&quot;</span></span><br><span class="line">2) <span class="string">&quot;third&quot;</span></span><br><span class="line">3) <span class="string">&quot;first&quot;</span></span><br><span class="line">127.0.0.1:6379&gt; SISMEMBER <span class="built_in">set</span> first             <span class="comment"># 判断是否包含指定元素</span></span><br><span class="line">(<span class="built_in">integer</span>) 1</span><br><span class="line">127.0.0.1:6379&gt; SISMEMBER <span class="built_in">set</span> fifth</span><br><span class="line">(<span class="built_in">integer</span>) 0</span><br><span class="line">127.0.0.1:6379&gt; SCARD <span class="built_in">set</span>				       <span class="comment"># 集合的长度</span></span><br><span class="line">(<span class="built_in">integer</span>) 3</span><br><span class="line">-------------------------------------------------</span><br><span class="line"><span class="comment"># 移除</span></span><br><span class="line">SREM key member [member ...]                    <span class="comment"># 删除指定元素（可以批量）</span></span><br><span class="line">SPOP key [count]                                <span class="comment"># 随机删除元素（可以指定个数）</span></span><br><span class="line">SMOVE <span class="built_in">source</span> destination member                 <span class="comment"># 将指定元素从集合source移动到集合destination</span></span><br><span class="line">-------------------------------------------------</span><br><span class="line">SRANDMEMBER key [count]                         <span class="comment"># 随机返回元素（可以指定个数）</span></span><br><span class="line">-------------------------------------------------</span><br><span class="line"><span class="comment"># 集合计算</span></span><br><span class="line"><span class="comment"># 差集     </span></span><br><span class="line">SDIFF set1 set2                                 <span class="comment"># 集合set1中有但set2中没有的元素</span></span><br><span class="line"><span class="comment"># 交集</span></span><br><span class="line">SINTER set1 set2                                <span class="comment"># 交</span></span><br><span class="line"><span class="comment"># 并集</span></span><br><span class="line">SUNION set1 set2                                <span class="comment"># 并</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>Hash（命令都以h打头）<ul>
-<li>相当于map，则变为key-(key-value)，故（更适合对象的存储）</li>
-</ul>
-</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 添加</span></span><br><span class="line">HSET key field value [field value ...]           <span class="comment"># 存值，key为hash容器的名字</span></span><br><span class="line">HMSET key field value [field value ...]          <span class="comment"># 批量存值</span></span><br><span class="line">127.0.0.1:6379&gt; HSET <span class="built_in">hash</span> name xunlu</span><br><span class="line">(<span class="built_in">integer</span>) 1</span><br><span class="line">127.0.0.1:6379&gt; HSET <span class="built_in">hash</span> age 18</span><br><span class="line">(<span class="built_in">integer</span>) 1</span><br><span class="line">-------------------------------------------------</span><br><span class="line"><span class="comment"># 查看</span></span><br><span class="line">HGET key field                                   <span class="comment"># 指定字段的取值</span></span><br><span class="line">HMGET key field [field ...]                      <span class="comment"># 批量取值</span></span><br><span class="line">127.0.0.1:6379&gt; HGET <span class="built_in">hash</span> name</span><br><span class="line"><span class="string">&quot;xunlu&quot;</span></span><br><span class="line">127.0.0.1:6379&gt; HGETALL <span class="built_in">hash</span>                     <span class="comment"># 查看全部内容</span></span><br><span class="line">1) <span class="string">&quot;name&quot;</span></span><br><span class="line">2) <span class="string">&quot;xunlu&quot;</span></span><br><span class="line">3) <span class="string">&quot;age&quot;</span></span><br><span class="line">4) <span class="string">&quot;18&quot;</span></span><br><span class="line">-------------------------------------------------</span><br><span class="line"><span class="comment"># 删除</span></span><br><span class="line">HDEL key field [field ...]                       <span class="comment"># 删除指定元素（可批量）</span></span><br><span class="line">-------------------------------------------------</span><br><span class="line"><span class="comment"># 长度</span></span><br><span class="line">127.0.0.1:6379&gt; HLEN <span class="built_in">hash</span></span><br><span class="line">(<span class="built_in">integer</span>) 2</span><br><span class="line">-------------------------------------------------</span><br><span class="line"><span class="comment"># 是否存在</span></span><br><span class="line">HEXISTS key field                                <span class="comment"># 判断指定字段是否存在</span></span><br><span class="line">-------------------------------------------------</span><br><span class="line">127.0.0.1:6379&gt; HKEYS <span class="built_in">hash</span>                       <span class="comment"># 取全部字段名</span></span><br><span class="line">1) <span class="string">&quot;name&quot;</span></span><br><span class="line">2) <span class="string">&quot;age&quot;</span></span><br><span class="line">127.0.0.1:6379&gt; HVALS <span class="built_in">hash</span>                       <span class="comment"># 取全部字段的值</span></span><br><span class="line">1) <span class="string">&quot;xunlu&quot;</span></span><br><span class="line">2) <span class="string">&quot;18&quot;</span></span><br><span class="line">-------------------------------------------------</span><br><span class="line"><span class="comment"># 自增、自减</span></span><br><span class="line">HINCRBY key field increment                      <span class="comment"># field = field + increment （increment为负数即为减）</span></span><br><span class="line">-------------------------------------------------</span><br><span class="line">HSETNX key field value                           <span class="comment"># 和setnx作用类似</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>Zset（有序集合）【底层为跳表】</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 添加、查看</span></span><br><span class="line">ZADD key score member [score member ...]          <span class="comment"># score用于排序</span></span><br><span class="line">127.0.0.1:6379&gt; ZADD salary 2500 mary 3000 alice 1000 lisa</span><br><span class="line">(<span class="built_in">integer</span>) 3</span><br><span class="line">ZRANGE salary 0 -1                                <span class="comment"># 返回所有数据</span></span><br><span class="line">--------------------------------------------------</span><br><span class="line"><span class="comment"># 排序</span></span><br><span class="line">ZRANGE salary 100 0 byscore rev withscores        <span class="comment"># ZRANGE 后可跟上多个参数来约束比较，如通过score、降序、带上score</span></span><br><span class="line">ZRANGEBYSCORE key min max [WITHSCORES] [LIMIT offset count]      <span class="comment"># 小到大</span></span><br><span class="line">ZREVRANGEBYSCORE key max min [WITHSCORES] [LIMIT offset count]   <span class="comment"># 大到小</span></span><br><span class="line">127.0.0.1:6379&gt; ZRANGEBYSCORE salary -inf +inf    <span class="comment"># 返回score在-inf +inf之间元素的排序，小到大</span></span><br><span class="line">1) <span class="string">&quot;lisa&quot;</span></span><br><span class="line">2) <span class="string">&quot;mary&quot;</span></span><br><span class="line">3) <span class="string">&quot;alice&quot;</span></span><br><span class="line">--------------------------------------------------</span><br><span class="line"><span class="comment"># 移除</span></span><br><span class="line">ZREM key member [member ...]</span><br><span class="line">--------------------------------------------------</span><br><span class="line"><span class="comment"># 长度</span></span><br><span class="line">127.0.0.1:6379&gt; ZCARD salary                      <span class="comment"># 总个数</span></span><br><span class="line">(<span class="built_in">integer</span>) 3</span><br><span class="line">127.0.0.1:6379&gt; zcount salary 2000 3000           <span class="comment"># 指定区间个数（score的区间）</span></span><br><span class="line">(<span class="built_in">integer</span>) 2</span><br></pre></td></tr></table></figure>
-
-<h5 id="三种特殊数据类型"><a href="#三种特殊数据类型" class="headerlink" title="三种特殊数据类型"></a>三种特殊数据类型</h5><ul>
-<li>Geospatial 地理位置 【底层由Zset实现、因此可以使用zset的命令，如ZREM等】</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 添加城市及经纬度信息</span></span><br><span class="line">GEOADD key [NX|XX] [CH] longitude latitude member [longitude latitude member ...]</span><br><span class="line">127.0.0.1:6379&gt; GEOADD china:city 116.40 39.90 beijing     <span class="comment"># 经度、纬度</span></span><br><span class="line">(<span class="built_in">integer</span>) 1</span><br><span class="line">127.0.0.1:6379&gt; GEOADD china:city 121.47 31.23 shanghai</span><br><span class="line">(<span class="built_in">integer</span>) 1</span><br><span class="line">127.0.0.1:6379&gt; <span class="built_in">type</span> china:city                            <span class="comment"># 底层由Zset实现</span></span><br><span class="line">zset</span><br><span class="line">------------------------------------------------------------</span><br><span class="line"><span class="comment"># 获取指定城市的经纬度信息</span></span><br><span class="line">GEOPOS key member [member ...]</span><br><span class="line">127.0.0.1:6379&gt; GEOPOS china:city beijing</span><br><span class="line">1) 1) <span class="string">&quot;116.39999896287918091&quot;</span></span><br><span class="line">   2) <span class="string">&quot;39.90000009167092543&quot;</span></span><br><span class="line">-------------------------------------------------------------</span><br><span class="line"><span class="comment"># 获取两地的距离（直线距离）</span></span><br><span class="line">GEODIST key member1 member2 [m|km|ft|mi]                     <span class="comment"># 可指定单位，默认为米</span></span><br><span class="line">127.0.0.1:6379&gt; GEODIST china:city beijing shanghai km</span><br><span class="line"><span class="string">&quot;1067.3788&quot;</span></span><br><span class="line">-------------------------------------------------------------</span><br><span class="line"><span class="comment"># 获取范围内的元素</span></span><br><span class="line">GEORADIUS key longitude latitude radius m|km|ft|mi          <span class="comment"># 根据指定经纬度和半径获取范围内的元素</span></span><br><span class="line">127.0.0.1:6379&gt; GEORADIUS china:city 120 30 500 km          <span class="comment"># 经度、维度、半径</span></span><br><span class="line">1) <span class="string">&quot;hangzhou&quot;</span></span><br><span class="line">2) <span class="string">&quot;shanghai&quot;</span></span><br><span class="line">GEORADIUSBYMEMBER key member radius m|km|ft|mi              <span class="comment"># 根据元素名和半径获取范围内的元素</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>Hypeloglog（基数统计、即去重后计数）【占用内存很小，最大只需要12KB】（有0.81%错误率）— 使用伯努利概率分布，根据第一个 1 出现的位置推测有多少基数。</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">PFADD key element [element ...]                  <span class="comment"># 添加</span></span><br><span class="line">PFCOUNT key [key ...]                            <span class="comment"># 基数统计</span></span><br><span class="line">127.0.0.1:6379&gt; pfadd key a a a a l k j h j k l d</span><br><span class="line">(<span class="built_in">integer</span>) 1</span><br><span class="line">127.0.0.1:6379&gt; PFCOUNT key</span><br><span class="line">(<span class="built_in">integer</span>) 6</span><br><span class="line">PFMERGE destkey sourcekey [sourcekey ...]        <span class="comment"># 合并</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>Bitmaps（位图）<ul>
-<li>位存储、只有两种状态的都可以用它存储</li>
-</ul>
-</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SETBIT key offset value                          <span class="comment"># 添加，其中value的值只能是 0 或 1</span></span><br><span class="line">GETBIT key offset                                <span class="comment"># 查看</span></span><br><span class="line">BITCOUNT key [start end]                         <span class="comment"># 统计value为 1 的个数</span></span><br></pre></td></tr></table></figure>
-
-<hr>
-<h3 id="发布订阅"><a href="#发布订阅" class="headerlink" title="发布订阅"></a>发布订阅</h3><h4 id="基于频道"><a href="#基于频道" class="headerlink" title="基于频道"></a>基于频道</h4><p>基于频道(Channel)的发布/订阅有两个命令分别是 publish 和 subscribe 。</p>
-<ul>
-<li>先订阅，再发布；即可以先订阅一个不存在的 channel</li>
-<li>先发布，再订阅；则只能收到订阅之后发布的消息。</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:6379&gt; publish work dowork   // publish channel message</span><br><span class="line"></span><br><span class="line">127.0.0.1:6379&gt; subscribe work        // subscribe channel </span><br><span class="line">Reading messages... (press Ctrl-C to quit)</span><br><span class="line">1) &quot;subscribe&quot;</span><br><span class="line">2) &quot;work&quot;</span><br><span class="line">3) (integer) 1</span><br></pre></td></tr></table></figure>
-
-<p>进入订阅状态后消息类型的取值可能是以下3个:</p>
-<ul>
-<li>subscribe。表示订阅成功的反馈信息。第二个值是订阅成功的频道名称，第三个是当前客户端订阅的频道数量。</li>
-<li>message。表示接收到的消息，第二个值表示产生消息的频道名称，第三个值是消息的内容。</li>
-<li>unsubscribe。表示成功取消订阅某个频道。第二个值是对应的频道名称，第三个值是当前客户端订阅的频道数量，当此值为0时客户端会退出订阅状态，之后就可以执行其他非”发布/订阅”模式的命令了。</li>
-</ul>
-<h4 id="基于模式"><a href="#基于模式" class="headerlink" title="基于模式"></a>基于模式</h4><p>publish 命令不变，订阅使用 psubscribe 。</p>
-<p>模式即通配符匹配，只能用 psubscribe 订阅时使用，发布时使用通配符会当作普通字符。</p>
-<p>通配符中 ? 表示1个占位符，* 表示任意个占位符(包括0)，?* 表示1个以上占位符。</p>
-<h4 id="底层"><a href="#底层" class="headerlink" title="底层"></a>底层</h4><p>底层是通过字典（pubsub_channels）实现的，这个字典就用于保存订阅频道的信息：字典的键为正在被订阅的频道， 而字典的值则是一个链表， 链表中保存了所有订阅这个频道的客户端。</p>
-<p>当客户端调用 SUBSCRIBE 命令时， 程序就将客户端和要订阅的频道在 pubsub_channels 字典中关联起来。</p>
-<p>当调用 <code>PUBLISH channel message</code> 命令， 程序首先根据 channel 定位到字典的键， 然后将信息发送给字典值链表中的所有客户端。</p>
-<p>使用 UNSUBSCRIBE 命令可以退订指定的频道， 这个命令执行的是订阅的反操作： 它从 pubsub_channels 字典的给定频道（键）中， 删除关于当前客户端的信息， 这样被退订频道的信息就不会再发送给这个客户端。</p>
-<hr>
-<h3 id="事务"><a href="#事务" class="headerlink" title="事务"></a>事务</h3><p>Redis事务的本质是一组命令的集合。事务执行一次执行多个命令。一个事务中的所有命令都会被序列化，在事务执行过程中，会按顺序执行。其他客户端提交的命令请求不会插入到事务队列中执行。  （一次性、顺序性、排他性）</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MULTI 、 EXEC 、 DISCARD 和 WATCH 是 Redis 事务相关的命令。</span><br></pre></td></tr></table></figure>
-
-<p><strong>Redis的单条命令保证原子性，但是Redis的事务不保证原子性！</strong></p>
-<p>认为Redis不保证原子性是因为<strong>Redis 事务不支持事务回滚机制</strong>。</p>
-<ul>
-<li>对于编译时异常：提前检查命令格式，若有错误，则返回错误且整个事务都不执行。</li>
-<li>对于运行时异常：错误之前的命令正常执行，错误命令返回错误，错误之后的命令正常执行。</li>
-</ul>
-<p><strong>Redis事务没有隔离级别的概念</strong></p>
-<p>因为是单线程操作。     </p>
-<p><strong>Redis 不支持持久性</strong></p>
-<p>因为 rdb 和 aof 都是异步执行。</p>
-<p><strong>Redis 支持一致性</strong></p>
-<p>单条命令失败会回滚</p>
-<h5 id="Redis事务执行"><a href="#Redis事务执行" class="headerlink" title="Redis事务执行"></a>Redis事务执行</h5><ul>
-<li>开启事务（multi）</li>
-<li>命令入队</li>
-<li>执行事务 （exec）</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 正常执行事务</span></span><br><span class="line">127.0.0.1:6379&gt; MULTI                  <span class="comment"># 开启事务</span></span><br><span class="line">OK</span><br><span class="line"><span class="comment"># 命令入队</span></span><br><span class="line">127.0.0.1:6379(TX)&gt; <span class="built_in">set</span> k1 v1          </span><br><span class="line">QUEUED</span><br><span class="line">127.0.0.1:6379(TX)&gt; <span class="built_in">set</span> k2 v2</span><br><span class="line">QUEUED</span><br><span class="line">127.0.0.1:6379(TX)&gt; get k2</span><br><span class="line">QUEUED</span><br><span class="line">127.0.0.1:6379(TX)&gt; <span class="built_in">set</span> k3 v3</span><br><span class="line">QUEUED</span><br><span class="line">127.0.0.1:6379(TX)&gt; <span class="built_in">exec</span>               <span class="comment"># 执行事务 </span></span><br><span class="line">1) OK</span><br><span class="line">2) OK</span><br><span class="line">3) <span class="string">&quot;v2&quot;</span></span><br><span class="line">4) OK</span><br><span class="line">----------------------------------------</span><br><span class="line"><span class="comment"># 放弃事务</span></span><br><span class="line">127.0.0.1:6379&gt; MULTI </span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379(TX)&gt; <span class="built_in">set</span> k1 v1</span><br><span class="line">QUEUED</span><br><span class="line">127.0.0.1:6379(TX)&gt; <span class="built_in">set</span> k2 v2</span><br><span class="line">QUEUED</span><br><span class="line">127.0.0.1:6379(TX)&gt; <span class="built_in">set</span> k4 v4</span><br><span class="line">QUEUED</span><br><span class="line">127.0.0.1:6379(TX)&gt; DISCARD             <span class="comment"># 放弃事务（所有命令都不执行）</span></span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; get k4                  </span><br><span class="line">(nil)                                   <span class="comment"># 说明 set k4 v4 命令并未执行</span></span><br></pre></td></tr></table></figure>
-
-<h5 id="监控（watch）"><a href="#监控（watch）" class="headerlink" title="监控（watch）"></a>监控（watch）</h5><p>WATCH命令可以监控一个或多个键，一旦其中有一个键被修改（或删除），整个事务就不会执行。监控一直持续到EXEC命令（事务中的命令是在EXEC之后才执行的，所以在MULTI命令后可以修改WATCH监控的键值）（只要执行了EXEC命令或者DISCARD命令，不论其执行是否成功，都会自动取消所有的监控；因此在事务中修改被监视键时，WATCH已被取消，不生效了）</p>
-<p><strong>乐观锁</strong>：乐观锁在操作数据时非常乐观，认为别人不会同时修改数据。   </p>
-<p>因此乐观锁不会上锁，只是在执行更新的时候判断一下在此期间别人是否修改了数据：如果别人修改了数据则放弃操作，否则执行操作。</p>
-<p><strong>悲观锁</strong>：悲观锁在操作数据时比较悲观，认为别人会同时修改数据。   </p>
-<p>因此操作数据时直接把数据锁住，直到操作完成后才会释放锁；上锁期间其他人不能修改数据   </p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 正常执行成功（即在事务执行期间确实没有修改数据）</span></span><br><span class="line">127.0.0.1:6379&gt; <span class="built_in">set</span> <span class="keyword">in</span> 100</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; <span class="built_in">set</span> out 0</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; WATCH <span class="keyword">in</span>                 <span class="comment"># 监控 in 对象</span></span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; MULTI</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379(TX)&gt; INCRBY <span class="keyword">in</span> -20</span><br><span class="line">QUEUED</span><br><span class="line">127.0.0.1:6379(TX)&gt; INCRBY out 20</span><br><span class="line">QUEUED</span><br><span class="line">127.0.0.1:6379(TX)&gt; EXEC                 <span class="comment"># 事务正常结束，在事务执行期间外部没有修改数据</span></span><br><span class="line">1) (<span class="built_in">integer</span>) 80</span><br><span class="line">2) (<span class="built_in">integer</span>) 20</span><br></pre></td></tr></table></figure>
-
-<p>WATCH 命令可以为 Redis 事务提供 check-and-set （CAS）行为。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在事务执行期间外部了修改数据，则执行失败</span></span><br><span class="line">127.0.0.1:6379&gt; <span class="built_in">set</span> <span class="keyword">in</span> 100</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; <span class="built_in">set</span> out 0</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; WATCH <span class="keyword">in</span>                 <span class="comment"># 监控 in 对象</span></span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; MULTI</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379(TX)&gt; INCRBY <span class="keyword">in</span> -20</span><br><span class="line">QUEUED</span><br><span class="line">127.0.0.1:6379(TX)&gt; INCRBY out 20</span><br><span class="line">QUEUED</span><br><span class="line">-------------------------------------------</span><br><span class="line"><span class="comment"># 此处为另外打开一个bash执行的操作</span></span><br><span class="line">127.0.0.1:6379&gt; <span class="built_in">set</span> <span class="keyword">in</span> 200               <span class="comment"># 模拟另一个线程修改数据</span></span><br><span class="line">OK</span><br><span class="line">-------------------------------------------</span><br><span class="line"><span class="comment"># 返回原bash执行事务</span></span><br><span class="line">127.0.0.1:6379(TX)&gt; EXEC                 <span class="comment"># WATCH 监控到 in 对象发生改变，执行失败</span></span><br><span class="line">(nil)</span><br></pre></td></tr></table></figure>
-
-<p><code>UNWATCH</code> 可以取消监视。</p>
-<hr>
-<h3 id="Jedis"><a href="#Jedis" class="headerlink" title="Jedis"></a>Jedis</h3><p>Jedis是Redis官方推荐的java连接开发工具，是java操作redis的中间件。</p>
-<ol>
-<li>导入依赖jedis和fastjson</li>
-<li>测试连接</li>
-</ol>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestPing</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Jedis jedis = <span class="keyword">new</span> Jedis(<span class="string">&quot;192.168.202.128&quot;</span>, <span class="number">6379</span>);</span><br><span class="line">        <span class="comment">// jedis 所有的命令都是之前学习的redis的命令【全部一样】</span></span><br><span class="line">        System.out.println(jedis.ping());</span><br><span class="line">        jedis.close();       <span class="comment">// 关闭连接</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ol start="3">
-<li>关于事务</li>
-</ol>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestPing</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Jedis jedis = <span class="keyword">new</span> Jedis(<span class="string">&quot;192.168.233.128&quot;</span>, <span class="number">6379</span>);</span><br><span class="line"></span><br><span class="line">        jedis.flushDB();</span><br><span class="line">        Transaction transaction = jedis.multi();    <span class="comment">// 开启事务</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            transaction.set(<span class="string">&quot;name&quot;</span>, <span class="string">&quot;xunlu&quot;</span>);</span><br><span class="line">            transaction.set(<span class="string">&quot;age&quot;</span>, <span class="string">&quot;18&quot;</span>);</span><br><span class="line">            transaction.incr(<span class="string">&quot;name&quot;</span>);        <span class="comment">// 此处为运行时错误，正常执行其余指令</span></span><br><span class="line">            transaction.exec();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="comment">// 此句是为了在当try块中出现如10/0等java的错误，而非redis的错误时放弃执行事务的。</span></span><br><span class="line">            transaction.discard();</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        System.out.println(jedis.get(<span class="string">&quot;name&quot;</span>));</span><br><span class="line"></span><br><span class="line">        jedis.close();       <span class="comment">// 关闭连接</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h3 id="SpringBoot整合"><a href="#SpringBoot整合" class="headerlink" title="SpringBoot整合"></a>SpringBoot整合</h3><p>在SpringBoot 2.x之后，底层由jedis换为了lettuce。</p>
-<p>jedis：采用的直连，多个线程操作是不安全的，想要避免不安全需要使用jedis pool连接池。更像 bio模式</p>
-<p>lettuce：采用netty，实例可以在多个线程中共享，不存在不安全发情况，可以减少线程数据。更像 nio模式</p>
-<p>1、 导入依赖</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-data-redis<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>2、 配置连接</p>
-<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">spring.redis.host</span>=<span class="string">192.168.233.128     # 配置ip</span></span><br><span class="line"><span class="meta">spring.redis.port</span>=<span class="string">6379                # 端口号默认为6379，可以不配</span></span><br></pre></td></tr></table></figure>
-
-<p>3、 使用介绍</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Autowired</span></span><br><span class="line"><span class="keyword">private</span> RedisTemplate&lt;?, ?&gt; redisTemplate;   <span class="comment">// 注入模板类</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">contextLoads</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取连接 (一般很少用)</span></span><br><span class="line">    RedisConnection connection = redisTemplate.getConnectionFactory().getConnection();</span><br><span class="line">    connection.flushDb();</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * opsForValue()    操作字符串</span></span><br><span class="line"><span class="comment">     * opsForList()     操作List</span></span><br><span class="line"><span class="comment">     * opsForGeo()      操作Geo</span></span><br><span class="line"><span class="comment">     * 等等，类似上方对于8中数据类型都可以操作，选定操作对象后，具体方法和redis完全一样</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    redisTemplate.opsForValue().set(<span class="string">&quot;name&quot;</span>, <span class="string">&quot;xunlu&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 一些基本操作和常用方法都可以直接使用</span></span><br><span class="line">    redisTemplate.multi();       <span class="comment">// 开启事务</span></span><br><span class="line">    redisTemplate.keys();        <span class="comment">// 查询键</span></span><br><span class="line">    redisTemplate.rename();      <span class="comment">// 重命名</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h5 id="序列化"><a href="#序列化" class="headerlink" title="序列化"></a>序列化</h5><p>由于redis是要存储的，因此redis对象必须实现序列化（实际开发中，所有pojo包下的对象都需要实现序列化）。springboot默认的序列化为<code>JdkSerializationRedisSerializer</code>，该序列化会使中文转义。我们一般使用JSON来序列化。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 固定通用的配置，用到时直接复制即可</span></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedisConfig</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 编写自己的Template</span></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> RedisTemplate&lt;String, Object&gt; <span class="title">redisTemplate</span><span class="params">(RedisConnectionFactory redisConnectionFactory)</span> </span>&#123;</span><br><span class="line">        RedisTemplate&lt;String, Object&gt; template = <span class="keyword">new</span> RedisTemplate&lt;&gt;();</span><br><span class="line">        template.setConnectionFactory(redisConnectionFactory);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// json的序列化配置</span></span><br><span class="line">        Jackson2JsonRedisSerializer&lt;Object&gt; jsonRedisSerializer = <span class="keyword">new</span> Jackson2JsonRedisSerializer&lt;&gt;(Object.class);</span><br><span class="line">        ObjectMapper objectMapper = <span class="keyword">new</span> ObjectMapper();</span><br><span class="line">        objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);</span><br><span class="line">        objectMapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance);</span><br><span class="line">        jsonRedisSerializer.setObjectMapper(objectMapper);</span><br><span class="line">        <span class="comment">// String的序列化配置</span></span><br><span class="line">        StringRedisSerializer stringRedisSerializer = <span class="keyword">new</span> StringRedisSerializer();</span><br><span class="line"></span><br><span class="line">        template.setKeySerializer(stringRedisSerializer);     <span class="comment">// key采用string序列化方法</span></span><br><span class="line">        template.setValueSerializer(jsonRedisSerializer);     <span class="comment">// Value采用json序列化方法</span></span><br><span class="line">        template.setHashKeySerializer(stringRedisSerializer); <span class="comment">// HashKey采用string序列化方法</span></span><br><span class="line">        template.setHashValueSerializer(jsonRedisSerializer); <span class="comment">// HashValue采用json序列化方法</span></span><br><span class="line">        template.afterPropertiesSet();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> template;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h3 id="Redis-conf-解析"><a href="#Redis-conf-解析" class="headerlink" title="Redis.conf 解析"></a>Redis.conf 解析</h3><p><a href="%5BRedis%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6redis.conf%E8%B6%85%E8%AF%A6%E7%BB%86%E7%9A%84%E8%A7%A3%E6%9E%90-Redis-PHP%E4%B8%AD%E6%96%87%E7%BD%91%5D(https://www.php.cn/redis/470708.html)">redis.conf 解析</a></p>
-<hr>
-<h3 id="redis的淘汰机制"><a href="#redis的淘汰机制" class="headerlink" title="redis的淘汰机制"></a>redis的淘汰机制</h3><p><strong>redis的过期策略</strong></p>
-<p>redis有两种过期策略，定期删除和惰性删除</p>
-<ul>
-<li><strong>定期删除</strong>：redis每个100ms随机抽取一些设置了过期时间的key，检查其是否过期，如果过期就删除。</li>
-<li><strong>惰性删除</strong>：在获取某个key的时候，redis检查一下，如果该key设置了过期时间则判断该过期时间是否已经过期，如果过期了就直接删掉并不返回任何东西。</li>
-</ul>
-<p><strong>redis的内存淘汰机制</strong></p>
-<p>当redis内存快耗尽时，redis会启动内存淘汰机制，将部分key清掉以腾出内存。</p>
-<p>redis提供6中数据淘汰策略，可在redis.conf中配置：maxmemory-policy noeviction</p>
-<ul>
-<li>noeviction：禁止驱逐数据。默认配置都是这个。当内存使用达到阀值的时候，所有引起申请内存的命令都会报错。</li>
-<li>volatile-lru：从设置了过期时间的数据集中挑选最近最久未使用的数据淘汰。</li>
-<li>volatile-ttl：从已设置了过期时间的数据集中挑选即将要过期的数据淘汰。</li>
-<li>volatile-random：从已设置了过期时间的数据集中任意选择数据淘汰。</li>
-<li>allkeys-lru：从数据集中挑选最近最久未使用的数据淘汰。</li>
-<li>allkeys-random：从数据集中任意选择数据淘汰。</li>
-</ul>
-<p>当Redis确定好要驱逐某个键值对后，会删除这个数据，并将这个数据变更消息同步到本地和从机。</p>
-<p><strong>LRU和LFU区别</strong>：</p>
-<p>LRU是最近最久未使用，LFU是最近最少使用。</p>
-<p>举例：若页框数量为 3，页面顺序如：<code>1 2 1 2 3 4</code>；则4号页面进入时会发生页面置换。若使用LRU置换的是1；若使用LFU置换的是3</p>
-<p>LRU是从时间上看，最后一次调用到页面置换时刻间隔最久的置换出去；LRU可通过HashMap＋双向链表实现。</p>
-<p>LFU是从使用频次上看，内存中的所有页面中使用频次最少的置换出去；LFU可通过HashMap＋PriorityQueue实现。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/04/01/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E7%AC%94%E8%AE%B0/" data-id="cl3ir9vw4003akkaq98gh68n4" data-title="Redis基础" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-数据库/MySQL/MySQL主从复制" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/" class="article-date">
-  <time class="dt-published" datetime="2022-03-27T13:39:41.000Z" itemprop="datePublished">2022-03-27</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/">MySQL主从复制</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h3 id="主从复制功能"><a href="#主从复制功能" class="headerlink" title="主从复制功能"></a>主从复制功能</h3><ul>
-<li>数据分布</li>
-<li>负载均衡（读）</li>
-<li>备份</li>
-<li>高可用和故障切换</li>
-</ul>
-<h3 id="复制原理"><a href="#复制原理" class="headerlink" title="复制原理"></a>复制原理</h3><p>Mysql 中有一种日志叫做 bin 日志（二进制日志）。这个日志会记录下所有修改了数据库的SQL 语句（insert,update,delete,create/alter/drop table, grant 等等）。<br>主从复制的原理其实就是把主服务器上的 bin 日志复制到从服务器上执行一遍，这样从服务器上的数据就和主服务器上的数据相同了。</p>
-<h3 id="复制过程"><a href="#复制过程" class="headerlink" title="复制过程"></a>复制过程</h3><ol>
-<li>主节点开启bin-log功能，记录任何修改了数据库数据的事件。</li>
-<li>从节点开启一个线程（I/O Thread)把自己扮演成 mysql 的客户端，请求主节点的bin-log，position之后的内容。</li>
-<li>主节点启动一个线程（dump Thread），将bin-log内容，position返回给从节点 IO 线程。</li>
-<li>从节点接收到主节点发送过来的数据把它放置到中继日志（Relay log）文件中。</li>
-<li>从节点启动另外一个线程（sql Thread ），把 Relay log 中的事件读取出来，并在本地再执行一次。</li>
-</ol>
-<h3 id="读写分离"><a href="#读写分离" class="headerlink" title="读写分离"></a>读写分离</h3><p>master负责写入数据，slave负责读取数据。</p>
-<p>读写分离可以使用ShardingSphere-JDBC实现。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/" data-id="cl3ir9vvb001skkaqbs459yf9" data-title="MySQL主从复制" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-数据库/MySQL/InnoDB锁" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/InnoDB%E9%94%81/" class="article-date">
-  <time class="dt-published" datetime="2022-03-27T09:39:41.000Z" itemprop="datePublished">2022-03-27</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/InnoDB%E9%94%81/">InnoDB锁</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>锁机制用于管理对共享资源的并发访问。</p>
-<h2 id="1、锁粒度"><a href="#1、锁粒度" class="headerlink" title="1、锁粒度"></a>1、锁粒度</h2><ul>
-<li><p><strong>表锁</strong>是MySQL中最大粒度的锁定机制，会锁定整张表，可以很好的避免死锁，是 MySQL 中最大颗粒度的锁定机制。表锁由 MySQL Server 实现，一般在执行 DDL 语句时会对整个表进行加锁，比如说<code>ALTER TABLE</code>等操作。在执行 DML 语句时，也可以通过<code>LOCK TABLES</code>显式指定对某个表进行加锁。</p>
-</li>
-<li><p><strong>页级锁</strong>锁定一页，主要应用于 BDB 存储引擎。</p>
-</li>
-<li><p><strong>行级锁</strong>的锁定颗粒度在 MySQL 中是最小的，只针对操作的当前行进行加锁，所以行级锁发生锁定资源争用的概率也最小。只有通过索引进行检索的时候才会使用行级锁，否则会使用表级锁。InnoDB 默认使用行级锁。</p>
-</li>
-</ul>
-<h2 id="2、行锁详解"><a href="#2、行锁详解" class="headerlink" title="2、行锁详解"></a>2、行锁详解</h2><p>InnoDB默认使用行锁，实现了两种标准的行锁——共享锁与排他锁；</p>
-<p><img src="%E5%85%B1%E4%BA%AB%E9%94%81%E4%B8%8E%E6%8E%92%E4%BB%96%E9%94%81.png" alt="共享锁与排他锁"></p>
-<p>1、除了显式加锁的情况，其他情况下的加锁与解锁都无需人工干预。<br>2、InnoDB所有的行锁算法都是基于索引实现的，锁定的也都是索引或索引区间</p>
-<p><strong>lock in share mode</strong>与<strong>for update</strong>的区别：</p>
-<ol>
-<li>lock in share mode 是共享锁；for update 是排他锁</li>
-<li>没有覆盖索引时，两种锁都需要即锁辅助索引又锁主键索引；当有覆盖索引时，lock in share mode 只锁辅助索引，而 for update 即锁辅助索引又锁主键索引。</li>
-</ol>
-<h2 id="3、当前读与快照读"><a href="#3、当前读与快照读" class="headerlink" title="3、当前读与快照读"></a>3、当前读与快照读</h2><p><strong>1、当前读：</strong>即加锁读，读取记录的最新版本，会加锁保证其他并发事务不能修改当前记录，直至获取锁的事务释放锁；使用当前读的操作主要包括：显式加锁的读操作与插入/更新/删除等写操作。</p>
-<p><strong>2、快照读</strong>：即不加锁读，读取记录的快照版本而非最新版本，通过MVCC实现；</p>
-<p>InnoDB默认的RR事务隔离级别下，不显式加『lock in share mode』与『for update』的『select』操作都属于快照读，保证事务执行过程中只有第一次读之前提交的修改和自己的修改可见，其他的均不可见；</p>
-<h2 id="4、MVCC"><a href="#4、MVCC" class="headerlink" title="4、MVCC"></a>4、MVCC</h2><p>MVCC『多版本并发控制』，与之对应的是『基于锁的并发控制』；</p>
-<p>MVCC的最大好处：读不加任何锁，读写不冲突，对于读操作多于写操作的应用，极大的增加了系统的并发性能；</p>
-<p><img src="mvcc.png" alt="mvcc"></p>
-<h2 id="5、锁算法"><a href="#5、锁算法" class="headerlink" title="5、锁算法"></a>5、锁算法</h2><p>InnoDB主要实现了三种行锁算法：</p>
-<p><img src="%E4%B8%89%E7%A7%8D%E8%A1%8C%E9%94%81%E7%AE%97%E6%B3%95.png" alt="三种行锁算法"></p>
-<h3 id="5-1、记录锁"><a href="#5-1、记录锁" class="headerlink" title="5.1、记录锁"></a>5.1、记录锁</h3><p><code>记录锁(Record Locks)</code>也称为行锁，顾名思义，表示对某一行记录加锁。</p>
-<h3 id="5-2、间隙锁"><a href="#5-2、间隙锁" class="headerlink" title="5.2、间隙锁"></a>5.2、间隙锁</h3><p>Gap锁，锁定的是索引记录之间的间隙，是防止幻读的关键；并发事务插入新数据前会先检测间隙中是否已被加锁，防止幻读的出现；间隙锁与间隙锁不互斥。</p>
-<p>注意！间隙锁锁住的是一个区间，而不仅仅是这个区间中目前仅存在的数据行。</p>
-<ul>
-<li><code>插入意向锁(Insert Intention Locks)</code>是在插入一条记录行前，由 <code>INSERT</code> 操作产生的一种<code>间隙锁</code>。该锁用以表示插入意向，当多个事务在同一区间插入位置不同的多条数据时，事务之间不需要互相等待。假设存在两条值分别为 4 和 7 的记录，两个不同的事务分别试图插入值为 5 和 6 的两条记录，每个事务在获取插入行上排他锁前，都会获取（4，7）之间的间隙锁，但是因为数据行之间并不冲突，所以两个事务之间并不会产生冲突（阻塞等待）。</li>
-</ul>
-<h3 id="5-3、临键锁"><a href="#5-3、临键锁" class="headerlink" title="5.3、临键锁"></a>5.3、临键锁</h3><p><strong>临键锁</strong>，是<strong>记录锁与间隙锁的组合</strong>，它的封锁范围，既包含索引记录，又包含索引区间。通过临键锁可以解决幻读的问题。</p>
-<h2 id="6、表级锁"><a href="#6、表级锁" class="headerlink" title="6、表级锁"></a>6、表级锁</h2><h3 id="6-1、意向锁"><a href="#6-1、意向锁" class="headerlink" title="6.1、意向锁"></a>6.1、意向锁</h3><p><code>意向锁（Intention Locks）</code>是<strong>表级锁</strong>，指示事务稍后需要对表中的行使用哪种类型的锁（共享锁或独占锁）。</p>
-<p>意向锁有两种类型：</p>
-<ul>
-<li>意向共享锁（IS）：一个事务在获取（任何一行/或者全表）S锁之前，一定会先在所在的表上加IS锁。</li>
-<li>意向排它锁（IX）：一个事务在获取（任何一行/或者全表）X锁之前，一定会先在所在的表上加IX锁。</li>
-</ul>
-<p>意图锁定协议如下：</p>
-<ul>
-<li>在事务可以获取表中行的共享锁之前，它必须首先获取<code>IS</code>表上的锁或更强的锁。</li>
-<li>在事务获得表中行的排他锁之前，它必须首先获得<code>IX</code> 表的锁。</li>
-</ul>
-<h3 id="6-2、自增锁"><a href="#6-2、自增锁" class="headerlink" title="6.2、自增锁"></a>6.2、自增锁</h3><p><code>自增锁(auto-inc Locks)</code>是一种特殊的表级锁，主要用于事务中插入自增字段，也就是我们最常用的自增主键id。在最简单的情况下，如果一个事务正在向表中插入值，则任何其他事务都必须等待自己插入到该表中，以便第一个事务插入的行接收连续的主键值。</p>
-<h2 id="7、加锁规则"><a href="#7、加锁规则" class="headerlink" title="7、加锁规则"></a>7、加锁规则</h2><ul>
-<li>原则1：加锁的基本单位是next-key lock。next-key lock是前开后闭区间。</li>
-<li>原则2：查找过程中访问到的对象才会加锁。</li>
-<li>原则3：索引上的等值查询，给唯一索引加锁的时候，next-key lock退化为行锁。</li>
-<li>原则4：索引上的等值查询，向右遍历时且最后一个值不满足等值条件的时候，next-key lock退化为间隙锁。</li>
-<li>原则5：唯一索引上的范围查询会访问到不满足条件的第一个值为止。</li>
-</ul>
-<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/WSYW126/article/details/105324239">具体案例</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/InnoDB%E9%94%81/" data-id="cl3ir9vv7001kkkaqf0vc7jax" data-title="InnoDB锁" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-数据库/MySQL/MySQL小知识" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E5%B0%8F%E7%9F%A5%E8%AF%86/" class="article-date">
-  <time class="dt-published" datetime="2022-03-27T09:39:41.000Z" itemprop="datePublished">2022-03-27</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E5%B0%8F%E7%9F%A5%E8%AF%86/">MySQL小知识</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h3 id="1、or和union的区别"><a href="#1、or和union的区别" class="headerlink" title="1、or和union的区别"></a>1、or和union的区别</h3><p>对于单列来说，用or是没有任何问题的，但是or涉及到多个列的时候，每次select只能选取一个index，另一列需要进行table-scan，即全部扫描一遍，但是使用union就可以解决这个问题，分别使用各自列的index进行查询。 但是这里还会有一个问题就是，UNION会对结果进行排序去重，可能会降低一些performance。</p>
-<h3 id="2、having和where的区别"><a href="#2、having和where的区别" class="headerlink" title="2、having和where的区别"></a>2、having和where的区别</h3><ul>
-<li>where是在分组前对数据进行过滤；where后面不可以使用聚合函数</li>
-<li>having是在分组后对数据进行过滤；having后面可以使用聚合函数</li>
-</ul>
-<p>having 的作用就是弥补 where 的粗粒度，实现在组内更细粒度的筛选。</p>
-<p>在查询过程中执行顺序：from&gt;where&gt;group（含聚合）&gt;having&gt;order&gt;select。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/03/27/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E5%B0%8F%E7%9F%A5%E8%AF%86/" data-id="cl3ir9vvc001ukkaqbklg4sfw" data-title="MySQL小知识" class="article-share-link">分享</a>
       
       
       
@@ -1310,7 +1296,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%A1%B9%E7%9B%AE/">项目</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86/">实习经历</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
     </div>
   </div>
 
@@ -1325,7 +1311,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">七月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">八月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">七月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
     </div>
   </div>
 
@@ -1338,23 +1324,23 @@
       <ul>
         
           <li>
-            <a href="/2022/07/09/Java/Netty/">Netty</a>
+            <a href="/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E9%9B%86%E7%BE%A4/">ElasticSearch集群</a>
           </li>
         
           <li>
-            <a href="/2022/06/21/%E9%A1%B9%E7%9B%AE/%E6%A0%A1%E6%8B%9B%E5%87%86%E5%A4%87%E9%A1%B9%E7%9B%AE/">搁置项目</a>
+            <a href="/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E8%87%AA%E5%8A%A8%E5%8F%91%E7%8E%B0/">ElasticSearch集群</a>
           </li>
         
           <li>
-            <a href="/2022/06/06/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/Kuberbetes/Kuberbetes%E5%9F%BA%E7%A1%80/">Kuberbetes基础</a>
+            <a href="/2022/08/06/%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86/%E9%9C%80%E6%B1%82%E5%AE%9E%E7%8E%B0/">需求实现</a>
           </li>
         
           <li>
-            <a href="/2022/06/02/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/">分布式基础</a>
+            <a href="/2022/07/24/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E5%9F%BA%E7%A1%80/">ElasticSearch基础</a>
           </li>
         
           <li>
-            <a href="/2022/06/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/HTTP/">HTTP</a>
+            <a href="/2022/07/11/%E9%9D%A2%E7%BB%8F/%E5%B1%B1%E8%A5%BF%E5%BB%BA%E8%A1%8C%E6%9A%91%E6%9C%9F%E5%AE%9E%E4%B9%A0%E9%9D%A2%E7%BB%8F/">山西建行暑期实习面经</a>
           </li>
         
       </ul>

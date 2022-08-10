@@ -73,6 +73,292 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-分布式/分布式基础/分布式锁" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" class="article-date">
+  <time class="dt-published" datetime="2022-05-30T02:42:15.000Z" itemprop="datePublished">2022-05-30</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">分布式锁</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="1、前言"><a href="#1、前言" class="headerlink" title="1、前言"></a>1、前言</h2><p>单纯的Java Api并不能提供分布式锁的能力。目前比较常用的分布式锁的实现方案有如下三种：</p>
+<ul>
+<li>基于数据库实现分布式锁</li>
+<li>基于缓存实现分布式锁 </li>
+<li>基于Zookeeper实现分布式锁</li>
+</ul>
+<p>分布式锁应该实现如下功能：</p>
+<ul>
+<li>互斥性：在任何时刻，对于同一条数据，只有一台应用可以获取到分布式锁；</li>
+<li>高可用性：在分布式场景下，一小部分服务器宕机不影响正常使用，这种情况就需要将提供分布式锁的服务以集群的方式部署；</li>
+<li>防止锁超时：如果客户端没有主动释放锁，服务器会在一段时间之后自动释放锁，防止客户端宕机或者网络不可达时产生死锁；</li>
+<li>独占性：加锁解锁必须由同一台服务器进行，也就是锁的持有者才可以释放锁，不能出现你加的锁，别人给你解锁了；</li>
+</ul>
+<h2 id="2、基于数据库实现分布式锁"><a href="#2、基于数据库实现分布式锁" class="headerlink" title="2、基于数据库实现分布式锁"></a>2、基于数据库实现分布式锁</h2><h3 id="2-1、实现方式"><a href="#2-1、实现方式" class="headerlink" title="2.1、实现方式"></a>2.1、实现方式</h3><p>在数据库中存储方法名，将数据库的自动提交关闭，然后在查询语句后面增加<code>for update</code>来查询需要上锁的方法名，数据库会在查询过程中给数据库表增加排他锁。值得注意的是：只有通过索引进行检索的时候才会使用行级锁，所以应该给方法名加上唯一锁，同时为了避免重载方法也被锁住，应该在方法名上将参数类型也加上。等临界资源使用完毕后再手动提交事务。</p>
+<h3 id="2-2、缺点"><a href="#2-2、缺点" class="headerlink" title="2.2、缺点"></a>2.2、缺点</h3><ul>
+<li>数据在磁盘中，查询开销很大</li>
+<li>事务提交之前客户端失联，会导致死锁</li>
+<li>如果表中数据量不大，查询优化器可能会通过全表扫描执行，此时会使用表锁，而非行锁。</li>
+</ul>
+<h2 id="3、基于缓存实现分布式锁"><a href="#3、基于缓存实现分布式锁" class="headerlink" title="3、基于缓存实现分布式锁"></a>3、基于缓存实现分布式锁</h2><h3 id="3-1、实现方式"><a href="#3-1、实现方式" class="headerlink" title="3.1、实现方式"></a>3.1、实现方式</h3><p>以 redis 为例来说明基于缓存实现分布式锁。</p>
+<p><code>Redis</code>分布式锁主要是通过在 set 命令中添加 nx 和 ex 这两个参数实现的。</p>
+<p>核心思想就是每次想要获取锁的时候，就对一个固定的 key 值以 <code>SET  NX  EX</code>的方式存放，如果成功，就说明获取锁成功，否则以自旋的方式持续获取锁，直到超时获取失败。解锁通过 LUA 代码实现，LUA是原子性的。</p>
+<h3 id="3-2、优缺点"><a href="#3-2、优缺点" class="headerlink" title="3.2、优缺点"></a>3.2、优缺点</h3><p>优点：性能好，redis 是 NoSQL，数据在内存中，支持高性能，高并发。</p>
+<p>缺点：过期时间需要手动提前设置，若设置太长当线程阻塞后需要较长时间才锁过期，会影响性能，若设置太短会导致提前释放产生并发问题。所以可靠性稍低。</p>
+<p><a href="https://ethereal-lu.github.io/2022/04/12/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">关于 redis 实现分布式锁更多内容查看 redis 目录中的分布式锁篇章</a></p>
+<h2 id="4、基于Zookeeper实现分布式锁"><a href="#4、基于Zookeeper实现分布式锁" class="headerlink" title="4、基于Zookeeper实现分布式锁"></a>4、基于Zookeeper实现分布式锁</h2><h3 id="4-1、实现方式"><a href="#4-1、实现方式" class="headerlink" title="4.1、实现方式"></a>4.1、实现方式</h3><ol>
+<li>在与方法对应的永久节点下创建一个临时序号节点</li>
+<li>获取当前永久节点下的所有子节点</li>
+<li>判断自己是否是最小节点<ul>
+<li>如果是，上锁成功</li>
+<li>如果不是，说明前面还有锁，上锁失败，监听比自己小的节点，形成链式监听，当触发监听时，再次执行步骤 2</li>
+</ul>
+</li>
+</ol>
+<p><strong>惊群效应</strong>（羊群效应）：如果在上锁时，每个节点监听的是最小的节点，那么每次最小节点发生改变都会触发大量的监听事件，对于 zk 压力非常大，这就是惊群效应。故应该使用上述的链式监听，因为如果前一个结点没有获取到锁，自然也轮不到自己获取。这样只能实现公平锁。</p>
+<ul>
+<li>客户端突然失联，会自动释放锁</li>
+<li>可以在临时序号节点的值中保存当前主机和线程的信息，实现可重入锁</li>
+</ul>
+<h3 id="4-2、优缺点"><a href="#4-2、优缺点" class="headerlink" title="4.2、优缺点"></a>4.2、优缺点</h3><p>优点：可靠性高；断开连接自动释放锁，无需手动设置过期时间</p>
+<p>缺点：</p>
+<ul>
+<li>性能没有 reids 高。因为每次在创建锁和释放锁的过程中，都要动态创建、销毁瞬时节点来实现锁功能。ZK中创建和删除节点只能通过Leader服务器来执行，然后将数据同不到所有的Follower机器上。</li>
+<li>可能产生并发问题：如果由于网络抖动，服务端没有收到客户端的心跳包，服务端就会删除临时节点让其他节点获取锁，从而使多个客户端获取到锁。但是 zk 有重试机制，如果检测不到客户端的心跳，就会重试连接，所以这种情况并不常见。</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" data-id="cl40o2ces0005mgaq4jbhfrn3" data-title="分布式锁" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-数据结构/零碎算法" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/05/22/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%9B%B6%E7%A2%8E%E7%AE%97%E6%B3%95/" class="article-date">
+  <time class="dt-published" datetime="2022-05-22T03:12:41.000Z" itemprop="datePublished">2022-05-22</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/05/22/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%9B%B6%E7%A2%8E%E7%AE%97%E6%B3%95/">零碎算法</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="不大于-num-的最大值"><a href="#不大于-num-的最大值" class="headerlink" title="不大于 num 的最大值"></a>不大于 num 的最大值</h2><p>给定整数 num，使用数组 arr 中的元素组成不大于 num 的最大数；1 &lt;= arr[i] &lt;= 9。例如 arr = {1, 2, 4, 9}，num = 2533，则返回 2499。</p>
+<p><strong>整体思路：</strong>每次都选择恰好等于当前值的元素，若顺利遍历完则所选元素组成的数等于给定值；若遍历到某个值时数组中的所有元素都大于该值，则需要回溯，将前一个元素减小；若遍历到某个值时数组中不存在等于当前值的元素，则选择较小的元素，并将之后所有元素全部置为数组中的最大值。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.Arrays;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">findMax</span><span class="params">(<span class="keyword">int</span>[] arr, <span class="keyword">int</span> num)</span> </span>&#123;</span><br><span class="line">        Arrays.sort(arr);</span><br><span class="line">        <span class="keyword">int</span> n = String.valueOf(num).length();</span><br><span class="line">        <span class="keyword">int</span> ret = dfs(arr, num, <span class="number">0</span>, <span class="number">0</span>, n);</span><br><span class="line">        <span class="comment">// 这里 ret &lt; 0 是递归的最外层返回 -1，说明数位相同没有答案，必须少一位。</span></span><br><span class="line">        <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            ret = <span class="number">0</span>;</span><br><span class="line">            <span class="keyword">while</span> (ret &lt; num) ret = ret * <span class="number">10</span> + arr[arr.length - <span class="number">1</span>];</span><br><span class="line">            ret /= <span class="number">10</span>;</span><br><span class="line">            <span class="comment">// 这里 ret 如果为 0，说明数组中的数不可能组成答案。</span></span><br><span class="line">            ret = ret == <span class="number">0</span> ? -<span class="number">1</span> : ret;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 只负责处理第一个数位相同的情况，因为数位不相同的情况只有一种，很简单，交给主函数处理即可。</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">dfs</span><span class="params">(<span class="keyword">int</span>[] arr, <span class="keyword">int</span> num, <span class="keyword">int</span> target, <span class="keyword">int</span> index, <span class="keyword">int</span> n)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (index == n) &#123;</span><br><span class="line">            <span class="keyword">if</span> (target &lt;= num) <span class="keyword">return</span> target;</span><br><span class="line">            <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> curr = Integer.parseInt(String.valueOf(num).charAt(index) + <span class="string">&quot;&quot;</span>);</span><br><span class="line">        <span class="comment">// arr[i] 为不大于 curr 的最大值</span></span><br><span class="line">        <span class="keyword">int</span> i = arr.length - <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">for</span> (; i &gt;= <span class="number">0</span> &amp;&amp; arr[i] &gt; curr; i--);</span><br><span class="line">        <span class="comment">// i &lt; 0 表示所有值都大于 curr。不正确，回退。</span></span><br><span class="line">        <span class="keyword">if</span> (i &lt; <span class="number">0</span>) <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">        <span class="keyword">int</span> ret = -<span class="number">1</span>;</span><br><span class="line">        <span class="comment">// arr[i] == curr, 继续往后走。</span></span><br><span class="line">        <span class="keyword">if</span> (arr[i] == curr) &#123;</span><br><span class="line">            ret = dfs(arr, num, target * <span class="number">10</span> + arr[i], index + <span class="number">1</span>, n);</span><br><span class="line">            <span class="keyword">if</span> (ret &gt; <span class="number">0</span>) <span class="keyword">return</span> ret;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// arr[i] &lt; curr，则后续所有值直接取最大值即可。</span></span><br><span class="line">        <span class="keyword">if</span> (arr[i] &lt; curr || i &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="comment">// 如果 arr[i] == curr 且走到这里，说明当前选择 arr[i] 走不通，选择更小的 arr[i - 1];</span></span><br><span class="line">            <span class="keyword">if</span> (arr[i] == curr) i--;</span><br><span class="line">            target = target * <span class="number">10</span> + arr[i];</span><br><span class="line">            <span class="keyword">while</span> (target &lt; num) target = target * <span class="number">10</span> + arr[arr.length - <span class="number">1</span>];</span><br><span class="line">            ret = target / <span class="number">10</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Solution solution = <span class="keyword">new</span> Solution();</span><br><span class="line">        System.out.println(solution.findMax(<span class="keyword">new</span> <span class="keyword">int</span>[]&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">4</span>, <span class="number">9</span>&#125;, <span class="number">2533</span>));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="右侧小于当前元素的个数"><a href="#右侧小于当前元素的个数" class="headerlink" title="右侧小于当前元素的个数"></a>右侧小于当前元素的个数</h2><p>给你一个整数数组 nums ，按要求返回一个新数组 counts 。数组 counts 有该性质： counts[i] 的值是  nums[i] 右侧小于 nums[i] 的元素的数量。如：nums = [5,2,6,1]，返回 [2,1,1,0] </p>
+<p>线段树适用的场景为<strong>单点修改，区间查询</strong>。</p>
+<p><strong>整体思路：</strong></p>
+<p>用桶表示数组中的每一个数，桶中记录这些数字出现的次数。假设nums = {5, 5, 2, 3, 6}，那么遍历这个序列得到的桶是这样的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">index  -&gt;  1 2 3 4 5 6 7 8 9</span><br><span class="line">value  -&gt;  0 1 1 0 2 1 0 0 0</span><br></pre></td></tr></table></figure>
+
+<p>初始桶中元素全部为 0，从后往前遍历序列数组，每次把遍历到的当前元素所在桶的值加 1，然后求出当前桶之前的全部桶的值之和就是在之前已经遍历过的所有数中有多少个数小于当前值。</p>
+<p>由于数组中值的值域非常大，所以不能为整个值域都放一个桶。将原数组去重并排序，我们记录下数组中每个值与排序之后的下标的映射关系，之后从后往前遍历数组时，根据该映射表找到当前值对应的下标，并将下标所在的桶的值加 1，然后求出下标之前的所有桶之和即为当前位置的答案。</p>
+<p>如此转换后，对每个值所在桶加 1，即为单点修改；查询之前全部桶之和即为区间查询。所以可以使用线段树了。</p>
+<p><strong>注：</strong>逆序对的题与该题完全一样。逆序对也就是求每个数之后有几个数小于当前数。解法也毫无差别。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 数组表示的线段树</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span>[] sengment;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> List&lt;Integer&gt; <span class="title">countSmaller</span><span class="params">(<span class="keyword">int</span>[] nums)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 对原数组排序</span></span><br><span class="line">        <span class="keyword">int</span>[] sorted = Arrays.stream(nums).distinct().sorted().toArray();</span><br><span class="line">        <span class="comment">// 存储值与排序后下标的映射关系</span></span><br><span class="line">        Map&lt;Integer, Integer&gt; map = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; sorted.length; i++) &#123;</span><br><span class="line">            map.put(sorted[i], i);</span><br><span class="line">        &#125;</span><br><span class="line">        List&lt;Integer&gt; ret = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        sengment = <span class="keyword">new</span> <span class="keyword">int</span>[sorted.length * <span class="number">4</span>];</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = nums.length - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) &#123;</span><br><span class="line">            <span class="comment">// 用 map 找出当前值对应的下标，并将下标所在桶的值加 1</span></span><br><span class="line">            update(<span class="number">0</span>, <span class="number">0</span>, sorted.length - <span class="number">1</span>, map.get(nums[i]));</span><br><span class="line">            <span class="comment">// 特殊处理，数组中最小的数的后边小于其的个数为 0，防止下方search方法参数异常</span></span><br><span class="line">            <span class="keyword">if</span> (map.get(nums[i]) == <span class="number">0</span>) &#123;</span><br><span class="line">                ret.add(<span class="number">0</span>);</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 当前值之前全部桶之和</span></span><br><span class="line">            ret.add(search(<span class="number">0</span>, <span class="number">0</span>, sorted.length - <span class="number">1</span>, <span class="number">0</span>, map.get(nums[i]) - <span class="number">1</span>));</span><br><span class="line">        &#125;</span><br><span class="line">        Collections.reverse(ret);</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 单点修改</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">update</span><span class="params">(<span class="keyword">int</span> node, <span class="keyword">int</span> left, <span class="keyword">int</span> right, <span class="keyword">int</span> index)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (left == right) &#123;</span><br><span class="line">            sengment[node]++;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> mid = (left + right) / <span class="number">2</span>;</span><br><span class="line">        <span class="keyword">if</span> (mid &lt; index) </span><br><span class="line">            update(node * <span class="number">2</span> + <span class="number">2</span>, mid + <span class="number">1</span>, right, index);</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            update(node * <span class="number">2</span> + <span class="number">1</span>, left, mid, index);</span><br><span class="line">        sengment[node] = sengment[node * <span class="number">2</span> + <span class="number">1</span>] + sengment[node * <span class="number">2</span> + <span class="number">2</span>];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 区间查询</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">search</span><span class="params">(<span class="keyword">int</span> node, <span class="keyword">int</span> left, <span class="keyword">int</span> right, <span class="keyword">int</span> lboard, <span class="keyword">int</span> rboard)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (left == lboard &amp;&amp; right == rboard) <span class="keyword">return</span> sengment[node];</span><br><span class="line">        <span class="keyword">int</span> mid = (left + right) / <span class="number">2</span>;</span><br><span class="line">        <span class="keyword">if</span> (lboard &gt; mid) <span class="keyword">return</span> search(node * <span class="number">2</span> + <span class="number">2</span>, mid + <span class="number">1</span>, right, lboard, rboard);</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (rboard &lt;= mid) <span class="keyword">return</span> search(node * <span class="number">2</span> + <span class="number">1</span>, left, mid, lboard, rboard);</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">return</span> search(node * <span class="number">2</span> + <span class="number">1</span>, left, mid, lboard, mid) + </span><br><span class="line">            search(node * <span class="number">2</span> + <span class="number">2</span>, mid + <span class="number">1</span>, right, mid + <span class="number">1</span>, rboard);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/05/22/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%9B%B6%E7%A2%8E%E7%AE%97%E6%B3%95/" data-id="cl3ir9vui0008kkaqg0sf352y" data-title="零碎算法" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-分布式/分布式基础/分布式事务" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/05/19/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" class="article-date">
+  <time class="dt-published" datetime="2022-05-19T09:42:15.000Z" itemprop="datePublished">2022-05-19</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/05/19/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/">分布式事务</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="1-事务"><a href="#1-事务" class="headerlink" title="1 事务"></a>1 事务</h2><p>事务可以看做是一次大的活动，它由不同的小活动组成，这些活动要么全部成功，要么全部失败。</p>
+<h3 id="1-1-本地事务"><a href="#1-1-本地事务" class="headerlink" title="1.1 本地事务"></a>1.1 本地事务</h3><p>在计算机系统中，更多的是通过关系型数据库来控制事务，这是利用数据库本身的事务特性来实现的，因此叫数据库事务，由于应用主要靠关系数据库来控制事务，而数据库通常和应用在同一个服务器，所以基于关系型数据库的事务又被称为本地事务。</p>
+<h3 id="1-2-分布式事务"><a href="#1-2-分布式事务" class="headerlink" title="1.2 分布式事务"></a>1.2 分布式事务</h3><p>随着互联网的快速发展，软件系统由原来的单体应用转变为分布式应用。分布式系统会把一个应用系统拆分为可独立部署的多个服务，因此需要服务与服务之间远程协作才能完成事务操作，这种分布式系统环境下由不同的服务之间通过网络远程协作完成事务称之为<strong>分布式事务</strong>，例如用户注册送积分事务、创建订单减库存事务，银行转账事务等都是分布式事务。</p>
+<h3 id="1-3-BASE-理论"><a href="#1-3-BASE-理论" class="headerlink" title="1.3 BASE 理论"></a>1.3 BASE 理论</h3><p>由于 CAP 理论，大型互联网应用为达到良好的响应性能来提高用户体验，一般会保证 P 和 A ，舍弃 C 强一致，保证最终一致性。</p>
+<p>BASE 是 Basically Available（基本可用）、Soft state（软状态）和 Eventually consistent （最终一致性）三个短语的缩写。BASE 理论通过牺牲强一致性来获得可用性，当出现故障允许部分不可用但要保证核心功能可用，允许数据在一段时间内是不一致的，但最终达到一致状态。满足BASE理论的事务，我们称之为“<strong>柔性事务</strong>”。</p>
+<p>基本可用：分布式系统在出现故障时，允许损失部分可用功能，保证核心功能可用。如电商网站交易付款出现问题了，商品依然可以正常浏览。</p>
+<p>软状态：由于不要求强一致性，所以BASE允许系统中存在中间状态（也叫软状态），这个状态不影响系统可用性，如订单的”支付中”、“数据同步中”等状态，待数据最终一致后状态改为“成功”状态。</p>
+<p>最终一致：最终一致是指经过一段时间后，所有节点数据都将会达到一致。如订单的”支付中”状态，最终会变 为“支付成功”或者”支付失败”，使订单状态与实际交易结果达成一致，但需要一定时间的延迟、等待。</p>
+<h2 id="2-分布式事务解决方案"><a href="#2-分布式事务解决方案" class="headerlink" title="2 分布式事务解决方案"></a>2 分布式事务解决方案</h2><h3 id="2-1-2PC"><a href="#2-1-2PC" class="headerlink" title="2.1 2PC"></a>2.1 2PC</h3><p>2PC 即两阶段提交协议，是将整个事务流程分为两个阶段，准备阶段（Prepare phase）、提交阶段（commit phase），2 是指两个阶段，P 是指准备阶段，C 是指提交阶段。</p>
+<p>整个事务过程由事务管理器和参与者组成，事务管理器负责决策整个分布式事务的提交和回滚，事务参与者负责自己本地事务的提交和回滚。</p>
+<ol>
+<li>在<strong>准备阶段</strong> 事务管理器给每个参与者发送 Prepare 消息，每个数据库参与者在本地执行事务（此时本地事务不提交），并将自己的执行结果发送给事务管理器。</li>
+<li>在<strong>提交阶段</strong> 事务管理器只要发现有任意一个数据库参与者执行失败，就会直接给每个参与者发送回滚（Rollback）消息；否则，发送提交（Commit）消息；参与者根据事务管理器的指令执行提交或者回滚操作，并释放事务处理过程中使用的锁资源。注意：<strong>必须在最后阶段释放锁资源</strong>。</li>
+</ol>
+<p>tips：Mysql 中，事务执行是指在内存中修改值；事务提交是指将 undolog 和  redolog 存储在磁盘中。事务已经提交，仍然可以回滚。</p>
+<h3 id="2-2-TCC"><a href="#2-2-TCC" class="headerlink" title="2.2 TCC"></a>2.2 TCC</h3><p>TCC 是 Try、Conﬁrm、Cancel 三个词语的缩写，TCC 要求每个分支事务实现三个操作：预处理、确认 、撤销 。</p>
+<ol>
+<li><strong>Try</strong> 阶段是做完业务检查（一致性）及资源预留（隔离），此阶段仅是一个初步操作，它和后续的  Conﬁrm 一起才能真正构成一个完整的业务逻辑。</li>
+<li><strong>Confirm</strong> 阶段是做确认提交，Try 阶段所有分支事务执行成功后开始执行 Conﬁrm。通常情况下，采用 TCC 则认为 Conﬁrm 阶段是不会出错的。即：只要 Try 成功，Conﬁrm 一定成功。若 Conﬁrm 阶段真的出错了，需引入重试机制或人工处理。</li>
+<li><strong>Cancel</strong> 阶段是在业务执行错误需要回滚的状态下执行分支事务的业务取消，预留资源释放。通常情况下，采用 TCC 则认为 Cancel 阶段也是一定成功的。若 Cancel 阶段真的出错了，需引入重试机制或人工处理。</li>
+</ol>
+<p>事务管理器首先发起所有的分支事务的 Try 操作，任何一个分支事务的Try操作执行失败，事务管理器将会发起所有分支事务的 Cancel 操作，若 Try 操作全部成功，事务管理器将会发起所有分支事务的 Conﬁrm 操作，其中 Conﬁrm/Cancel 操作若执行失败，事务管理器会进行重试。</p>
+<h3 id="2-3-可靠消息最终一致性"><a href="#2-3-可靠消息最终一致性" class="headerlink" title="2.3 可靠消息最终一致性"></a>2.3 可靠消息最终一致性</h3><p>可靠消息最终一致性方案是指当事务发起方执行完成本地事务后发出一条消息，事务参与方一定能够接收消息并处理事务成功。</p>
+<p>此方案是利用消息中间件完成，事务发起方（消息生产方）将消息发给消息中间件，事务参与方从消息中间件接收消息。</p>
+<p>可靠消息最终一致性方案要解决以下几个问题：</p>
+<ul>
+<li>本地事务与消息发送的原子性问题。可能本地事务执行成功但消息发送失败，或消息发送成功但本地事务执行失败。</li>
+<li>事务参与方接收消息的可靠性。事务参与方必须能够从消息队列接收到消息，如果接收消息失败可以重复接收消息。</li>
+<li>消息重复消费的问题。若某一个消费节点超时但是消费成功，此时消息中间件会重复投递此消息，就导致了消息的重复消费。</li>
+</ul>
+<p><strong>解决方案</strong>：本地消息表方案</p>
+<ol>
+<li>在本地创建一个消息日志表，在本地事务中将需要发送的消息写入消息日志表。<code>mysql begin transaction     //1.本地事务操作     //2.存储消息日志   commit transation</code>。</li>
+<li>启动独立的线程，定时对消息日志表中的消息进行扫描并发送至消息中间件，在消息中间件反馈发送成功后删除该消息日志，否则等待定时任务下一周期重试。</li>
+<li>使用 MQ 的 ack（即消息确认）机制，消费者监听 MQ，如果消费者接收到消息并且业务处理完成后向 MQ 发送 ack（即消息确认），此时说明消费者正常消费消息完成，MQ 将不再向消费者推送消息，否则消费者会不断重复向消费者来发送消息。由于消息会重复投递，消费者需要实现幂等性。</li>
+</ol>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/263555694">更多内容看这里</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/05/19/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" data-id="cl3ir9vv00017kkaqdwjfd6wa" data-title="分布式事务" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-数据库/MySQL/MySQL默认数据库" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/05/17/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E9%BB%98%E8%AE%A4%E6%95%B0%E6%8D%AE%E5%BA%93/" class="article-date">
+  <time class="dt-published" datetime="2022-05-17T09:39:41.000Z" itemprop="datePublished">2022-05-17</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/05/17/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E9%BB%98%E8%AE%A4%E6%95%B0%E6%8D%AE%E5%BA%93/">MySQL默认数据库</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="Mysql系统默认数据库"><a href="#Mysql系统默认数据库" class="headerlink" title="Mysql系统默认数据库"></a>Mysql系统默认数据库</h2><ul>
+<li>information_schema</li>
+<li>performance_schema</li>
+<li>mysql</li>
+<li>sys</li>
+</ul>
+<h3 id="一、information-schema（信息概要）"><a href="#一、information-schema（信息概要）" class="headerlink" title="一、information_schema（信息概要）"></a>一、information_schema（信息概要）</h3><ul>
+<li>保存了MySQl服务所有数据库的信息。</li>
+<li>具体MySQL服务有多少个数据库，各个数据库有哪些表，各个表中的字段是什么数据类型，各个表中有哪些索引，各个数据库要什么权限才能访问。</li>
+</ul>
+<h3 id="二、performance-schema（性能概要）"><a href="#二、performance-schema（性能概要）" class="headerlink" title="二、performance_schema（性能概要）"></a>二、performance_schema（性能概要）</h3><ul>
+<li>主要用于收集数据库服务器性能参数。5.7后默认开启。</li>
+<li>提供进程等待的详细信息，包括锁、互斥变量、文件信息；</li>
+<li>保存历史的事件汇总信息，为提供MySQL服务器性能做出详细的判断；</li>
+</ul>
+<h3 id="三、mysql（核心数据库）"><a href="#三、mysql（核心数据库）" class="headerlink" title="三、mysql（核心数据库）"></a>三、mysql（核心数据库）</h3><ul>
+<li>保存MySQL的用户、权限设置、关键字等</li>
+<li>如哪些user可以访问这个数据、DB参数、插件、主从</li>
+</ul>
+<h3 id="四、Sys（系统表）"><a href="#四、Sys（系统表）" class="headerlink" title="四、Sys（系统表）"></a>四、Sys（系统表）</h3><p>Sys库所有的数据源来自：performance_schema。目标是把performance_schema的把复杂度降低，让DBA能更好的阅读这个库里的内容。让DBA更快的了解DB的运行情况。 </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/05/17/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E9%BB%98%E8%AE%A4%E6%95%B0%E6%8D%AE%E5%BA%93/" data-id="cl3ir9vvf0020kkaq9i5z8sb6" data-title="MySQL默认数据库" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-分布式/Zookeeper/ZAB协议" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/ZAB%E5%8D%8F%E8%AE%AE/" class="article-date">
@@ -181,6 +467,11 @@
 <p>Zookeeper 由于实行半数原则，如果出现两个团体，则要么这两个团体的成员数量都不过半，此时两个团体都选举 Leader 失败，即整个集群不能提供服务；要么一个团体成员数量过半，另一个不过半，此时过半的团体正常提供服务，而不过半的团体则无法选举 leader 不能提供服务。</p>
 <p>因此 Zookeeper 不存在脑裂问题。</p>
 <p>假设: leader发生了假死, followers选举出了一个新的leader.当旧的leader复活并认为自己仍然是leader, 它向其他followers发出写请求时, 会被拒绝.—— 因为ZooKeeper维护了一个叫epoch的变量, 每当新leader产生时, epoch都会递增, followers如果确认了新的leader存在, 同时也会知道其epoch的值 —— 它们会拒绝epoch小于现任leader的epoch的所有旧leader的任何请求.</p>
+<h1 id="6、ZAB与Raft区别"><a href="#6、ZAB与Raft区别" class="headerlink" title="6、ZAB与Raft区别"></a>6、ZAB与Raft区别</h1><ul>
+<li>ZAB会在每次leader选举之后进行一次数据同步，所以在一个轮次内，节点间的日志内容是统一的。而Raft在leader选举之后没有同步过程，因此可能出现已经隔了几个轮次，节点间的日志还不一致。</li>
+<li>在一次选举leader的过程中，Raft只投一次票，每个竞选者会随机睡一段时间，睡醒就发送选票信息请求他人给自己投票，因此越早睡醒的节点成为leader的可能性越大；ZAB可能会在一次选举的过程中发送多次投票结果，这种方式有利于选举出zxid更大的节点，但是选举时间理论上比Raft要多。</li>
+<li>在消息广播阶段，ZK收到写请求后将事务写到事务日志中，同时广播给从节点，当收到一半以上ack后广播从节点提交事物。Raft同样将写请求转发到主节点，主节点写入事务日志，同时可能将一批事务广播给从节点，收到一半以上ack时，只有主节点提交事务，不向从节点广播提交的消息，当下一次心跳时才顺带告知从节点自己已经提交，然后从节点提交自己的事务。</li>
+</ul>
 
       
     </div>
@@ -616,377 +907,6 @@
 
 
   
-    <article id="post-数据库/MySQL/MySQL数据类型" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/05/04/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" class="article-date">
-  <time class="dt-published" datetime="2022-05-04T04:39:41.000Z" itemprop="datePublished">2022-05-04</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/05/04/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">MySQL数据类型</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h3 id="1、整型"><a href="#1、整型" class="headerlink" title="1、整型"></a>1、整型</h3><p><img src="int%E7%B1%BB%E5%9E%8B.png" alt="int类型"></p>
-<p>**int(11)*<em>：括号中的 11 表示</em>字符的显示宽度*，它不影响存储，即它所能存储的数据还是在上图 int 的范围内。</p>
-<p>那它什么时候起作用：</p>
-<p>只有 int 字段类型设置为无符号且填充零（UNSIGNED  ZEROFILL）时，当数值位数未达到设置的显示宽度时，会在数值前面补充零直到满足设定的显示宽度，为什么会有无符号的限制呢，是因为  ZEROFILL 属性会隐式地将数值转为无符号型，因此不能存储负的数值。</p>
-<p>详见<a target="_blank" rel="noopener" href="https://www.cnblogs.com/chenmingjun/p/10556206.html">https://www.cnblogs.com/chenmingjun/p/10556206.html</a></p>
-<h3 id="2、浮点类型"><a href="#2、浮点类型" class="headerlink" title="2、浮点类型"></a>2、浮点类型</h3><p>MySQL中使用浮点数和定点数来表示小数。</p>
-<p> 浮点类型有两种，分别是单精度浮点数（<strong>FLOAT</strong>）和双精度浮点数（<strong>DOUBLE</strong>）；定点类型只有一种，就是 <strong>DECIMAL</strong>。</p>
-<p> 浮点类型和定点类型都可以用<code>(M, D)</code>来表示，其中<code>M</code>称为精度，表示总共的位数；<code>D</code>称为标度，表示小数的位数。</p>
-<p>CPU 原生支持浮点运算，但是不支持 DECIMAl 类型的计算，因此 DECIMAL 的计算比浮点类型需要更高的代价。</p>
-<h3 id="3、字符串"><a href="#3、字符串" class="headerlink" title="3、字符串"></a>3、字符串</h3><p>主要有 CHAR 和 VARCHAR 两种类型，一种是定长的，一种是变长的。因此，当char类型的长度不够时，会以空格填充。当插入的字符串长度超过括号中设置的长度时报错。</p>
-<h4 id="3-1、varchar-n"><a href="#3-1、varchar-n" class="headerlink" title="3.1、varchar(n)"></a>3.1、varchar(n)</h4><p>varchar是动态字符串（跟上面的int不一样）长度是在括号里面指定的，即只能存储小于等于指定长度的字符串，以 varchar(255)举例，该字段最多只能存储255个字符。</p>
-<h4 id="3-2、varchar-255"><a href="#3-2、varchar-255" class="headerlink" title="3.2、varchar(255)"></a>3.2、varchar(255)</h4><p>那为什么会经常性设置成varchar(255)呢？</p>
-<p>首先我们要知道一个概念：InnoDB存储引擎的表索引的前缀长度最长是767字节(bytes)，前缀长度意思就是索引中数据的长度，即若给一个varchar类型的字段建索引，则该varchar中最长的字符长度不能超过767字节。</p>
-<p>utf8编码时 255*3=765bytes ,恰恰是能建索引情况下的最大值。（255是字符的长度，3是utf8一个字符占用3个字节）</p>
-<p>如果使用的是utf8mb4编码，默认字符长度则应该是 767除以4向下取整，也就是191。</p>
-<h4 id="3-3、字符集"><a href="#3-3、字符集" class="headerlink" title="3.3、字符集"></a>3.3、字符集</h4><p>varchar(n)占用几个字节跟字符集有关系：</p>
-<ul>
-<li>字符类型若为gbk，每个字符占用2个字节，</li>
-<li>字符类型若为utf8，每个字符最多占用3个字节</li>
-<li>字符类型若为utf8mb4，每个字符最多占用4个字节</li>
-</ul>
-<h4 id="3-4、前缀索引"><a href="#3-4、前缀索引" class="headerlink" title="3.4、前缀索引"></a>3.4、前缀索引</h4><p>如果要为三个 varchar 字段建立联合索引，但是三个字段的长度之和加起来超过了767字节，该怎么办？</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">UNIQUE KEY &#96;uniq_code&#96; (&#96;nick_name&#96;(20),&#96;account&#96;(20),&#96;city&#96;(20))</span><br></pre></td></tr></table></figure>
-
-<p>每个字段取前20字符建立索引，这样的话就是长度就不会超出，这个就是<code>前缀索引</code></p>
-<h4 id="3-5、varchar（20）-和varchar（255）的开销"><a href="#3-5、varchar（20）-和varchar（255）的开销" class="headerlink" title="3.5、varchar（20） 和varchar（255）的开销"></a>3.5、varchar（20） 和varchar（255）的开销</h4><p>如果要存储<code>&#39;hello12345&#39;</code>这个字符串，使用<code>varchar(10)</code>和<code>varchar(100)</code>存储，占用的磁盘空间是一样的，但是内存消耗不一样。</p>
-<ul>
-<li>MySQL建立索引时如果没有限制索引的大小，索引长度会默认采用的该字段的长度。因此，加载索引信息时用varchar(255)类型会占用更多的内存。</li>
-<li>由于MySQL通常会分配固定大小的内存块来保存内部值，因此当使用临时表进行排序等操作时会消耗更多的内存。</li>
-</ul>
-<h4 id="3-6、varchar-与-char"><a href="#3-6、varchar-与-char" class="headerlink" title="3.6、varchar 与 char"></a>3.6、varchar 与 char</h4><p>VARCHAR 会保留字符串末尾的空格，而 CHAR 会删除。即对于 <code>“a    ”</code>，varchar 存储的是 <code>“a    ”</code>，而char存储的是<code>“a”</code></p>
-<p>VARCHAR 合适场景：字符串的最大长度比平均长度大很多；使用了像UTF-8这样的字符集，每个字符都使用不同的字节数进行存储。</p>
-<p>CHAR适合存储很短的字符串，或者所有值都接近同一个长度，如密码的MD5值。</p>
-<h3 id="4、-时间和日期"><a href="#4、-时间和日期" class="headerlink" title="4、 时间和日期"></a>4、 时间和日期</h3><p>MySQL 提供了两种相似的日期时间类型: DATETIME 和 TIMESTAMP。</p>
-<h4 id="4-1、DATETIME"><a href="#4-1、DATETIME" class="headerlink" title="4.1、DATETIME"></a>4.1、DATETIME</h4><p>能够保存从 1001 年到 9999 年的日期和时间，精度为秒，使用 8 字节的存储空间。它与时区无关。</p>
-<h4 id="4-2-TIMESTAMP"><a href="#4-2-TIMESTAMP" class="headerlink" title="4.2. TIMESTAMP"></a>4.2. TIMESTAMP</h4><p>和 UNIX 时间戳相同，保存从 1970 年 1 月 1 日午夜(格林威治时间)以来的秒数，使用 4 个字节，只能表示从 1970 年 到 2038 年。</p>
-<p>它和时区有关，也就是说一个时间戳在不同的时区所代表的具体时间是不同的。</p>
-<h3 id="5、BLOB-和-TEXT"><a href="#5、BLOB-和-TEXT" class="headerlink" title="5、BLOB 和 TEXT"></a>5、BLOB 和 TEXT</h3><p>BLOB和TEXT都是为存储很大的数据而设计的数据类型，分别采用二进制和字符方式存储。</p>
-<p>与其他类型不同，MySQL把每个BLOB和TEXT值当做一个独立的对象去处理。当BLOB和TEXT值太大时，InnoDB会使用专门的“外部”存储区域来进行存储，此时每个值在行内需要1~4个字节存储一个指针，然后在外部存储区域存储实际的值。</p>
-<p>MySQL对BLOB和TEXT列进行排序与其他类型是不同的：它只对每个列的最前max_sort_length个字节而不是整个字符串做排序。同样的，MySQL也不能将BLOB或TEXT列全部长度的字符串进行索引（前缀索引）。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/05/04/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" data-id="cl3ir9vve001ykkaq29m0h51n" data-title="MySQL数据类型" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-计算机网络/基础网络攻击" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/05/03/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/%E5%9F%BA%E7%A1%80%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB/" class="article-date">
-  <time class="dt-published" datetime="2022-05-03T14:39:41.000Z" itemprop="datePublished">2022-05-03</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/05/03/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/%E5%9F%BA%E7%A1%80%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB/">基础网络攻击</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="1、SYN洪泛攻击"><a href="#1、SYN洪泛攻击" class="headerlink" title="1、SYN洪泛攻击"></a>1、SYN洪泛攻击</h2><h3 id="1-1、产生原理"><a href="#1-1、产生原理" class="headerlink" title="1.1、产生原理"></a>1.1、产生原理</h3><p>服务器在收到连接请求报文段后，如同意建立连接，就向客户机发回确认，并在OS内核中为该TCP连接分配TCP缓存和变量。除此之外标识该tcp连接的tcb也会占用内存资源。</p>
-<h3 id="1-2、防御手段"><a href="#1-2、防御手段" class="headerlink" title="1.2、防御手段"></a>1.2、防御手段</h3><p><code>SYN cookie 方法</code></p>
-<p>在服务器收到客户端的第一次请求之后，不立马分配资源，而是将</p>
-<ol>
-<li>SYN报文的源和目的IP与端口号</li>
-<li>仅仅有服务器知道的密钥</li>
-</ol>
-<p>塞入一个哈希函数，生成一个认证码；这个认证码也叫cookie；将cookie作为初始序列号，发送给客户端。如果客户端真实存在，则客户端将会带着cookie+1作为ack响应。而服务器可以再次执行上述过程，比较与ack-1是否相同。如果相同，则建立连接。如果客户端不存在，则服务器没有为其消耗任何资源。</p>
-<h3 id="1-3、TCP的相关细节"><a href="#1-3、TCP的相关细节" class="headerlink" title="1.3、TCP的相关细节"></a>1.3、TCP的相关细节</h3><p>TCB：包含 socket 、指向收发缓冲区的指针、数据包序列号等。</p>
-<p>客户端的TCB在发起连接之前就创建并赋好值；服务端的TCB也在收到连接之前就创建好，但是由于不知道谁会连接自己，故将TCB都初始化为0，当接收到第一次握手的连接请求后，为该tcp分配缓存等资源，并赋值给TCB。因此，在第二次握手时，服务端已经为该tcp连接分配了一部分资源。</p>
-<p><strong>若第三次握手的ack包丢失会怎样？</strong></p>
-<p>或许由于第二次握手的包丢失，客户端不会发起第三次握手；或者客户端的第三次握手的包丢失。总之，服务端在接收不到第三次握手包时会执行如下操作：</p>
-<ol>
-<li>没有收到来自客户端的任何包：根据 TCP的超时重传机制，重新发送第二次握手包，若重发指定次数之后，仍然未收到响应，就会发送reset包，关闭连接，释放资源。</li>
-<li>收到了后续的数据包：由于第三次握手的关键就是其ack，而数据包中也有ack，故连接正常建立并进行通信。如果第三次握手包中不包含数据则不消耗序号。</li>
-</ol>
-<h2 id="2、DNS-劫持"><a href="#2、DNS-劫持" class="headerlink" title="2、DNS 劫持"></a>2、DNS 劫持</h2><p>某些网络运营商为了某些目的，对DNS进行了某些操作，导致用户无法通过域名取得正确的IP地址。</p>
-<p>运营商会利用 DNS 劫持 投放小广告等。DNS污染则让域名直接无法访问了。</p>
-<p>遇到DNS污染只能更换域名服务器或使用第三方域名解析服务。</p>
-<h2 id="3、中间人攻击"><a href="#3、中间人攻击" class="headerlink" title="3、中间人攻击"></a>3、中间人攻击</h2><p>前置知识：机器对于 ARP 包是信任的，不做任何安全校验。此方式需要和受害人在同一局域网。</p>
-<p>当客户端发起连接请求时，攻击者向客户端发送大量 ARP 包谎称自己是网关，然后客户端就会将所有请求都发送给攻击者。攻击者收到请求后返回自己的数字证书，并向服务端发送真实的请求。如果客户端不对证书校验，则客户端就会向攻击者发送对称加密密钥并进行后续的加密通信，而攻击者和服务器建立的是正规的安全连接。如此，中间人攻击就成功了，后续攻击者可以对请求和响应进行转发，并动一些手脚。</p>
-<p>也可以利用DNS 劫持发起中间人攻击。</p>
-<p>使用 SSL 身份认证即可防御中间人攻击。</p>
-<h2 id="4、缓冲区溢出攻击"><a href="#4、缓冲区溢出攻击" class="headerlink" title="4、缓冲区溢出攻击"></a>4、缓冲区溢出攻击</h2><p>通过往程序的缓冲区写超出其长度的内容，造成缓冲区的溢出，使程序转而执行其它指令，以达到攻击的目的。如strcpy()函数，不会对字符串边界进行检查就直接复制，当参数长度大于缓冲区长度时就会造成缓冲区溢出。</p>
-<p>可以通过制造缓冲区溢出使程序运行一个用户shell，再通过shell执行其它命令。如果该程序有root权限的话，攻击者就获得了一个有root权限的shell，可以对系统进行任意操作了。</p>
-<h2 id="5、跨站请求伪造-CSRF"><a href="#5、跨站请求伪造-CSRF" class="headerlink" title="5、跨站请求伪造 CSRF"></a>5、跨站请求伪造 CSRF</h2><h3 id="5-1、同源策略"><a href="#5-1、同源策略" class="headerlink" title="5.1、同源策略"></a>5.1、同源策略</h3><p>源由[协议、域名、端口]三元组组成，三元组都一样时称为同源。</p>
-<p>同源策略限制了其他源的脚本对当前页面资源的读写。</p>
-<p>同源策略不会限制发起跨域请求，而是限制 Javascript 对于响应结果的读写。</p>
-<h3 id="5-2、CSRF-原理"><a href="#5-2、CSRF-原理" class="headerlink" title="5.2、CSRF 原理"></a>5.2、CSRF 原理</h3><p>用户在登录网站 A 后，在本地浏览器中存储了网站 A 的 Cookie 。之后没有结束与 A 的会话就去访问恶意网站 B ，网站 B 可以通过 img 的 src 向网站 A 发起 GET 请求，或通过表单向网站 A 发起 POST请求。这些请求会自动携带上之前还没有删除的 Cookie ，网站 A 就会认为这是来自用户的一个合法请求并执行它。</p>
-<p>举例：用户登录银行网站后访问恶意网站，恶意网站中存在一个表单，该表单可以向银行网站发起向自己转账的请求，请求中携带用户的信息便会执行该用户向自己转账。</p>
-<p><strong>同源策略不能作为防范 CSRF 的方法</strong>。原因：如上所述，同源策略并不会限制发起跨域请求，所以这些请求实际已经到达了目标服务器，只是这些请求的响应结果被浏览器所拦截，不允许 Javascript  对这些结果操作。</p>
-<p>注：Javascript  同样无法读取到其他源的 Cookie 的内容。</p>
-<p>http请求自动携带cookies的条件:</p>
-<ol>
-<li>本地已经缓存有cookies</li>
-<li>根据请求的URL来匹配cookies的domain、path属性，如果都符合才会发送。</li>
-</ol>
-<h3 id="5-3、CSRF的防御"><a href="#5-3、CSRF的防御" class="headerlink" title="5.3、CSRF的防御"></a>5.3、CSRF的防御</h3><h4 id="5-3-1、双重Cookie验证"><a href="#5-3-1、双重Cookie验证" class="headerlink" title="5.3.1、双重Cookie验证"></a>5.3.1、双重Cookie验证</h4><p>利用CSRF攻击不能获取到用户Cookie的特点，可以要求在请求中携带一个Cookie中的值。</p>
-<p>双重Cookie采用以下流程：</p>
-<ul>
-<li>在用户访问网站页面时，服务端生成加密Token并存入Cookie中</li>
-<li>在前端向后端发起请求时，携带Cookie，并从Cookie中取出Token拼接到URL中</li>
-<li>后端接口验证Cookie中的Token字段与URL参数中的Token字段是否一致，不一致则拒绝。</li>
-</ul>
-<h4 id="5-3-2、CSRF-Token"><a href="#5-3-2、CSRF-Token" class="headerlink" title="5.3.2、CSRF Token"></a>5.3.2、CSRF Token</h4><ul>
-<li>用户登陆时，服务端生成加密Token并发送给客户端，同时自己也将该Token存储（可存入Sesson）</li>
-<li>客户端存储Token（可存入Local Storage）在每次请求时取出Token添加到自定义请求头中</li>
-<li>服务端收到请求比较请求头中的Token和自己保存的Token，若不一致拒绝访问</li>
-</ul>
-<p><strong>分布式校验</strong></p>
-<p>上方的Token通常是一个随机字符串，在分布式场景中需要存入redis中，随着用户增多每次读取验证需要较大的开销。目前主流使用的是将UserID和时间戳通过加密生成Token，之后服务端收到Token解密，拿到UserID与当前用户的UserID比较，拿到时间戳与当前时间比较来验证Token有效性。</p>
-<p>这种通过密码算法加解密的方式无需查询数据库，减轻服务端压力；同时在分布式场景中只要每个节点使用相同算法及密钥就可进行解密操作，易于扩展。</p>
-<h2 id="6、跨站脚本攻击-xss"><a href="#6、跨站脚本攻击-xss" class="headerlink" title="6、跨站脚本攻击 xss"></a>6、跨站脚本攻击 xss</h2><h3 id="6-1、攻击"><a href="#6-1、攻击" class="headerlink" title="6.1、攻击"></a>6.1、攻击</h3><p>恶意攻击者往Web页面里插入恶意Script代码，当用户浏览该页面时，嵌入Web里面的Script代码会被执行，从而达到恶意攻击用户的目的。</p>
-<p>在发表评论或填写信息时，填入一段恶意脚本，如：<code>&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code>，如果应用程序对提交的内容没有进行过滤，那么这段恶意脚本就会存储在服务端的数据库中，当有其他用户访问这条评论时，服务端会将这条恶意脚本连同页面一起返回给前端，浏览器解析并执行这条脚本就会获取用户cookie并发送给攻击者的服务器，攻击者获取到cookie就可以冒充合法用户了。</p>
-<p>以上是储存型xss，另外还有反射性xss，这个不要主动提，只要知道是需要诱导用户点击恶意链接，嵌入到恶意链接中的恶意脚本会进行攻击。</p>
-<h3 id="6-2、防御"><a href="#6-2、防御" class="headerlink" title="6.2、防御"></a>6.2、防御</h3><ul>
-<li>对上传的数据进行过滤，如将 <code>&lt;script&gt;</code>等关键字替换为空。</li>
-<li>设置Cookie中的HTTP Only属性来禁止客户端的 js 读写Cookie。注：Cookie的HTTP Only属性只能由服务端设置，客户端不能设置</li>
-</ul>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/05/03/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/%E5%9F%BA%E7%A1%80%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB/" data-id="cl2rm3dlj00028caq7isa2rwa" data-title="基础网络攻击" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-数据库/Redis/Redis集群" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/05/02/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E9%9B%86%E7%BE%A4/" class="article-date">
-  <time class="dt-published" datetime="2022-05-02T13:39:41.000Z" itemprop="datePublished">2022-05-02</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Redis/">Redis</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/05/02/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E9%9B%86%E7%BE%A4/">Redis集群</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>主从复制和哨兵机制保障了高可用，就读写分离而言虽然slave节点扩展了主从的读并发能力，但是<strong>写能力</strong>和<strong>存储能力</strong>是无法进行扩展，就只能是master节点能够承载的上限。如果面对海量数据那么必然需要构建master之间的集群，同时必然需要吸收高可用（主从复制和哨兵机制）能力，即每个master分片节点还需要有slave节点。这就是为社么要使用Redis集群。</p>
-<h2 id="1、概述"><a href="#1、概述" class="headerlink" title="1、概述"></a>1、概述</h2><p>Redis集群可以理解为n个主从架构组合在一起对外服务。Redis Cluster要求至少需要3个master才能组成一个集群，同时每个master至少需要有一个slave节点。</p>
-<p>如此，Redis集群的写能力和存储能力就是所有master之和了。</p>
-<p>虽然每个master下都挂载了一个slave节点，但是在Redis Cluster中的读、写请求其实都是在<strong>master</strong>上完成的。slave节点只是充当了一个数据备份的角色，当master发生了宕机，就会将对应的slave节点提拔为master，来重新对外提供服务。</p>
-<p><img src="redis-cluster.jpg" alt="redis-cluster"></p>
-<h2 id="2、-主要模块介绍"><a href="#2、-主要模块介绍" class="headerlink" title="2、 主要模块介绍"></a>2、 主要模块介绍</h2><h3 id="2-1、-哈希槽-Hash-Slot"><a href="#2-1、-哈希槽-Hash-Slot" class="headerlink" title="2.1、 哈希槽(Hash Slot)"></a>2.1、 哈希槽(Hash Slot)</h3><p>Redis-cluster没有使用<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/129049724">一致性hash</a>，而是引入了<strong>哈希槽</strong>的概念。Redis-cluster中有16384(即2的14次方）个哈希槽，每个key通过CRC16校验后对16383取模来决定放置哪个槽。Cluster中的每个节点负责一部分hash槽（hash slot）。</p>
-<p> 一个键的对应的哈希槽通过计算键的CRC16 哈希值，然后对16384进行取模得到：<code>HASH_SLOT=CRC16(key) modulo 16383</code>。读写操作都是先计算出键的哈希槽，再在负责该哈希槽的 master 上进行相应操作。</p>
-<h3 id="2-2、Cluster总线"><a href="#2-2、Cluster总线" class="headerlink" title="2.2、Cluster总线"></a>2.2、Cluster总线</h3><p>每个Redis Cluster节点有一个额外的TCP端口用来接受其他节点的连接。这个端口为普通 client 端口 + 10000。如普通 client 端口为6379，则总线端口为 16379。节点到节点的通讯只使用集群总线。</p>
-<h3 id="2-3、集群拓扑"><a href="#2-3、集群拓扑" class="headerlink" title="2.3、集群拓扑"></a>2.3、集群拓扑</h3><p>Redis Cluster是一张全网拓扑，节点与其他每个节点之间都保持着TCP连接。</p>
-<h3 id="2-4、节点握手"><a href="#2-4、节点握手" class="headerlink" title="2.4、节点握手"></a>2.4、节点握手</h3><p>节点认定其他节点是当前集群的一部分有两种方式：</p>
-<ol>
-<li><p>如果一个节点出现在了一条MEET消息中。meet消息会强制接收者接受一个节点作为集群的一部分。</p>
-</li>
-<li><p>从某个已信任的节点处获知某节点是集群的一部分，则当前节点也会将该节点当成集群的一部分。</p>
-</li>
-</ol>
-<h2 id="3、状态检测及维护"><a href="#3、状态检测及维护" class="headerlink" title="3、状态检测及维护"></a>3、状态检测及维护</h2><p>在集群模式下，所有的publish命令都会向所有节点（包括从节点）进行广播，加重了带宽负担，对于在有大量节点的集群中频繁使用pub，会严重消耗带宽，不建议使用。</p>
-<h3 id="3-1、Gossip协议"><a href="#3-1、Gossip协议" class="headerlink" title="3.1、Gossip协议"></a>3.1、Gossip协议</h3><p>gossip 协议是基于流行病传播方式的节点或者进程之间信息交换的协议。Gossip协议的最大的好处是，即使集群节点的数量增加，每个节点的负载也不会增加很多，几乎是恒定的。</p>
-<p>Gossip的特点：在一个有界网络中，每个节点都随机地与其他节点通信，经过一番杂乱无章的通信，最终所有节点的状态都会达成一致。每个节点可能知道所有其他节点，也可能仅知道几个邻居节点，只要这些节可以通过网络连通，最终他们的状态都是一致的。即Gossip协议是最终一致性，不是强一致性。</p>
-<h3 id="3-2、基于Gossip协议的故障检测"><a href="#3-2、基于Gossip协议的故障检测" class="headerlink" title="3.2、基于Gossip协议的故障检测"></a>3.2、基于Gossip协议的故障检测</h3><p>集群中的每个节点都会不定时地向集群中的其他节点发送PING消息，以此交换各个节点状态信息。</p>
-<p>当节点 1 向节点 3 发送PING消息后未在规定时间内收到节点 3 的PONG响应，则节点 1 认为节点 3 PFAIL（主观下线）。当节点1标记节点3为PFAIL后，节点1会通过Gossip消息把这个信息发送给其他节点，接收到信息的节点会进行节点3客观下线状态判定。当节点2接收到来自节点1关于节点3的状态判定信息之后，节点2首先会把节点1加入到节点3的下线报告列表(Fail Report)中。每个节点都会维护一个下线报告列表，主要维护一个节点被哪些节点报告处于下线状态。</p>
-<p>只有同样认为节点3处于PFAIL状态的节点才会去做客观下线状态判定，即只有节点2也曾向节点3发送ping且没有得到响应，节点2才会去做客观下线状态判定：如果自己维护的节点3的下线报告列表中包含<strong>一半以上的主节点</strong>（即超过半数的主节点认为节点3主观下线），则认为节点3 FAIL（客观下线）。</p>
-<p>一旦节点2认为节点3客观下线，就向集群广播节点3的FAIL消息，所有收到FAIL消息的节点都会立即将节点3的状态标记为已下线。</p>
-<p>疑问：节点2是否可以是从节点？即从节点是否参与故障检测，是否拥有下线报告列表，是否做客观下线判断，是否能发广播？</p>
-<h2 id="4、-故障恢复（Failover）"><a href="#4、-故障恢复（Failover）" class="headerlink" title="4、 故障恢复（Failover）"></a>4、 故障恢复（Failover）</h2><p>当slave发现自己的master变为FAIL状态时，便尝试进行Failover，以期成为新的master。由于挂掉的master可能会有多个slave。Failover的过程需要经过类Raft协议的过程在整个集群内达到一致， 其过程如下：</p>
-<ul>
-<li>slave发现自己的master变为FAIL</li>
-<li>长时间不与主节点通信的从节点不具备竞选资格</li>
-<li>所有竞选者随即休眠，唤醒后立即通过广播向所有节点拉票</li>
-<li>其他节点收到拉票请求，只有master响应，若本轮竞选中自己没投过票就投，否则不投票，即每个主节点只有一次投票机会</li>
-<li>从节点发现超过半数的主节点为自己投票就变成新Master：接替旧master 的slot，并让旧master与其他从节点成为自己的从节点</li>
-<li>广播Pong通知其他集群节点自己成为新的主节点</li>
-</ul>
-<p>易知，休眠时间最短的节点容易获得大部分投票。</p>
-<h2 id="5、扩容-amp-缩容"><a href="#5、扩容-amp-缩容" class="headerlink" title="5、扩容&amp;缩容"></a>5、扩容&amp;缩容</h2><h3 id="5-1、扩容"><a href="#5-1、扩容" class="headerlink" title="5.1、扩容"></a>5.1、扩容</h3><p>当集群出现容量限制或者其他一些原因需要扩容时，redis cluster提供了比较优雅的集群扩容方案。</p>
-<ol>
-<li>首先将新节点加入到集群中，可以通过在集群中任何一个客户端执行cluster meet 新节点ip:端口，或者通过redis-trib add node添加，新添加的节点默认在集群中都是主节点。</li>
-<li>迁移数据 迁移数据的大致流程是，首先需要确定哪些槽需要被迁移到目标节点，然后获取槽中key，将槽中的key全部迁移到目标节点，然后向集群所有主节点广播槽（数据）全部迁移到了目标节点。</li>
-</ol>
-<h3 id="5-2、缩容"><a href="#5-2、缩容" class="headerlink" title="5.2、缩容"></a>5.2、缩容</h3><p>缩容的大致过程与扩容一致，需要判断下线的节点是否是主节点，以及主节点上是否有槽，若主节点上有槽，需要将槽迁移到集群中其他主节点，槽迁移完成之后，需要向其他节点广播该节点准备下线（cluster forget nodeId）。最后需要将该下线主节点的从节点指向其他主节点，当然最好是先将从节点下线。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/05/02/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E9%9B%86%E7%BE%A4/" data-id="cl3ir9vvv002qkkaq1lbzctdj" data-title="Redis集群" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-数据库/Redis/Redis主从复制" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/05/02/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/" class="article-date">
-  <time class="dt-published" datetime="2022-05-02T07:39:41.000Z" itemprop="datePublished">2022-05-02</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Redis/">Redis</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/05/02/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/">Redis主从复制</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h1 id="1、概述"><a href="#1、概述" class="headerlink" title="1、概述"></a>1、概述</h1><p>主从复制，是指将一台Redis服务器的数据，复制到其他的Redis服务器。前者称为主节点(master)，后者称为从节点(slave)；数据的复制是单向的，只能由主节点到从节点。主从节点建立连接后会保持心跳检测。</p>
-<p><strong>主从复制的作用</strong>主要包括：</p>
-<ul>
-<li><strong>数据冗余</strong>：主从复制实现了数据的热备份，是持久化之外的一种数据冗余方式。</li>
-<li><strong>故障恢复</strong>：当主节点出现问题时，可以由从节点提供服务，实现快速的故障恢复；实际上是一种服务的冗余。</li>
-<li><strong>负载均衡</strong>：在主从复制的基础上，配合读写分离，可以由主节点提供写服务，由从节点提供读服务。尤其是在写少读多的场景下，通过多个从节点分担读负载，可以大大提高Redis服务器的并发量。</li>
-<li><strong>高可用基石</strong>：除了上述作用以外，主从复制还是哨兵和集群能够实施的基础，因此说主从复制是Redis高可用的基础。</li>
-</ul>
-<p>主从库之间采用的是<strong>读写分离</strong>的方式。</p>
-<ul>
-<li>读操作：主库、从库都可以接收；</li>
-<li>写操作：首先到主库执行，然后，主库将写操作同步给从库。</li>
-</ul>
-<p>由于 Redis 的主从复制是通过异步实现的，在主从复制期间任然可以对外提供服务，因此属于 AP 模型，实现的是最终一致性。</p>
-<h1 id="2、原理"><a href="#2、原理" class="headerlink" title="2、原理"></a>2、原理</h1><ul>
-<li><code>全量（同步）复制</code>：主库的全部数据同步给从库</li>
-<li><code>增量（同步）复制</code>：只会把主从库网络断连期间主库收到的命令，同步给从库</li>
-</ul>
-<h2 id="2-1、全量复制"><a href="#2-1、全量复制" class="headerlink" title="2.1、全量复制"></a>2.1、全量复制</h2><p>当我们启动多个 Redis 实例的时候，它们相互之间就可以通过 replicaof（Redis 5.0 之前使用 slaveof）命令形成主库和从库的关系。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">replicaof <span class="number">172.16</span><span class="number">.19</span><span class="number">.3</span> <span class="number">6379</span>      <span class="comment">// 当前实例作为 172.16.19.3 6379 的从库</span></span><br></pre></td></tr></table></figure>
-
-<p><strong>全量复制的三个阶段</strong></p>
-<ol>
-<li><p>第一阶段是主从库间建立连接、协商同步的过程：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 从库发出如下命令请求数据同步</span></span><br><span class="line">psync ？ <span class="number">-1</span></span><br><span class="line"><span class="comment">// 第一个参数为 runID ,唯一标识一个实例。由于第一次请求不知道主库的 runID ，故使用 ？</span></span><br><span class="line"><span class="comment">// 第二个参数为数据同步的偏移量 offset ，-1 表示从头开始同步。</span></span><br></pre></td></tr></table></figure>
-
-<p>主库收到请求后返回自己的 runID 和当前同步进度 offset，从库记录下来用于后续同步操作。</p>
-</li>
-<li><p>第二阶段，主库将所有数据同步给从库：主库执行 bgsave 命令，生成 RDB 文件，接着将文件发给从库。从库接收到 RDB 文件后，会先清空当前数据库，然后加载 RDB 文件。数据同步的过程中主库新接收的写操作记录在 replication buffer 中。</p>
-</li>
-<li><p>第三个阶段，主库会把第二阶段执行过程中新收到的写命令，再发送给从库：主库完成 RDB 文件发送后，就会把此时 replication buffer 中的修改操作发给从库，从库再重新执行这些操作。</p>
-</li>
-</ol>
-<h2 id="2-2、增量复制"><a href="#2-2、增量复制" class="headerlink" title="2.2、增量复制"></a>2.2、增量复制</h2><p>一旦主从库完成了全量复制，它们之间就会一直维护一个网络连接，主库会通过这个连接将后续陆续收到的命令操作再同步给从库，这个过程也称为基于长连接的命令传播，可以避免频繁建立连接的开销。</p>
-<p>如果主从库在命令传播时出现了网络闪断，若全量复制，开销太大，故采用增量复制的方式继续同步。</p>
-<p><strong>增量复制的流程</strong></p>
-<p>复制缓冲区（replication_buffer）：对主库而言，从库也是一个客户端。每个 client 连上Redis后，Redis都会分配一个client buffer，所有数据交互都是通过这个buffer进行的，因其在主从复制时仅用于命令传播，故叫做 replication_buffer。</p>
-<p>复制积压缓冲区（replication_backlog_buffer）：是一个环形缓冲区。在命令传播阶段，主节点除了将写命令发送给复制缓冲区，还会发送给复制积压缓冲区；复制积压缓冲区中还维护了其中的每个字节对应的复制偏移量(offset) 。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">slave 每次和 master 建立通信时，都会发送 psync 命令。</span><br></pre></td></tr></table></figure>
-
-<p>当主从库间网络断开，从库再次连接上主库时，向主库发送 psync 命令并带上自己的复制偏移量，主库将该复制偏移量与复制积压缓冲区中维护的复制偏移量做对比。若找到，则从该命令开始同步；若它比复制积压缓冲区中的最小偏移量还小，说明在断开连接期间已经有一部分命令丢失了，此时必须进行全量复制。</p>
-<h2 id="2-3、复制偏移量"><a href="#2-3、复制偏移量" class="headerlink" title="2.3、复制偏移量"></a>2.3、复制偏移量</h2><p>参与复制的主从节点都会维护自身复制偏移量。每当有一个写命令在主节点执行，主节点的复制偏移量就会累加上该命令的长度，然后主节点将该写命令通过 replication_buffer 传播到从节点，从节点执行后也将自己的复制偏移量累加上该命令的长度。</p>
-<p>从节点（slave）每秒钟上报自身的复制偏移量给主节点</p>
-<p>从节点的复制偏移量总是落后于主节点的复制偏移量。</p>
-<h1 id="3、主从复制流程"><a href="#3、主从复制流程" class="headerlink" title="3、主从复制流程"></a>3、主从复制流程</h1><ol>
-<li>各从库通过 <code>replicaof</code>与主库建立关系。</li>
-<li>开始全量复制，主库将 rdb 发送给从库，再将 replication_buffer 中的所有命令发送给从库。全量复制结束。</li>
-<li>进入命令传播阶段，每收到一个写命令，主库都将其写入 replication_buffer 和 replication_backlog_buffer。写入 replication_buffer 即表示发送给从库。</li>
-<li>在命令传播阶段，若从库断开连接，则再次连接后向主库发送 psync 命令，主库判断后进行增量复制或全量复制。</li>
-</ol>
-<h1 id="4、redis-脑裂问题"><a href="#4、redis-脑裂问题" class="headerlink" title="4、redis 脑裂问题"></a>4、redis 脑裂问题</h1><p>主库出现假故障，无法及时响应心跳包，然后哨兵选举了新主节点，但是在选举过程中，旧主库恢复正常了并响应了客户端的写操作，在新主节点选举成功后，旧主节点需要变为从节点并删除原有的数据，这样在选举过程中旧主节点处理的写操作数据便丢失了。</p>
-<p>通过设置下方两个参数来避免脑裂：</p>
-<ul>
-<li>min-slaves-to-write：设置了主库能进行数据同步的最少从库数量；</li>
-<li>min-slaves-max-lag：设置了主从库间进行数据复制时，从库给主库发送 ACK 消息的最大延迟。</li>
-</ul>
-<p>当主节点不满足这两个参数的要求时就会拒绝接收客户端的请求。</p>
-<h1 id="5、思考"><a href="#5、思考" class="headerlink" title="5、思考"></a>5、思考</h1><h3 id="5-1、若主库关闭持久化功能，则应该禁止自动重启"><a href="#5-1、若主库关闭持久化功能，则应该禁止自动重启" class="headerlink" title="5.1、若主库关闭持久化功能，则应该禁止自动重启"></a>5.1、若主库关闭持久化功能，则应该禁止自动重启</h3><p>原因：若主库故障自动重启，则变为空表，从库复制后全部变为空表。</p>
-<h3 id="5-2、-为什么全量复制使用RDB而不使用AOF？"><a href="#5-2、-为什么全量复制使用RDB而不使用AOF？" class="headerlink" title="5.2、 为什么全量复制使用RDB而不使用AOF？"></a>5.2、 为什么全量复制使用RDB而不使用AOF？</h3><ul>
-<li>RDB文件内容是经过压缩的二进制数据，文件很小，可以降低网络带宽消耗。</li>
-<li>RDB文件存储的都是二进制数据，从库直接按照RDB协议解析还原数据即可，速度会非常快。</li>
-</ul>
-<h3 id="5-3、从库的从库"><a href="#5-3、从库的从库" class="headerlink" title="5.3、从库的从库"></a>5.3、从库的从库</h3><p>一次全量复制中，对于主库来说，需要完成两个耗时的操作：<strong>生成 RDB 文件和传输 RDB 文件</strong>。</p>
-<p>fork 操作会阻塞主线程处理正常请求，传输 RDB 文件也会占用主库的网络带宽。因此可以主库只连接一个从库，其他从库连接这个从库，从而降低主库的复制压力。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/05/02/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/" data-id="cl3ir9vvi0028kkaqdoe2gw6n" data-title="Redis主从复制" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -1002,7 +922,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%A1%B9%E7%9B%AE/">项目</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86/">实习经历</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
     </div>
   </div>
 
@@ -1017,7 +937,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">七月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">八月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">七月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
     </div>
   </div>
 
@@ -1030,23 +950,23 @@
       <ul>
         
           <li>
-            <a href="/2022/07/09/Java/Netty/">Netty</a>
+            <a href="/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E9%9B%86%E7%BE%A4/">ElasticSearch集群</a>
           </li>
         
           <li>
-            <a href="/2022/06/21/%E9%A1%B9%E7%9B%AE/%E6%A0%A1%E6%8B%9B%E5%87%86%E5%A4%87%E9%A1%B9%E7%9B%AE/">搁置项目</a>
+            <a href="/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E8%87%AA%E5%8A%A8%E5%8F%91%E7%8E%B0/">ElasticSearch集群</a>
           </li>
         
           <li>
-            <a href="/2022/06/06/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/Kuberbetes/Kuberbetes%E5%9F%BA%E7%A1%80/">Kuberbetes基础</a>
+            <a href="/2022/08/06/%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86/%E9%9C%80%E6%B1%82%E5%AE%9E%E7%8E%B0/">需求实现</a>
           </li>
         
           <li>
-            <a href="/2022/06/02/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/">分布式基础</a>
+            <a href="/2022/07/24/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E5%9F%BA%E7%A1%80/">ElasticSearch基础</a>
           </li>
         
           <li>
-            <a href="/2022/06/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/HTTP/">HTTP</a>
+            <a href="/2022/07/11/%E9%9D%A2%E7%BB%8F/%E5%B1%B1%E8%A5%BF%E5%BB%BA%E8%A1%8C%E6%9A%91%E6%9C%9F%E5%AE%9E%E4%B9%A0%E9%9D%A2%E7%BB%8F/">山西建行暑期实习面经</a>
           </li>
         
       </ul>

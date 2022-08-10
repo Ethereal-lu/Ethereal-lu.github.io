@@ -14,7 +14,7 @@
 <meta property="og:description" content="1、SYN洪泛攻击1.1、产生原理服务器在收到连接请求报文段后，如同意建立连接，就向客户机发回确认，并在OS内核中为该TCP连接分配TCP缓存和变量。除此之外标识该tcp连接的tcb也会占用内存资源。 1.2、防御手段SYN cookie 方法 在服务器收到客户端的第一次请求之后，不立马分配资源，而是将  SYN报文的源和目的IP与端口号 仅仅有服务器知道的密钥  塞入一个哈希函数，生成一个认证码">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-05-03T14:39:41.000Z">
-<meta property="article:modified_time" content="2022-06-28T03:21:25.739Z">
+<meta property="article:modified_time" content="2022-07-24T15:25:52.372Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -158,6 +158,19 @@
 <li>对上传的数据进行过滤，如将 <code>&lt;script&gt;</code>等关键字替换为空。</li>
 <li>设置Cookie中的HTTP Only属性来禁止客户端的 js 读写Cookie。注：Cookie的HTTP Only属性只能由服务端设置，客户端不能设置</li>
 </ul>
+<h2 id="7、SQL注入"><a href="#7、SQL注入" class="headerlink" title="7、SQL注入"></a>7、SQL注入</h2><h3 id="7-1、攻击"><a href="#7-1、攻击" class="headerlink" title="7.1、攻击"></a>7.1、攻击</h3><p>SQL 注入就是在用户输入的字符串中加入 SQL 语句，如果忽略了检查，那么这些注入进去的 SQL 语句就会被数据库服务器误认为是正常的 SQL 语句而运行，攻击者就可以执行计划外的命令。</p>
+<p>如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE user_id &#x3D; $user_id   -- 正常</span><br><span class="line">-- 异常，参数为    1234; DELETE FROM users</span><br><span class="line">SELECT * FROM users WHERE user_id &#x3D; 1234; DELETE FROM users</span><br><span class="line"># ---------------------</span><br><span class="line">UPDATE users SET userpass&#x3D;&#39;$userpass&#39; WHERE user_id &#x3D; $user_id;  -- 正常</span><br><span class="line">-- 异常，参数为     1234 OR TRUE</span><br><span class="line">UPDATE users SET userpass&#x3D; &#39;123456&#39; WHERE user_id &#x3D; 1234 OR TRUE;</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-2、防御"><a href="#7-2、防御" class="headerlink" title="7.2、防御"></a>7.2、防御</h3><ul>
+<li>对输入参数进行过滤校验</li>
+<li>预编译</li>
+</ul>
+<p>预编译SQL语句中的参数用占位符表示，在真正执行之前已经编译优化完成，可以做到一次编译、多次运行，即提升效率又能防止SQL注入。以下方预编译语句举例：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE user_id &#x3D; ?</span><br></pre></td></tr></table></figure>
+
+<p>由于预编译语句中 WHERE 条件已经确定，故预编译时使用什么索引等优化方案也已经确定，因此后续的查询无需重复编译，可以提升效率。</p>
+<p>传入的参数仅仅是作为查询过程中匹配和比较的对象，不会作为SQL语句的一部分去执行，如传入 <code>1234 OR TRUE</code>，则SQL会查询是否有 user_id 的值为 <code>1234 OR TRUE</code> 的数据行，而不会将 <code>1234 OR TRUE</code>编译为SQL语句去执行，因此可以防止SQL注入攻击。</p>
 
       
     </div>
@@ -201,7 +214,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%A1%B9%E7%9B%AE/">项目</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86/">实习经历</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
     </div>
   </div>
 
@@ -216,7 +229,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">七月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">八月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">七月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
     </div>
   </div>
 
@@ -229,23 +242,23 @@
       <ul>
         
           <li>
-            <a href="/2022/07/09/Java/Netty/">Netty</a>
+            <a href="/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E9%9B%86%E7%BE%A4/">ElasticSearch集群</a>
           </li>
         
           <li>
-            <a href="/2022/06/21/%E9%A1%B9%E7%9B%AE/%E6%A0%A1%E6%8B%9B%E5%87%86%E5%A4%87%E9%A1%B9%E7%9B%AE/">搁置项目</a>
+            <a href="/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E8%87%AA%E5%8A%A8%E5%8F%91%E7%8E%B0/">ElasticSearch集群</a>
           </li>
         
           <li>
-            <a href="/2022/06/06/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/Kuberbetes/Kuberbetes%E5%9F%BA%E7%A1%80/">Kuberbetes基础</a>
+            <a href="/2022/08/06/%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86/%E9%9C%80%E6%B1%82%E5%AE%9E%E7%8E%B0/">需求实现</a>
           </li>
         
           <li>
-            <a href="/2022/06/02/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/">分布式基础</a>
+            <a href="/2022/07/24/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E5%9F%BA%E7%A1%80/">ElasticSearch基础</a>
           </li>
         
           <li>
-            <a href="/2022/06/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/HTTP/">HTTP</a>
+            <a href="/2022/07/11/%E9%9D%A2%E7%BB%8F/%E5%B1%B1%E8%A5%BF%E5%BB%BA%E8%A1%8C%E6%9A%91%E6%9C%9F%E5%AE%9E%E4%B9%A0%E9%9D%A2%E7%BB%8F/">山西建行暑期实习面经</a>
           </li>
         
       </ul>
