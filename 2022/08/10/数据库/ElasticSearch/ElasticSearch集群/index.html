@@ -6,17 +6,17 @@
   
   <title>ElasticSearch集群 | 驯鹿非鹿</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="1 节点自动发现机制Zen Discovery是Elasticsearch内置的默认发现模块，支持多播模式和单播模式。发现模块用于发现集群中的节点 及选举主节点。多播模式已经不被大多数操作系统所支持，Elasticsearch的发现机制默认为单播模式，以防止节点无意中加入集群。 在同一台机器上运行的Elasticsearch节点会自动组成集群，当集群的节点运行在不同的机器上时，需要在每个节点的配置">
+  <meta name="description" content="1 节点自动发现Zen Discovery是Elasticsearch内置的默认发现模块，支持多播模式和单播模式。发现模块用于发现集群中的节点 及选举主节点。多播模式已经不被大多数操作系统所支持，Elasticsearch的发现机制默认为单播模式，以防止节点无意中加入集群。 在同一台机器上运行的Elasticsearch节点会自动组成集群，当集群的节点运行在不同的机器上时，需要在每个节点的配置文件">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ElasticSearch集群">
 <meta property="og:url" content="https://ethereal-lu.github.io/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E9%9B%86%E7%BE%A4/index.html">
 <meta property="og:site_name" content="驯鹿非鹿">
-<meta property="og:description" content="1 节点自动发现机制Zen Discovery是Elasticsearch内置的默认发现模块，支持多播模式和单播模式。发现模块用于发现集群中的节点 及选举主节点。多播模式已经不被大多数操作系统所支持，Elasticsearch的发现机制默认为单播模式，以防止节点无意中加入集群。 在同一台机器上运行的Elasticsearch节点会自动组成集群，当集群的节点运行在不同的机器上时，需要在每个节点的配置">
+<meta property="og:description" content="1 节点自动发现Zen Discovery是Elasticsearch内置的默认发现模块，支持多播模式和单播模式。发现模块用于发现集群中的节点 及选举主节点。多播模式已经不被大多数操作系统所支持，Elasticsearch的发现机制默认为单播模式，以防止节点无意中加入集群。 在同一台机器上运行的Elasticsearch节点会自动组成集群，当集群的节点运行在不同的机器上时，需要在每个节点的配置文件">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://ethereal-lu.github.io/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E9%9B%86%E7%BE%A4/Bully%E7%AE%97%E6%B3%95.png">
 <meta property="og:image" content="https://ethereal-lu.github.io/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E9%9B%86%E7%BE%A4/%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B.jpg">
 <meta property="article:published_time" content="2022-08-10T13:39:41.000Z">
-<meta property="article:modified_time" content="2022-08-10T14:43:55.601Z">
+<meta property="article:modified_time" content="2022-09-04T03:33:01.648Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://ethereal-lu.github.io/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E9%9B%86%E7%BE%A4/Bully%E7%AE%97%E6%B3%95.png">
@@ -102,7 +102,7 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h2 id="1-节点自动发现机制"><a href="#1-节点自动发现机制" class="headerlink" title="1 节点自动发现机制"></a>1 节点自动发现机制</h2><p>Zen Discovery是Elasticsearch内置的默认发现模块，支持多播模式和单播模式。发现模块用于发现集群中的节点 及选举主节点。多播模式已经不被大多数操作系统所支持，Elasticsearch的发现机制默认为单播模式，以防止节点无意中加入集群。</p>
+        <h2 id="1-节点自动发现"><a href="#1-节点自动发现" class="headerlink" title="1 节点自动发现"></a>1 节点自动发现</h2><p>Zen Discovery是Elasticsearch内置的默认发现模块，支持多播模式和单播模式。发现模块用于发现集群中的节点 及选举主节点。多播模式已经不被大多数操作系统所支持，Elasticsearch的发现机制默认为单播模式，以防止节点无意中加入集群。</p>
 <p>在同一台机器上运行的Elasticsearch节点会自动组成集群，当集群的节点运行在不同的机器上时，需要在每个节点的配置文件<code>elasticsearch.yml</code>中配置节点列表，即其他节点的IP和端口。集群建立后，每个节点都会每隔一定时间对节点列表中的所有节点发送心跳检测，心跳响应包中包含响应者所认可的master节点。</p>
 <h2 id="2-Bully算法"><a href="#2-Bully算法" class="headerlink" title="2 Bully算法"></a>2 Bully算法</h2><p>选举原则：在所有活着的节点中，选取节点ID最大或者最小的节点为主节点。</p>
 <p>节点角色：主节点和普通节点</p>
@@ -116,13 +116,34 @@
 <p>集群中每个活着的节点查找比自己ID大的节点，如果不存在则向其他节点发送Victory消息，表明自己为主节点。<br>如果存在比自己ID大的节点，则向这些节点发送Election消息，并等待响应。<br>若在给定的时间内没有收到这些节点回复的消息，则自己成为主节点，并向比自己ID小的节点发送Victory消息。<br>节点收到比自己ID小的节点发送的Election消息，则回复Alive消息。</p>
 <p>假设有三个节点，选举过程如下图：</p>
 <p><img src="Bully%E7%AE%97%E6%B3%95.png" alt="Bully算法"></p>
-<h2 id="3-选举流程"><a href="#3-选举流程" class="headerlink" title="3 选举流程"></a>3 选举流程</h2><h3 id="3-1-选举时机"><a href="#3-1-选举时机" class="headerlink" title="3.1 选举时机"></a>3.1 选举时机</h3><ol>
-<li>集群启动初始化</li>
-<li>集群的Master崩溃的时候</li>
-<li>任何一个节点发现当前集群中的Master节点没有得到n/2 + 1节点认可的时候，触发选举</li>
-</ol>
+<h2 id="3-选举流程"><a href="#3-选举流程" class="headerlink" title="3 选举流程"></a>3 选举流程</h2><h3 id="3-1-选举时机"><a href="#3-1-选举时机" class="headerlink" title="3.1 选举时机"></a>3.1 选举时机</h3><p>当一个节点发现包括自己在内的多数派的master-eligible节点认为集群没有master时，就可以发起master选举。</p>
 <h3 id="3-2-选举流程"><a href="#3-2-选举流程" class="headerlink" title="3.2 选举流程"></a>3.2 选举流程</h3><p><img src="%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B.jpg" alt="选举流程"></p>
-<p>1. </p>
+<ol>
+<li>Elasticsearch节点向节点列表中的所有节点发送ping消息</li>
+<li>对收到的响应包进行过滤，筛选出activeMasters列表和masterCandidates列表。activeMasters列表是其它节点认为的当前集群的Master节点，masterCandidates列表是当前集群有资格成为Master的节点（即配置文件中 <code>node.master:true</code>的节点）</li>
+<li>如果activeMasters列表不为空，elasticsearch会优先从activeMasters列表中选举，选举的算法是Bully算法，选择ID最小的节点(理论上activeMaster中的节点一定有master资格)</li>
+<li>如果activeMaster列表为空，那么会在masterCandidates中选举，选举同样涉及到优先级比较，首先会判断masterCandidates列表成员数目是否达到了最小数目（即超过半数）。如果达到的情况下先比较节点的集群状态版本编号，版本号越大优先级越高，然后再比较id，id越小优先级越高，这一流程的目的是让拥有最新集群状态的节点成为master</li>
+<li>经过上述选举之后，会选举出一个临时master节点，  临时master节点会等待其它节点的投票，如果有<code>discovery.zen.minimum_master_nodes - 1</code>个节点投票认为当前节点是master，那么选举就成功，临时master会等待一定时间，如果超时投票数仍不够，那么就失败，需要重新选举。临时master 收到投票会给 Follwer 一个响应，表明 Follwer 已经加入自己的集群。</li>
+</ol>
+<p>注意：上述的2、3、4步都是单个节点内部的操作，所选出的临时master节点是当前节点自己认为的master，即每个节点所选出的临时master可能不同，所以才需要在第5步对临时master进行投票，超过一半票数的临时master才会成为真正master。</p>
+<p>Master节点会开启错误检测机制，它会定期扫描集群所有的成员，将失活的成员移除集群，同时将最新的集群状态发布到集群中，集群成员收到最新的集群状态后会进行相应的调整，比如重新选择主分片，进行数据复制等操作。</p>
+<h2 id="4-脑裂问题"><a href="#4-脑裂问题" class="headerlink" title="4 脑裂问题"></a>4 脑裂问题</h2><p>ElasticSearch 保证不脑裂的基本原则还是多数派的策略，如果必须得到多数派的认可才能成为Master。3.2 的流程在绝大部份场景下没问题，但还是有 bug，因为上述流程并没有限制在选举过程中，一个Node只能投一票。比如NodeB投NodeA一票，但是NodeA迟迟不成为Master，NodeB等不及了发起了下一轮选主，这时候发现集群里多了个Node0，Node0优先级比NodeA还高，那NodeB肯定就改投Node0了。假设Node0和NodeA都处在等选票的环节，那显然这时候NodeB其实发挥了两票的作用，而且投给了不同的人。如果最后NodeA和Node0都得到超过半数的投票，就会发生脑裂。Raft算法为了解决此问题引入了 term 的概念，即使产生双主也一定在不同的 term ，当 term 小的收到 term 大的节点消息时会自动变为 Follwer。ElasticSearch 没有 term 概念所以一个集群会有双主，但也不会产生问题，因为旧的master 很快会发现自己集群的节点数不过半而降级为 candidate。</p>
+<h2 id="5-错误检测"><a href="#5-错误检测" class="headerlink" title="5 错误检测"></a>5 错误检测</h2><p>通过心跳实现错误检测</p>
+<ul>
+<li>MasterFaultDetection：主节点开启。检测其他节点是否存活，不存活就删除；检测集群中节点数是否超过一半，不超过重新加入集群。</li>
+<li>NodesFaultDetection：普通节点开启。监测到主节点离线后重新监测法定节点数，并进行新一轮的选择；</li>
+</ul>
+<h2 id="6-ElasticSearch7-x"><a href="#6-ElasticSearch7-x" class="headerlink" title="6 ElasticSearch7.x"></a>6 ElasticSearch7.x</h2><p>在 ElasticSearch6.x 中使用 Bully 算法进行选主，即本文前半部分所述内容。在 ElasticSearch7.x 中使用 Raft 算法进行选主，但在实现上和 Raft 论文有所不同。</p>
+<p>ES实现中，候选人不先投自己，而是直接并行发起RequestVote，这相当于候选人有投票给其他候选人的机会。这样的好处是可以在一定程度上避免3个节点同时成为候选人时，都投自己，无法成功选主的情况。</p>
+<p>ES不限制每个节点在某个term上只能投一票， 节点可以投多票，这样会产生选出多个主的情况：</p>
+<ul>
+<li>Node2被选为主，收到的投票为：Node2、 Node3；</li>
+<li>Node3被选为主，收到的投票为：Node3、 Node1；</li>
+</ul>
+<p>对于这种情况，ES的处理是让最后当选的Leader成功，作为Leader。如果收到RequestVote请求，他会无条件退出Leader状态。在本例中，Node2先被选为主，随后他收到Node3的RequestVote请求，那么他退出Leader状态，切换为CANDIDATE，并同意向发起RequestVote候选人投票。因此最终Node3成功当选为Leader。</p>
+<p><strong>动态维护参选节点列表</strong></p>
+<p>在7.x之前的版本中，用户需要手动配置<code>minimum_master_nodes</code>, 来明确告诉集群过半节点数应该是多少，并在集群扩缩容时手动调整他。现在，集群可以自行维护。</p>
+<p>7.x 取消了<code>discovery.zen.minimum_master_nodes</code> 配置，不再记录“quorum”法定数量的具体数值，取而代之的是记录一个节点列表，这个列表中保存所有具备master资格的节点，称为<code>VotingConfiguration</code>，他会持久化到集群状态中。在节点加入或离开集群之后，Elasticsearch 会自动对<code>VotingConfiguration</code> 做出相应的更改，以确保集群具有尽可能高的弹性。如果在维护<code>VotingConfiguration</code>时发现具备master资格的节点数量为偶数，ES会将其中一个排除在外，保证<code>VotingConfiguration</code>是奇数。因为当是偶数的情况下，网络分区将集群划分为大小相等的两部分，那么两个子集群都无法达到“多数”的条件。</p>
 
       
     </div>
@@ -137,10 +158,19 @@
     
 <nav id="article-nav">
   
+    <a href="/2022/08/11/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/Raft%E7%AE%97%E6%B3%95/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">前一篇</strong>
+      <div class="article-nav-title">
+        
+          Raft算法
+        
+      </div>
+    </a>
   
-    <a href="/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E8%87%AA%E5%8A%A8%E5%8F%91%E7%8E%B0/" id="article-nav-older" class="article-nav-link-wrap">
+  
+    <a href="/2022/08/06/%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86/%E9%9C%80%E6%B1%82%E5%AE%9E%E7%8E%B0/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">后一篇</strong>
-      <div class="article-nav-title">ElasticSearch集群</div>
+      <div class="article-nav-title">需求实现</div>
     </a>
   
 </nav>
@@ -185,23 +215,23 @@
       <ul>
         
           <li>
+            <a href="/2022/08/22/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/Mysql%E5%90%8C%E6%AD%A5ElasticSearch/">Mysql同步ElasticSearch</a>
+          </li>
+        
+          <li>
+            <a href="/2022/08/17/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/Dubbo/">Dubbo</a>
+          </li>
+        
+          <li>
+            <a href="/2022/08/11/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/Raft%E7%AE%97%E6%B3%95/">Raft算法</a>
+          </li>
+        
+          <li>
             <a href="/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E9%9B%86%E7%BE%A4/">ElasticSearch集群</a>
           </li>
         
           <li>
-            <a href="/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E8%87%AA%E5%8A%A8%E5%8F%91%E7%8E%B0/">ElasticSearch集群</a>
-          </li>
-        
-          <li>
             <a href="/2022/08/06/%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86/%E9%9C%80%E6%B1%82%E5%AE%9E%E7%8E%B0/">需求实现</a>
-          </li>
-        
-          <li>
-            <a href="/2022/07/24/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E5%9F%BA%E7%A1%80/">ElasticSearch基础</a>
-          </li>
-        
-          <li>
-            <a href="/2022/07/11/%E9%9D%A2%E7%BB%8F/%E5%B1%B1%E8%A5%BF%E5%BB%BA%E8%A1%8C%E6%9A%91%E6%9C%9F%E5%AE%9E%E4%B9%A0%E9%9D%A2%E7%BB%8F/">山西建行暑期实习面经</a>
           </li>
         
       </ul>

@@ -14,7 +14,7 @@
 <meta property="og:description" content="1、什么是分布式锁分布式锁，顾名思义，就是分布式项目开发中用到的锁，可以用来控制分布式系统之间同步访问共享资源，一般来说，分布式锁需要满足的特性有这么几点： 1、互斥性：在任何时刻，对于同一条数据，只有一台应用可以获取到分布式锁； 2、高可用性：在分布式场景下，一小部分服务器宕机不影响正常使用，这种情况就需要将提供分布式锁的服务以集群的方式部署； 3、防止锁超时：如果客户端没有主动释放锁，服务器会">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-04-12T14:39:41.000Z">
-<meta property="article:modified_time" content="2022-05-27T10:49:19.109Z">
+<meta property="article:modified_time" content="2022-09-04T03:33:01.685Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -108,17 +108,40 @@
 <p>核心思想就是每次想要获取锁的时候，就对一个固定的 key 值以 <code>SETNX</code>的方式存放，如果成功，就说明获取锁成功，否则以自旋的方式持续获取锁，直到超时获取失败。</p>
 <p>解锁通过 LUA 代码实现，LUA是原子性的。</p>
 <p>注：下方代码只体现实现锁的思想，不能实际使用。实际开发中使用 Redisson 。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 代码通过 Jedis 编写，已经过时，重要的是实现方式，不是具体代码实现</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedisLock</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 竞争该 key 值</span></span><br><span class="line">    <span class="keyword">private</span> String LOCK_KEY = <span class="string">&quot;redis_lock&quot;</span>;`</span><br><span class="line">    <span class="comment">// key的持有时间，5ms`</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> EXPIRE_TIME = <span class="number">5</span>;`</span><br><span class="line">    <span class="comment">// 等待超时时间，1s`</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> TIME_OUT = <span class="number">1000</span>;`</span><br><span class="line">    <span class="comment">// redis命令参数，相当于nx和px的命令合集`</span></span><br><span class="line">    <span class="keyword">private</span> SetParams params = SetParams.setParams().nx().px(EXPIRE_TIME);`</span><br><span class="line">    <span class="comment">// redis连接池，连的是本地的redis客户端`</span></span><br><span class="line">    JedisPool jedisPool = <span class="keyword">new</span> JedisPool(<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">6379</span>);`</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 加锁</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">lock</span><span class="params">(String id)</span> </span>&#123;</span><br><span class="line">        Long start = System.currentTimeMillis();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">for</span> (; ; ) &#123;</span><br><span class="line">                <span class="comment">//SET命令返回OK ，则证明获取锁成功</span></span><br><span class="line">                String lock = jedis.set(LOCK_KEY, id, params);</span><br><span class="line">                <span class="keyword">if</span> (<span class="string">&quot;OK&quot;</span>.equals(lock)) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//否则循环等待，在timeout时间内仍未获取到锁，则获取失败</span></span><br><span class="line">                <span class="keyword">long</span> l = System.currentTimeMillis() - start;</span><br><span class="line">                <span class="keyword">if</span> (l &gt;= timeout) &#123;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    Thread.sleep(<span class="number">100</span>);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            jedis.close();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 解锁</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">unlock</span><span class="params">(String id)</span> </span>&#123;</span><br><span class="line">        String script =</span><br><span class="line">            <span class="comment">// KEYS[1] 就是 LOCK_KEY，ARGV[1] 就是锁拥有者设置的值，表明只有锁拥有者才能解锁</span></span><br><span class="line">                <span class="string">&quot;if redis.call(&#x27;get&#x27;,KEYS[1]) == ARGV[1] then&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;   return redis.call(&#x27;del&#x27;,KEYS[1]) &quot;</span> +</span><br><span class="line">                        <span class="string">&quot;else&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;   return 0 &quot;</span> +</span><br><span class="line">                        <span class="string">&quot;end&quot;</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            String result = jedis.eval(script, Collections.singletonList(LOCK_KEY), </span><br><span class="line">                                       Collections.singletonList(id)).toString();</span><br><span class="line">            <span class="keyword">return</span> <span class="string">&quot;1&quot;</span>.equals(result) ? <span class="keyword">true</span> : <span class="keyword">false</span>;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            jedis.close();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <h2 id="3、分布式锁的缺陷"><a href="#3、分布式锁的缺陷" class="headerlink" title="3、分布式锁的缺陷"></a>3、分布式锁的缺陷</h2><p>一、客户端长时间阻塞导致锁失效问题</p>
 <p>客户端1得到了锁，因为网络问题或者GC等原因导致长时间阻塞，然后业务程序还没执行完锁就过期了，这时候客户端2也能正常拿到锁，可能会导致线程安全的问题。</p>
 <p>二、redis服务器时钟漂移问题</p>
 <p>如果redis服务器的机器时钟发生了向前跳跃，就会导致这个key过早超时失效，比如说客户端1拿到锁后，key的过期时间是12:02分，但redis服务器本身的时钟比客户端快了2分钟，导致key在12:00的时候就失效了，这时候，如果客户端1还没有释放锁的话，就可能导致多个客户端同时持有同一把锁的问题。</p>
 <p>三、单点实例安全问题</p>
 <p>如果redis是单master模式的，当这台机宕机的时候，那么所有的客户端都获取不到锁了，为了提高可用性，可能就会给这个master加一个slave，但是因为redis的主从同步是异步进行的，可能会出现客户端1设置完锁后，master挂掉，但此时数据还没有同步给slave 节点，当slave提升为master后，客户端1设置的锁丢失了，这时候客户端2设置锁也能够成功，导致客户端1和客户端2同时拥有锁。因此 reids 实现的分布式锁是 AP 模型。</p>
-<p>针对上述问题，官方推出了 RedLock 算法，但是依然无法完全解决。</p>
-<p>对此只能说，鱼和熊掌不可兼得，我们之所以用Redis作为分布式锁的工具，很大程度上是因为Redis本身效率高且单进程的特点，即使在高并发的情况下也能很好的保证性能，但很多时候，性能和安全不能完全兼顾，如果你一定要保证锁的安全性的话，可以用其他的中间件如db、zookeeper来做控制，这些工具能很好的保证锁的安全，但性能方面只能说是差强人意，否则大家早就用上了。</p>
-<p>本文摘自<a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000038988087">面试官：你真的了解Redis分布式锁吗？ - SegmentFault 思否</a> </p>
+<h2 id="4、RedLock"><a href="#4、RedLock" class="headerlink" title="4、RedLock"></a>4、RedLock</h2><p>针对上述问题，官方推出了 RedLock 算法，RedLock 算法用于解决 Redis 集群中向一个 master 节点设置锁后该节点挂了，这时向其他 master 节点设置锁一定成功的问题。获取锁时在超过半数的实例中设置了锁就认为获取到了锁，解锁时将所有实例解锁。</p>
+<p>RedLock 不足：</p>
+<ul>
+<li>宕机重启之后，2个客户端拿到同一把锁：假设5个节点是A, B, C, D, E，客户端1在A, B, C上面拿到锁，D, E没有拿到锁，客户端1拿锁成功。 此时，C挂了重启，C上面锁的数据丢失（假设机器断电，数据还没来得及刷盘；或者C上面的主节点挂了，从节点未同步）。客户端2去取锁，从C, D, E 3个节点拿到锁，A, B没有拿到（还被客户端1持有），客户端2也超过多数派，也会拿到锁。</li>
+<li>多个客户端同时竞争同一把锁，全部失败：比如有节点1、2、3、4、5，A、B、C同时竞争锁，A获得1、2,B获得3、4,C获得5,最后ABC都没有成功获得锁，没有获得半数以上的锁。需要强调，当客户端从大多数Redis实例获取锁失败时，应该尽快地释放（部分）已经成功取到的锁，方便别的客户端去获取锁，假如释放锁失败了，就只能等待锁超时释放了</li>
+<li>效率低：需要顺序向所有 master 节点设置锁，master 节点越多，效率越低</li>
+</ul>
+<h2 id="5、Redisson"><a href="#5、Redisson" class="headerlink" title="5、Redisson"></a>5、Redisson</h2><p>Redisson 分布式锁通过 hash 实现，hash 名作为锁，hash 中的键为 线程ID，值为 重入次数。</p>
+<p><strong>加锁时设置了过期时间</strong></p>
+<ul>
+<li>加锁：<ul>
+<li>如果不存在该 key，新增该锁并且hash中该线程id对应的count置1，并设置过期时间；</li>
+<li>如果存在该key 并且 hash中线程id的key也存在就将线程重入次数加 1，重置过期时间。</li>
+<li>最后返回这把锁的ttl剩余时间</li>
+</ul>
+</li>
+<li>解锁：<ul>
+<li>如果该锁不存在则返回nil；</li>
+<li>如果该锁存在则将其线程的hash key计数器-1，</li>
+<li>如果计数器大于 0，重置过期时间，返回；否则，删除该锁，发布解锁消息</li>
+</ul>
+</li>
+</ul>
+<p>当锁被其他线程占用时，监听锁的释放通知（非不是CAS自旋），等待锁被其他线程释放，也是为了避免自旋的一种常用效率手段。</p>
+<p><strong>加锁时未设置过期时间</strong></p>
+<p>未设置过期时间的加锁与设置了过期时间的加锁一样，只是在最后会开启一个定时任务来进行锁续约。</p>
+<p>当一个线程持有了一把锁，由于并未设置超时时间leaseTime，Redisson默认配置了30S，开启watchDog，每10S对该锁进行一次续约，维持30S的超时时间，直到任务完成再删除锁。</p>
+<p>以上是非公平锁，Redisson 还通过 List 和 Zset 实现了公平锁。（公平锁不重要，别主动说）</p>
 
       
     </div>
@@ -190,23 +213,23 @@
       <ul>
         
           <li>
+            <a href="/2022/08/22/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/Mysql%E5%90%8C%E6%AD%A5ElasticSearch/">Mysql同步ElasticSearch</a>
+          </li>
+        
+          <li>
+            <a href="/2022/08/17/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/Dubbo/">Dubbo</a>
+          </li>
+        
+          <li>
+            <a href="/2022/08/11/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/Raft%E7%AE%97%E6%B3%95/">Raft算法</a>
+          </li>
+        
+          <li>
             <a href="/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E9%9B%86%E7%BE%A4/">ElasticSearch集群</a>
           </li>
         
           <li>
-            <a href="/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E8%87%AA%E5%8A%A8%E5%8F%91%E7%8E%B0/">ElasticSearch集群</a>
-          </li>
-        
-          <li>
             <a href="/2022/08/06/%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86/%E9%9C%80%E6%B1%82%E5%AE%9E%E7%8E%B0/">需求实现</a>
-          </li>
-        
-          <li>
-            <a href="/2022/07/24/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E5%9F%BA%E7%A1%80/">ElasticSearch基础</a>
-          </li>
-        
-          <li>
-            <a href="/2022/07/11/%E9%9D%A2%E7%BB%8F/%E5%B1%B1%E8%A5%BF%E5%BB%BA%E8%A1%8C%E6%9A%91%E6%9C%9F%E5%AE%9E%E4%B9%A0%E9%9D%A2%E7%BB%8F/">山西建行暑期实习面经</a>
           </li>
         
       </ul>

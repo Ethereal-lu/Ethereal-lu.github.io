@@ -14,7 +14,7 @@
 <meta property="og:description" content="1、大文件上传每个分块的文件内容都是通过 MultipartFile 来接收的，改接口的所有实现类都是通过包装 HttpServletRequest 来实现的，故该文件传输是通过 HTTP 协议实现的。 1.1、分片上传 先获取完整文件的 MD5 值，之后将文件分割成相同大小的数据块； 每次上传文件时都携带上 MD5 值、分块序号、文件内容等。 每收到一个分块，便将其存储到文件中，并将分块序号添加">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-04-05T13:12:41.000Z">
-<meta property="article:modified_time" content="2022-07-24T05:59:32.636Z">
+<meta property="article:modified_time" content="2022-09-04T03:33:01.687Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -192,6 +192,15 @@
 <p>get方法首先获取到当前线程的<code>ThreadLocalMap</code>，然后以线性探测的方式找到键值对。同样在探测过程中清除死亡映射。</p>
 <h3 id="9-3、内存泄漏"><a href="#9-3、内存泄漏" class="headerlink" title="9.3、内存泄漏"></a>9.3、内存泄漏</h3><p>当我们通过 <code>ThreadLocal&lt;?&gt; local = new ThreadLocal&lt;&gt;();</code>创建一个<code>ThreadLocal</code>，并通过set存入值的时候，<code>ThreadLocal</code>就包含了两个引用，一个是我们显式声明的强引用，一个是存储在<code>ThreadLocalMap</code>中的弱引用。当<code>ThreadLocal</code>由程序员手动设置为null后，强引用就消失了，剩下的弱引用会在下次垃圾回收时清理掉，此时<code>ThreadLocalMap</code>中的键就为null，根据上方的get和set方法，他们会清理掉键为null的值，所以这种情况不会发生内存泄漏。</p>
 <p>但是如果使用的是线程池，线程使用后不会回收，则<code>ThreadLocal</code>一直保持着强引用也不会回收，那么其对应的值也不会回收，这时就会内存泄漏，同时由于使用了上一个线程的<code>ThreadLocal</code>，还可能引起逻辑错误。</p>
+<h2 id="10、大文件修改"><a href="#10、大文件修改" class="headerlink" title="10、大文件修改"></a>10、大文件修改</h2><p>机器学习数据动辄上 10G ，需要实现一个在线修改数据的功能。</p>
+<p>调研 普通文件修改、RandomAccessFile、python 的 pandas 类库，最终都需要对整个文件重写，不可行。</p>
+<p>得到两种解决方案：</p>
+<ul>
+<li>以拼凑 sql 语句的方式为每个文件建一张表</li>
+<li>将文件分割为多个小文件，修改时只需重写小文件，提交时将文件合并</li>
+</ul>
+<p>继续找方法：mmap 内存映射–&gt; 不可行。</p>
+<p>在线修改文档的大致流程：后段将数据全部或部分传给前段、用户修改后前段将修改后的数据全部返回给后段</p>
 <h2 id="998、场景设计类题目"><a href="#998、场景设计类题目" class="headerlink" title="998、场景设计类题目"></a>998、场景设计类题目</h2><h3 id="1、设计一个秒杀场景可能会遇到什么问题？"><a href="#1、设计一个秒杀场景可能会遇到什么问题？" class="headerlink" title="1、设计一个秒杀场景可能会遇到什么问题？"></a>1、设计一个秒杀场景可能会遇到什么问题？</h3><p>这条搭配着下一题看把。</p>
 <p>从流量入口出发，秒杀场景会有大量请求同时到达服务器，而服务器只有有限资源处理这些请求，同时还要尽可能快地处理，在入口处可能需要做一些鉴权、限流、缓存、日志和监控等。流量进入入口之后，需要做一些流量削峰、资源隔离、服务器优化和负载均衡，之后还有服务降级、服务限流、拒绝请求。到达扣减库存时，需要有缓存以及用分布式锁控制并发读写，同时考虑用阻塞队列、线程池的方式让用户先拿到秒杀资格，再通过异步计算返回给客户。</p>
 <h3 id="2、如何设计秒杀场景？"><a href="#2、如何设计秒杀场景？" class="headerlink" title="2、如何设计秒杀场景？"></a>2、如何设计秒杀场景？</h3><p>秒杀场景的关键就是面对大量的请求可以正常提供服务并做出快速响应，同时保证数据的一致性。</p>
@@ -351,23 +360,23 @@
       <ul>
         
           <li>
+            <a href="/2022/08/22/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/Mysql%E5%90%8C%E6%AD%A5ElasticSearch/">Mysql同步ElasticSearch</a>
+          </li>
+        
+          <li>
+            <a href="/2022/08/17/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/Dubbo/">Dubbo</a>
+          </li>
+        
+          <li>
+            <a href="/2022/08/11/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/Raft%E7%AE%97%E6%B3%95/">Raft算法</a>
+          </li>
+        
+          <li>
             <a href="/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E9%9B%86%E7%BE%A4/">ElasticSearch集群</a>
           </li>
         
           <li>
-            <a href="/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E8%87%AA%E5%8A%A8%E5%8F%91%E7%8E%B0/">ElasticSearch集群</a>
-          </li>
-        
-          <li>
             <a href="/2022/08/06/%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86/%E9%9C%80%E6%B1%82%E5%AE%9E%E7%8E%B0/">需求实现</a>
-          </li>
-        
-          <li>
-            <a href="/2022/07/24/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E5%9F%BA%E7%A1%80/">ElasticSearch基础</a>
-          </li>
-        
-          <li>
-            <a href="/2022/07/11/%E9%9D%A2%E7%BB%8F/%E5%B1%B1%E8%A5%BF%E5%BB%BA%E8%A1%8C%E6%9A%91%E6%9C%9F%E5%AE%9E%E4%B9%A0%E9%9D%A2%E7%BB%8F/">山西建行暑期实习面经</a>
           </li>
         
       </ul>
