@@ -14,7 +14,7 @@
 <meta property="og:description" content="1、大文件上传每个分块的文件内容都是通过 MultipartFile 来接收的，改接口的所有实现类都是通过包装 HttpServletRequest 来实现的，故该文件传输是通过 HTTP 协议实现的。 1.1、分片上传 先获取完整文件的 MD5 值，之后将文件分割成相同大小的数据块； 每次上传文件时都携带上 MD5 值、分块序号、文件内容等。 每收到一个分块，便将其存储到文件中，并将分块序号添加">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-04-05T13:12:41.000Z">
-<meta property="article:modified_time" content="2022-09-04T03:33:01.687Z">
+<meta property="article:modified_time" content="2022-09-15T05:25:05.499Z">
 <meta property="article:author" content="驯鹿先生">
 <meta name="twitter:card" content="summary">
   
@@ -142,9 +142,9 @@
 <h3 id="5-2、cookie"><a href="#5-2、cookie" class="headerlink" title="5.2、cookie"></a>5.2、cookie</h3><p>每个 cookie 中的domain和path这两个属性标识其所属的域名和路径，只有请求的域名和路径都相同才会自动携带 cookie；一个域内可以有多个cookie，它们的path可以不同。cookie 的 http-only 字段若为 true，则域内的 js 无法读写本域的 cookie，可以防止 xss 攻击，该字段只能由服务端设置。</p>
 <p>网页要发<code>http</code>请求时，浏览器会先检查是否有相应的<code>cookie</code>，有则自动添加在<code>request header</code>中的<code>cookie</code>字段中。这些是浏览器自动帮我们做的，无需在前端中通过 js 添加。</p>
 <p>cookie 只保存在客户端，不保存在服务端；服务端每次通过请求中的 cookie 判断用户登陆状态；客户端和服务端都可以设置 cookie。</p>
-<h3 id="5-3、Session"><a href="#5-3、Session" class="headerlink" title="5.3、Session"></a>5.3、Session</h3><p>Sesson 存储在服务器的内存或redis 等中。Session 必须搭配 Cookie 使用，此时 Cookie 只需要保存一个 sessionid 即可。如果浏览器禁止 Cookie，则会使用 Url 重写方式将 sessionid 放在 url 中进行传递。</p>
+<h3 id="5-3、Session"><a href="#5-3、Session" class="headerlink" title="5.3、Session"></a>5.3、Session</h3><p>Session 必须搭配 Cookie 使用，此时 Cookie 只需要保存一个 sessionid 即可。如果浏览器禁止 Cookie，则会使用 Url 重写方式将 sessionid 放在 url 中进行传递。</p>
 <p>Session对应的类为javax.servlet.http.HttpSession类。每个客户端对应一个Session对象，具体看 servlet 章节。</p>
-<p>在请求过程中 Tomcat 会解析请求中的sessionId信息，然后将sessionId存储到request的参数列表中。然后再从  request获取session的时候，如果存在sessionId那么就根据Id获取session（说明用户已登录），如果sessionId不存在或者session失效，那么则新建session（未登录）。</p>
+<p>Session 存储在 Tomcat 中，在请求过程中 Tomcat 会解析请求中的 sessionId，然后根据 sessionId 获取 Session 信息并保存到 request 中。然后从 request 获取 session，如果存在 session 就说明用户已登录，否则就是登录过期或者未登录，需要新建 session。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 根据 request 获取 session</span></span><br><span class="line">HttpSession session = request.getSession();</span><br><span class="line">session.setAttribute(<span class="string">&quot;name&quot;</span>,<span class="string">&quot;tom&quot;</span>);</span><br><span class="line">session.getAttribute(<span class="string">&quot;name&quot;</span>);</span><br><span class="line"><span class="comment">// 使其失效；此外只有过期 session 才会失效，过期从最后一次访问服务端开始计时，默认 30 分钟。</span></span><br><span class="line">session.invalidate();</span><br></pre></td></tr></table></figure>
 
 <h3 id="5-4、为什么要用-Token？"><a href="#5-4、为什么要用-Token？" class="headerlink" title="5.4、为什么要用 Token？"></a>5.4、为什么要用 Token？</h3><ol>

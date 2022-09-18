@@ -73,87 +73,6 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-面经/其他面经" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/04/26/%E9%9D%A2%E7%BB%8F/%E5%85%B6%E4%BB%96%E9%9D%A2%E7%BB%8F/" class="article-date">
-  <time class="dt-published" datetime="2022-04-26T03:12:41.000Z" itemprop="datePublished">2022-04-26</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/04/26/%E9%9D%A2%E7%BB%8F/%E5%85%B6%E4%BB%96%E9%9D%A2%E7%BB%8F/">其他面经-字节</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="一面"><a href="#一面" class="headerlink" title="一面"></a>一面</h2><p>http1.1 与 http 2.0 区别？</p>
-<p>tcp 三次握手</p>
-<p>状态码 500  503 </p>
-<p>进程、线程、协程</p>
-<p>进程通信</p>
-<p>信号</p>
-<p>kill -9   -15</p>
-<p>bio、nio、aio</p>
-<p>多路复用</p>
-<p>两个栈？</p>
-<p>utf-8  varchar int bigint </p>
-<p>b树  b+树</p>
-<p>聚集索引</p>
-<p>主键索引</p>
-<p>手写 SQL？  join </p>
-<p>编程：三数之和？</p>
-<h2 id="二面"><a href="#二面" class="headerlink" title="二面"></a>二面</h2><p>unicode 和 ascii</p>
-<p>死锁及避免</p>
-<p>栈和堆</p>
-<p>json</p>
-<p>RPC</p>
-<p>子网掩码</p>
-<p>syn洪范攻击</p>
-<p>dns劫持、避免</p>
-<p>http 状态码</p>
-<p>断点续传</p>
-<p>手写sql   update table set name=“zhangsan” where id &gt; 3</p>
-<p>泛型</p>
-<p>容器类</p>
-<p>treeMap</p>
-<p>斐波那契dp？</p>
-<p>链表题</p>
-<h2 id="三"><a href="#三" class="headerlink" title="三"></a>三</h2><p>虚拟内存</p>
-<p>死锁、避免</p>
-<p>linux 基础命令介绍</p>
-<p>状态码介绍。细问，全记。</p>
-<p>cooike sesson</p>
-<p>docker 细问</p>
-<p>redis</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/04/26/%E9%9D%A2%E7%BB%8F/%E5%85%B6%E4%BB%96%E9%9D%A2%E7%BB%8F/" data-id="cl7msi2cz00005saq7c6u59od" data-title="其他面经-字节" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
     <article id="post-数据库/Redis/Redis缓存一致性" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/04/25/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7/" class="article-date">
@@ -1139,6 +1058,52 @@
     </div>
     <footer class="article-footer">
       <a data-url="https://ethereal-lu.github.io/2022/04/07/%E5%88%86%E5%B8%83%E5%BC%8F/RabbitMQ/RabbitMQ/" data-id="cl3ir9vw5003ckkaq9lelcd6y" data-title="RabbitMQ基础" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Java/Java 进阶/AQS" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/06/Java/Java%20%E8%BF%9B%E9%98%B6/AQS/" class="article-date">
+  <time class="dt-published" datetime="2022-04-06T13:12:41.000Z" itemprop="datePublished">2022-04-06</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/04/06/Java/Java%20%E8%BF%9B%E9%98%B6/AQS/">AQS</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p><strong>AQS的核心思想</strong>是，如果被请求的共享资源空闲，则将当前请求资源的线程设置为有效的工作线程，并将共享资源设置为锁定状态，如果被请求的共享资源被占用，那么就通过cas 的方式将当前线程添加到等待队列的尾部，直到它的前继节点释放锁并唤醒它。</p>
+<p>在 AQS 中用变量 state 代表共享资源，通过 cas 改变 state 的值来竞争锁。</p>
+<p>ReentrantLock 实现了公平锁和非公平锁，他们都继承了 AQS，公平锁和非公平锁的最大区别就是在获取锁的时候，非公平锁直接和等待队列的头节点竞争锁，而非公平锁只有在自己是队列头结点时才去获取锁。</p>
+<p>ReentrantLock 中，若 state 的值为0，说明当前共享资源是空闲的，可以获取。若获取到锁的线程再次获取锁时，state 的值加 1，这就是可重入锁。同时这样会避免多余的 cas 开销。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/04/06/Java/Java%20%E8%BF%9B%E9%98%B6/AQS/" data-id="cl3ir9vv5001gkkaqdn138z4u" data-title="AQS" class="article-share-link">分享</a>
       
       
       
