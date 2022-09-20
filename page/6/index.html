@@ -73,6 +73,51 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Java/Java 进阶/ConcurrentHashMap" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/03/26/Java/Java%20%E8%BF%9B%E9%98%B6/ConcurrentHashMap/" class="article-date">
+  <time class="dt-published" datetime="2022-03-26T03:12:41.000Z" itemprop="datePublished">2022-03-26</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/03/26/Java/Java%20%E8%BF%9B%E9%98%B6/ConcurrentHashMap/">ConcurrentHashMap</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="1、ConcurrentHashMap-如何保证线程安全"><a href="#1、ConcurrentHashMap-如何保证线程安全" class="headerlink" title="1、ConcurrentHashMap 如何保证线程安全"></a>1、ConcurrentHashMap 如何保证线程安全</h3><p>ConcurrentHashMap 是由 Node 数组构成，这里先将 Node 数组的每个下标对应的空间称为一个桶，以方便叙述。ConcurrentHashMap 的 get 操作不需要加锁，只有 put 和 remove 需要加锁。当执行 put\remove 操作时，会先定位到桶，然后将桶中的链表头节点或树的根节点锁住，因为必须要获取到链表头节点或树的根节点才能对整个链表或树操作，所以可以保证线程安全。</p>
+<p>当 put 操作发现桶中没有数据时，会通过 cas 操作赋值，而不是上锁。</p>
+<h3 id="2、ConcurrentHashMap-扩容"><a href="#2、ConcurrentHashMap-扩容" class="headerlink" title="2、ConcurrentHashMap 扩容"></a>2、ConcurrentHashMap 扩容</h3><p>ConcurrentHashMap 中有一个 sizeCtl 变量，它类似于 HashMap 中的 threshold ，通过比较元素数量与 sizeCtl 的大小判断是否需要扩容。扩容时，先创建一个2倍大小的新数组并初始化一个forwardNode实例fwd，然后遍历每一个桶，若桶中元素为 null 时，直接将其赋值为fwd，否则将桶中的元素转移到新数组，再将其赋值为fwd。在扩容的过程中若进来其他的读线程，若读线程发现桶中的元素是 fwd，就会帮助进行转移，否则进行正常的读操作。若进来写线程，若写线程发现桶中的元素是 fwd，就会帮助进行转移，否则阻塞，直到扩容完成。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/03/26/Java/Java%20%E8%BF%9B%E9%98%B6/ConcurrentHashMap/" data-id="cl3ir9vv8001nkkaq7hwteupb" data-title="ConcurrentHashMap" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-面经/面经-美团" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/03/26/%E9%9D%A2%E7%BB%8F/%E9%9D%A2%E7%BB%8F-%E7%BE%8E%E5%9B%A2/" class="article-date">
@@ -2265,63 +2310,6 @@
 
 
   
-    <article id="post-小碎片知识/lambda" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2021/08/18/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/lambda/" class="article-date">
-  <time class="dt-published" datetime="2021-08-18T15:08:18.000Z" itemprop="datePublished">2021-08-18</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2021/08/18/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/lambda/">lambda 表达式中使用的变量为什么必须是 final</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>Java 规范中规定：Lambda 表达式中要用到的，但又未在 Lambda 表达式中声明的变量，必须声明为 final 或者是 effectively final，否则就会出现编译错误。</p>
-<p>有效 final 即不用显示声明为 final，由 JVM 添加 final。</p>
-<hr>
-<h4 id="个人理解"><a href="#个人理解" class="headerlink" title="个人理解"></a>个人理解</h4><p>由于 lambda 表达式相当于生成一个对象，存储在堆中（生命周期长），而方法的局部变量存储在栈中（生命周期短）。如果 lambda 表达式在使用了外部方法中的局部变量后，该局部变量又发生变化，且方法执行完毕内存被释放，此 lambda 表达式生成的对象可能依然存活（未被GC回收），但是却无法得知局部变量改变后的值，造成数据一致性破坏。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 报错</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">func</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> a = <span class="number">5</span>;</span><br><span class="line">        Runnable runnable = () -&gt; &#123;</span><br><span class="line">            a++;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上方在方法中报错而下方在类中不报错，因此推断与栈和堆的生存周期有关系。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 不报错</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> a = <span class="number">3</span>;</span><br><span class="line">    Runnable runnable = () -&gt; &#123;</span><br><span class="line">        a++;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>存在问题：</strong>作为方法中的内部类，既然方法被释放后，该类绝不可能再被使用，矛盾！</p>
-<hr>
-<h4 id="其他理解"><a href="#其他理解" class="headerlink" title="其他理解"></a>其他理解</h4><p>lambda是对接口中的方法的一种简写方式，当方法想要使用外部的变量的时候，需要把值给传过去，但是方法中无论怎么改变量的值，都不会改变这个变量在外部的值（值传递和引用传递的区别），所以加上final就是为了方便开发者，以免误以为可以更改这个变量的值。final的目的就是告诉开发人员不能改变外面的变量值。</p>
-<p><strong>存在问题：</strong>外部变量什么时候传递给 lambda 的。难道隐式的传了？</p>
-<hr>
-<p>悬而未决，先睡觉</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2021/08/18/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/lambda/" data-id="cl3ir9vus000ikkaqe4m7cbyg" data-title="lambda 表达式中使用的变量为什么必须是 final" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -2337,7 +2325,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86/">实习经历</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86/">实习经历</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%A1%8C%E6%B5%8B/">行测</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
     </div>
   </div>
 
