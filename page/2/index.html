@@ -73,370 +73,6 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-Java/Netty" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/07/09/Java/Netty/" class="article-date">
-  <time class="dt-published" datetime="2022-07-09T11:12:41.000Z" itemprop="datePublished">2022-07-09</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Java/">Java</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/07/09/Java/Netty/">Netty</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="1-NIO基础"><a href="#1-NIO基础" class="headerlink" title="1 NIO基础"></a>1 NIO基础</h2><p>non-blocking io 非阻塞IO</p>
-<h3 id="1-1-三大组件"><a href="#1-1-三大组件" class="headerlink" title="1.1 三大组件"></a>1.1 三大组件</h3><h4 id="1-1-1-Channel-amp-Buffer"><a href="#1-1-1-Channel-amp-Buffer" class="headerlink" title="1.1.1 Channel &amp; Buffer"></a>1.1.1 Channel &amp; Buffer</h4><p>Buffer是内存中的数据缓冲区，Channel 是内存与磁盘之间的数据通道。不同于InputStream、OutputStream等BIO中的流都是单向数据通道，Channel 是双向数据通道，可以从 Channel 将数据读入 Buffer，也可以将Buffer 中的数据写入Channel 。</p>
-<p>常见的 Channel 有：</p>
-<ul>
-<li>FileChannel ：文件通道</li>
-<li>DatagramChannel ：udp</li>
-<li>SocketChannel ：tcp；客户端服务端都可以</li>
-<li>ServerSocketChannel ：tcp；专用于服务端</li>
-</ul>
-<p>Buffer 使用最多的就是 ByteBuffer，其他的也是每种基础数据类型有一个对应的Buffer，但用的不多。</p>
-<h4 id="1-1-2-Selector"><a href="#1-1-2-Selector" class="headerlink" title="1.1.2 Selector"></a>1.1.2 Selector</h4><p>在使用传统BIO开发时，要么对每个连接都新建一个线程处理（线程太多撑爆内存、线程切换成本高），要么使用线程池（阻塞IO，同时只能处理一个连接，线程利用率不高）—&gt; 正因为此，原始的HTTP1.0才使用短连接，一个请求处理完立刻释放连接，让线程可以处理其他请求。</p>
-<p>Selector 的作用就是配合一个线程来管理多个Channel ，获取这些Channel 上发生的事件，将有事件发生的Channel 交给线程处理。适合连接数多但流量低的场景，流量大意味着一个Channel 要处理大量数据，会使其他Channel 饥饿。</p>
-<p><img src="selector.png" alt="selector"></p>
-<h3 id="1-2-ByteBuffer"><a href="#1-2-ByteBuffer" class="headerlink" title="1.2 ByteBuffer"></a>1.2 ByteBuffer</h3><h4 id="1-2-1-基本使用"><a href="#1-2-1-基本使用" class="headerlink" title="1.2.1 基本使用"></a>1.2.1 基本使用</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestByteBuffer</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 获取 FileChannel</span></span><br><span class="line">        <span class="keyword">try</span> (FileChannel channel = <span class="keyword">new</span> FileInputStream(<span class="string">&quot;data.txt&quot;</span>).getChannel()) &#123;</span><br><span class="line">            <span class="comment">// 申请 10 个字节的缓冲区</span></span><br><span class="line">            ByteBuffer buffer = ByteBuffer.allocate(<span class="number">10</span>);</span><br><span class="line">            <span class="comment">// 读取channel中的数据到buffer。read 方法返回读取到的字节数，-1表示读完了</span></span><br><span class="line">            <span class="keyword">while</span> (channel.read(buffer) != -<span class="number">1</span>) &#123;</span><br><span class="line">                buffer.flip();  <span class="comment">// 切换为读模式</span></span><br><span class="line">                <span class="keyword">while</span> (buffer.hasRemaining()) &#123;</span><br><span class="line">                    System.out.println(buffer.get());  <span class="comment">// get 每次读一个字节</span></span><br><span class="line">                &#125;</span><br><span class="line">                buffer.clear();  <span class="comment">// 切换为写模式</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="1-2-2-内部结构"><a href="#1-2-2-内部结构" class="headerlink" title="1.2.2 内部结构"></a>1.2.2 内部结构</h4><p>ByteBuffer有以下几个重要属性</p>
-<ul>
-<li>capacity：容量      —–&gt; 在任何时候都指向ByteBuffer的末尾</li>
-<li>position：读或者写的当前位置</li>
-<li>limit：读或者写的限制处</li>
-</ul>
-<p>在写模式下limit指向ByteBuffer末尾，position指向当前写入的位置。在读模式下，limit指向写入的最后一个位置，position指向当前读取的位置。</p>
-<p>flip()方法从写模式切换为读模式，即limit指向写入的最后一个位置，position置为 0，从头读。</p>
-<p>clear()方法从读模式切换为写模式，即limit指向ByteBuffer末尾，position置为 0，从头写。</p>
-<p>compact()方法从读模式切换为写模式，但是它会将之前没有读取到的数据移动到ByteBuffer的开头，然后从下一个位置开始写。</p>
-<h4 id="1-2-3-方法"><a href="#1-2-3-方法" class="headerlink" title="1.2.3 方法"></a>1.2.3 方法</h4><p>分配空间</p>
-<ul>
-<li><code>ByteBuffer.allocate(10)</code>：<code>HeapByteBuffer</code>，申请的是堆内存，读写效率低，会受到GC影响而在新生代中复制</li>
-<li><code>ByteBuffer.allocateDirect(10)</code>：<code>DirectByteBuffer</code>，申请的是直接内存，读写效率高（零拷贝），不受GC影响，但分配内存需要由操作系统分配，故分配时效率较低。</li>
-</ul>
-<p>向 buffer 写数据</p>
-<ul>
-<li><code>channel.read(buffer)</code></li>
-<li><code>buffer.put((byte)127)</code></li>
-</ul>
-<p>从buffer读数据</p>
-<ul>
-<li><code>channel.write(buffer)</code></li>
-<li><code>buffer.get()</code>。get 方法会让 position 指针向后走，如果想重复读取，有以下两种方法<ul>
-<li>调用 rewind 方法将 position 重置为 0</li>
-<li>调用 get(int i)获取索引为 i 处的内容，指针不移动</li>
-</ul>
-</li>
-</ul>
-<p>mark &amp; reset</p>
-<ul>
-<li>mark：做一个标记，记录 position 位置</li>
-<li>reset：将 position 重新设置为 mark 处，两者一般配合使用。这两个是对 rewind 的增强。</li>
-</ul>
-<p>字符串存入缓冲区</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ByteBuffer buffer = ByteBuffer.wrap(<span class="string">&quot;hello&quot;</span>.getBytes());  <span class="comment">// 还有其他方式，需要再看吧</span></span><br></pre></td></tr></table></figure>
-
-<p>批量读取写入：其实就是在channel 的read 和 write 方法中可以传入一个 byteBuffer 数组。</p>
-<h3 id="1-3-FileChannel"><a href="#1-3-FileChannel" class="headerlink" title="1.3 FileChannel"></a>1.3 FileChannel</h3><ul>
-<li><code>FileInputStream</code>、<code>FileOutputStream</code>、<code>RandomAccessFile</code>都可以创建<code>FileChannel</code> ，前两种只能是单向通道，后一种可以指定为“rw”作为双向通道。</li>
-<li>两个<code>FileChannel </code>之间可以通过<code>transferTo()</code>方法传输数据。效率高，底层用操作系统零拷贝实现，最大2G，超过2G的文件需要循环传输</li>
-<li>推荐使用JDK1.7的path和files类操作文件与路径</li>
-<li><code>Files.walkFileTree()</code>可以遍历目录下的所有目录和文件，在遍历过程中可以执行一些自定义操作。</li>
-</ul>
-<h3 id="1-4-网络编程"><a href="#1-4-网络编程" class="headerlink" title="1.4 网络编程"></a>1.4 网络编程</h3><h4 id="1-4-1-BIO"><a href="#1-4-1-BIO" class="headerlink" title="1.4.1 BIO"></a>1.4.1 BIO</h4><p>线程与客户端连接之前会阻塞，建立连接后只能服务一个客户端，直到服务结束，线程池也是同样的道理。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    ServerSocketChannel ssc = ServerSocketChannel.open();</span><br><span class="line">    ssc.bind(<span class="keyword">new</span> InetSocketAddress(<span class="number">8080</span>));</span><br><span class="line">    ByteBuffer buffer = ByteBuffer.allocate(<span class="number">16</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">        <span class="comment">// accept() 会阻塞当前线程，直到有客户端连接它</span></span><br><span class="line">        SocketChannel sc = ssc.accept();</span><br><span class="line">        sc.read(buffer);   <span class="comment">// read 会阻塞当前线程，直到客户端将数据发送过来</span></span><br><span class="line">        buffer.flip();</span><br><span class="line">        <span class="keyword">while</span> (buffer.hasRemaining())</span><br><span class="line">            buffer.get();</span><br><span class="line">        buffer.clear();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="1-4-2-NIO"><a href="#1-4-2-NIO" class="headerlink" title="1.4.2 NIO"></a>1.4.2 NIO</h4><p>NIO可以解决BIO中单线程只能服务一个客户端的弊端，但是它需要不停地轮询，绝大多数时候都是在空转，浪费资源。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    ServerSocketChannel ssc = ServerSocketChannel.open();</span><br><span class="line">    ssc.configureBlocking(<span class="keyword">false</span>);          <span class="comment">// 非阻塞模式，这里影响的是下方的 accept 方法。</span></span><br><span class="line">    ssc.bind(<span class="keyword">new</span> InetSocketAddress(<span class="number">8080</span>));</span><br><span class="line">    ByteBuffer buffer = ByteBuffer.allocate(<span class="number">16</span>);</span><br><span class="line"></span><br><span class="line">    List&lt;SocketChannel&gt; channels = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">    <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">        SocketChannel sc = ssc.accept();   <span class="comment">// 非阻塞，如果没有建立连接，返回的 sc 为null</span></span><br><span class="line">        <span class="keyword">if</span> (sc != <span class="keyword">null</span>) &#123;</span><br><span class="line">            sc.configureBlocking(<span class="keyword">false</span>);   <span class="comment">// 非阻塞模式，这里影响的是下方的 read 方法</span></span><br><span class="line">            <span class="comment">// 非阻塞模式下可以与多个客户端同时连接，此处将所有客户端存储起来，方便后续轮询</span></span><br><span class="line">            channels.add(sc);              </span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (SocketChannel channel : channels) &#123;</span><br><span class="line">            <span class="keyword">int</span> read = channel.read(buffer);    <span class="comment">// 非阻塞，如果客户端没有发送数据，返回的读取数为 0</span></span><br><span class="line">            <span class="keyword">if</span> (read &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                buffer.flip();</span><br><span class="line">                <span class="keyword">while</span> (buffer.hasRemaining())</span><br><span class="line">                    buffer.get();</span><br><span class="line">                buffer.clear();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="1-4-3-IO多路复用-Selector"><a href="#1-4-3-IO多路复用-Selector" class="headerlink" title="1.4.3 IO多路复用-Selector"></a>1.4.3 IO多路复用-Selector</h4><p>多路复用只能用于网络编程，普通文件读写没法使用。</p>
-<p>事件类型有以下四种：</p>
-<ul>
-<li>accept：当客户端发起连接请求时，在服务端产生事件</li>
-<li>connect：连接建立成功后，在客户端触发   —    一般用不到</li>
-<li>read：可读事件</li>
-<li>write：可写事件</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="comment">// 相当于使用 epoll_create 创建一个 epoll 实例</span></span><br><span class="line">    Selector selector = Selector.open();</span><br><span class="line">    ServerSocketChannel ssc = ServerSocketChannel.open();</span><br><span class="line">    ssc.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将通道注册到 selector，并关注 accept 事件；相当于把 ssc 这个 channel 的 fd 通过 epoll_ctl 注册到红黑树</span></span><br><span class="line">    ssc.register(selector, SelectionKey.OP_ACCEPT);</span><br><span class="line">    ssc.bind(<span class="keyword">new</span> InetSocketAddress(<span class="number">8081</span>));</span><br><span class="line">    <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">        <span class="comment">// 此处相当于调用 epoll_wait，没有事件发生则线程阻塞，有事件才会唤醒。</span></span><br><span class="line">        <span class="comment">// 这里使用水平触发，如果事件未处理就类似于NIO，会一直循环直到你处理了。cancel()方法会从红黑树和链表都删除fd</span></span><br><span class="line">        selector.select();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 取出链表中的事件遍历处理</span></span><br><span class="line">        Iterator&lt;SelectionKey&gt; iter = selector.selectedKeys().iterator();</span><br><span class="line">        <span class="keyword">while</span> (iter.hasNext())&#123;</span><br><span class="line">            SelectionKey key = iter.next();</span><br><span class="line">            <span class="comment">// 重点：每发生一个事件，都会将该事件的 fd 从红黑树复制到链表中，但是事件处理完成后不会自动从链表删除。</span></span><br><span class="line">            <span class="comment">// 这就意味着下次遍历链表时还会遍历到它，但是它已经被处理过了，也就是此时它没有事件发生，就会造成异常。</span></span><br><span class="line">            <span class="comment">// 比如此时 accept 没有事件但是会进入它的分支，导致返回的 sc 为null，再执行后续操作会爆空指针异常。</span></span><br><span class="line">            <span class="comment">// 因此，每次处理完成一个事件后必须手动删除它。</span></span><br><span class="line">            iter.remove();</span><br><span class="line">            <span class="keyword">if</span> (key.isAcceptable()) &#123;</span><br><span class="line">                <span class="comment">// 因为关注 accept 事件的只有 ssc，故此处 key.channel() 获取到的就是上方的 ssc</span></span><br><span class="line">                <span class="comment">// 可以直接使用 ssc 替换下方两句</span></span><br><span class="line">                ServerSocketChannel channel = (ServerSocketChannel) key.channel();</span><br><span class="line">                SocketChannel sc = channel.accept();</span><br><span class="line">                sc.configureBlocking(<span class="keyword">false</span>);   <span class="comment">// 非阻塞模式才能配合 Selector 使用</span></span><br><span class="line">                sc.register(selector, SelectionKey.OP_READ);  <span class="comment">// 注册并关注读事件</span></span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (key.isReadable()) &#123;</span><br><span class="line">                <span class="comment">// 不论客户端是正常退出还是异常退出，都会触发一个读事件</span></span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    SocketChannel channel = (SocketChannel) key.channel();</span><br><span class="line">                    <span class="comment">// 此处在这里新建 buffer 而不是在 accept 事件中注册时添加附件，是因为下方服务器响应时会覆盖附件</span></span><br><span class="line">                    <span class="comment">// 而 accept 事件只有连接时触发一次，这样的话之后的读操作就获取不到 buffer 了</span></span><br><span class="line">                    ByteBuffer buffer = ByteBuffer.allocate(<span class="number">1024</span>);</span><br><span class="line">                    <span class="comment">// 如果客户端异常退出，触发读事件进行到这里时，read 操作会抛出 IOException，所以需要捕获处理</span></span><br><span class="line">                    <span class="keyword">int</span> read = channel.read(buffer);   <span class="comment">// 如果 buffer 较小一次没读完，会触发多次读事件</span></span><br><span class="line">                    <span class="comment">// 如果客户端正常退出，只有客户端调用 close 方法才是正常退出，即数据流读到了末尾</span></span><br><span class="line">                    <span class="comment">// 这时 read 方法的返回值为 0 或 -1。cancel()方法会从红黑树中删除 fd。</span></span><br><span class="line">                    <span class="comment">// 注意：如果是正常有数据过来触发的读事件，能读出的数据一定大于 0</span></span><br><span class="line">                    <span class="keyword">if</span> (read &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">                        System.out.println(<span class="string">&quot;stream end&quot;</span>);</span><br><span class="line">                        key.cancel();   <span class="comment">// 既然客户端已经断开连接，那红黑树中的 fd 就没必要监听了</span></span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        buffer.flip();</span><br><span class="line">                        System.out.println(<span class="string">&quot;服务端处理消息&quot;</span> + Charset.defaultCharset().decode(buffer));</span><br><span class="line">                        <span class="comment">// 此处服务端读取完客户端信息后开始响应消息</span></span><br><span class="line">                        key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);  <span class="comment">// 添加监听写事件</span></span><br><span class="line">                        key.attach(ByteBuffer.wrap(<span class="string">&quot;服务端响应的消息&quot;</span>.getBytes()));</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                    key.cancel();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (key.isWritable()) &#123;</span><br><span class="line">                SocketChannel channel = (SocketChannel) key.channel();</span><br><span class="line">                ByteBuffer buffer = (ByteBuffer) key.attachment();</span><br><span class="line">                channel.write(buffer);    <span class="comment">// channel 容量有限，如果一次写不完就需要触发多次写事件</span></span><br><span class="line">                <span class="keyword">if</span> (!buffer.hasRemaining()) &#123;</span><br><span class="line">                    key.attach(<span class="keyword">null</span>);   <span class="comment">// 将附件扔掉，以免浪费空间</span></span><br><span class="line">                    key.interestOps(key.interestOps() ^ SelectionKey.OP_WRITE); <span class="comment">// 写完了就取消监听写事件</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上方代码中没有考虑消息边界的处理，即如果 <code>ByteBuffer</code>设置的太小，则会产生半包，如用 4 字节的 <code>ByteBuffer</code>接收两个汉字（UTF-8），则第一个汉字正常处理，第二个汉字会拆成两半无法正常解码。一种解决方法是初始申请较小空间，如果空间不足则扩容，这种方法需要指定消息边界，如使用 <code>\n</code>作为一条消息的结尾，则逐一遍历消息中的每个 <code>byte</code>，若 <code>ByteBuffer</code>遍历完依然没有找到<code>\n</code>就要扩容。</p>
-<p>如果初始申请的 <code>ByteBuffer</code>就很大，则服务器连接几个客户端就把内存占满了，不划算。</p>
-<h4 id="1-4-4-多线程优化"><a href="#1-4-4-多线程优化" class="headerlink" title="1.4.4 多线程优化"></a>1.4.4 多线程优化</h4><p>单线程配合 Selector 已经可以实现多路复用，但是无法充分利用多核CPU，且如果一个事件需要耗费很长时间，就会使其他事件等待。</p>
-<p><strong>初始版本</strong>：由于 <code>register</code>和 <code>select</code>造成死锁，无法将通道注册到 <code>Selector</code>，所以不能用。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MultiThreadServer</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        <span class="comment">// master 只负责接受连接，具体的读写交给 Worker</span></span><br><span class="line">        Selector master = Selector.open();</span><br><span class="line">        ServerSocketChannel ssc = ServerSocketChannel.open();</span><br><span class="line">        ssc.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line">        ssc.register(master, SelectionKey.OP_ACCEPT);</span><br><span class="line">        ssc.bind(<span class="keyword">new</span> InetSocketAddress(<span class="number">8081</span>));</span><br><span class="line">        <span class="comment">// 创建固定大小的 worker，一般取核心数个</span></span><br><span class="line">        Worker worker = <span class="keyword">new</span> Worker(<span class="string">&quot;worker-0&quot;</span>); </span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            master.select();</span><br><span class="line">            Iterator&lt;SelectionKey&gt; iter = master.selectedKeys().iterator();</span><br><span class="line">            <span class="keyword">while</span> (iter.hasNext()) &#123;</span><br><span class="line">                SelectionKey key = iter.next();</span><br><span class="line">                iter.remove();</span><br><span class="line">                <span class="keyword">if</span> (key.isAcceptable()) &#123;</span><br><span class="line">                    SocketChannel sc = ssc.accept();</span><br><span class="line">                    sc.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line">                    <span class="comment">// 将客户通道注册到 worker 的 selector</span></span><br><span class="line">                    <span class="comment">// 观察源码可知，该方法最终会调用 selector 的注册方法，且这个方法会和 selector.select() 竞争锁</span></span><br><span class="line">                    <span class="comment">// 由于 selector.select() 先执行已经获取了锁，此方法就被阻塞，而 select 方法没有事件又持续阻塞</span></span><br><span class="line">                    <span class="comment">// 所以造成死锁。（由此可见，select 方法阻塞也不会释放锁。）</span></span><br><span class="line">                    sc.register(worker.selector, SelectionKey.OP_READ);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Worker</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> String name;</span><br><span class="line">        <span class="keyword">private</span> Selector selector;</span><br><span class="line">        <span class="keyword">private</span> Thread thread;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">Worker</span><span class="params">(String name)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.name = name;</span><br><span class="line">            <span class="keyword">this</span>.selector = Selector.open();</span><br><span class="line">            <span class="keyword">this</span>.thread = <span class="keyword">new</span> Thread(<span class="keyword">this</span>, name);</span><br><span class="line">            thread.start();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@SneakyThrows</span></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                selector.select();</span><br><span class="line">                Iterator&lt;SelectionKey&gt; iter = selector.selectedKeys().iterator();</span><br><span class="line">                <span class="keyword">while</span> (iter.hasNext()) &#123;</span><br><span class="line">                    SelectionKey key = iter.next();</span><br><span class="line">                    iter.remove();</span><br><span class="line">                    <span class="keyword">if</span> (key.isReadable()) &#123;</span><br><span class="line">                        ByteBuffer buffer = ByteBuffer.allocate(<span class="number">1024</span>);</span><br><span class="line">                        SocketChannel sc = (SocketChannel) key.channel();</span><br><span class="line">                        sc.read(buffer);</span><br><span class="line">                        buffer.flip();</span><br><span class="line">                        System.out.println(<span class="string">&quot;thread: &quot;</span> + thread.getName() + <span class="string">&quot;--&gt; charge for: &quot;</span></span><br><span class="line">                                + Charset.defaultCharset().decode(buffer));</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>优化</strong>：将注册的事交给子线程去执行。最关键的点还是  <code>selector.wakeup();</code>，netty 就是通过消息队列实现的工作传递</p>
-<p>注意：wakeup 和 select 的关系与 unpark 和 park 相似。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MultiThreadServer</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        Selector master = Selector.open();</span><br><span class="line">        ServerSocketChannel ssc = ServerSocketChannel.open();</span><br><span class="line">        ssc.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line">        ssc.register(master, SelectionKey.OP_ACCEPT);</span><br><span class="line">        ssc.bind(<span class="keyword">new</span> InetSocketAddress(<span class="number">8081</span>));</span><br><span class="line">        <span class="comment">// Runtime.getRuntime().availableProcessors() 获取的是物理机的核心数</span></span><br><span class="line">        <span class="comment">// 对于 docker 类容器就会有问题，因为实际不可能把所有核心分配给 docker</span></span><br><span class="line">        Worker[] workers = <span class="keyword">new</span> Worker[Runtime.getRuntime().availableProcessors()];</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; workers.length; i++) &#123;</span><br><span class="line">            workers[i] = <span class="keyword">new</span> Worker(<span class="string">&quot;worker-&quot;</span> + i);</span><br><span class="line">        &#125;</span><br><span class="line">        AtomicInteger index = <span class="keyword">new</span> AtomicInteger();</span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            master.select();</span><br><span class="line">            Iterator&lt;SelectionKey&gt; iter = master.selectedKeys().iterator();</span><br><span class="line">            <span class="keyword">while</span> (iter.hasNext()) &#123;</span><br><span class="line">                SelectionKey key = iter.next();</span><br><span class="line">                iter.remove();</span><br><span class="line">                <span class="keyword">if</span> (key.isAcceptable()) &#123;</span><br><span class="line">                    SocketChannel sc = ssc.accept();</span><br><span class="line">                    sc.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line">                    <span class="comment">// 将注册这个工作放到消息队列，同时唤醒子线程。负载均衡</span></span><br><span class="line">                    workers[index.incrementAndGet() % workers.length].register(sc);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Worker</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> String name;</span><br><span class="line">        <span class="keyword">private</span> Selector selector;</span><br><span class="line">        <span class="keyword">private</span> Thread thread;</span><br><span class="line">        <span class="keyword">private</span> ConcurrentLinkedQueue&lt;Runnable&gt; queue;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">Worker</span><span class="params">(String name)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.name = name;</span><br><span class="line">            <span class="keyword">this</span>.selector = Selector.open();</span><br><span class="line">            <span class="keyword">this</span>.queue = <span class="keyword">new</span> ConcurrentLinkedQueue&lt;&gt;();</span><br><span class="line">            <span class="keyword">this</span>.thread = <span class="keyword">new</span> Thread(<span class="keyword">this</span>, name);</span><br><span class="line">            thread.start();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">register</span><span class="params">(SocketChannel sc)</span> </span>&#123;</span><br><span class="line">            queue.add(() -&gt; &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    sc.register(selector, SelectionKey.OP_READ);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (ClosedChannelException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            selector.wakeup();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@SneakyThrows</span></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                selector.select();</span><br><span class="line">                Runnable task = queue.poll();</span><br><span class="line">                <span class="keyword">if</span> (task != <span class="keyword">null</span>)</span><br><span class="line">                    task.run();   <span class="comment">// 这里才将通道注册到子线程的 selector</span></span><br><span class="line">                Iterator&lt;SelectionKey&gt; iter = selector.selectedKeys().iterator();</span><br><span class="line">                <span class="keyword">while</span> (iter.hasNext()) &#123;</span><br><span class="line">                    SelectionKey key = iter.next();</span><br><span class="line">                    iter.remove();</span><br><span class="line">                    <span class="keyword">if</span> (key.isReadable()) &#123;</span><br><span class="line">                        ByteBuffer buffer = ByteBuffer.allocate(<span class="number">1024</span>);</span><br><span class="line">                        SocketChannel sc = (SocketChannel) key.channel();</span><br><span class="line">                        sc.read(buffer);</span><br><span class="line">                        buffer.flip();</span><br><span class="line">                        System.out.println(<span class="string">&quot;thread: &quot;</span> + thread.getName() + <span class="string">&quot;--&gt; charge for: &quot;</span></span><br><span class="line">                                + Charset.defaultCharset().decode(buffer));</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="1-5-零拷贝"><a href="#1-5-零拷贝" class="headerlink" title="1.5 零拷贝"></a>1.5 零拷贝</h3><h4 id="1-5-1-传统-IO-问题"><a href="#1-5-1-传统-IO-问题" class="headerlink" title="1.5.1 传统 IO 问题"></a>1.5.1 传统 IO 问题</h4><p>传统的 IO 将一个文件通过 socket 写出</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">File f = <span class="keyword">new</span> File(<span class="string">&quot;helloword/data.txt&quot;</span>);</span><br><span class="line">RandomAccessFile file = <span class="keyword">new</span> RandomAccessFile(file, <span class="string">&quot;r&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">byte</span>[] buf = <span class="keyword">new</span> <span class="keyword">byte</span>[(<span class="keyword">int</span>)f.length()];</span><br><span class="line">file.read(buf);</span><br><span class="line"></span><br><span class="line">Socket socket = ...;</span><br><span class="line">socket.getOutputStream().write(buf);</span><br></pre></td></tr></table></figure>
-
-<p>内部工作流程是这样的：</p>
-<p><img src="%E4%BC%A0%E7%BB%9FIO.jpg" alt="传统IO"></p>
-<ol>
-<li><p>读数据过程：</p>
-<ul>
-<li>应用程序要读取磁盘数据，调用read()函数从而实现用户态切换内核态，这是第1次状态切换；</li>
-<li>DMA控制器将数据从磁盘拷贝到内核缓冲区，这是第1次DMA拷贝；</li>
-<li>CPU将数据从内核缓冲区复制到用户缓冲区，这是第1次CPU拷贝；</li>
-<li>CPU完成拷贝之后，read()函数返回实现内核态切换用户态，这是第2次状态切换；</li>
-</ul>
-</li>
-<li><p>写数据过程：</p>
-<ul>
-<li>应用程序要向网卡写数据，调用write()函数实现用户态切换内核态，这是第1次切换；</li>
-<li>CPU将用户缓冲区数据拷贝到内核缓冲区，这是第1次CPU拷贝；</li>
-<li>DMA控制器将数据从内核缓冲区复制到socket缓冲区，这是第1次DMA拷贝；</li>
-<li>完成拷贝之后，write()函数返回实现内核态切换用户态，这是第2次切换；</li>
-</ul>
-</li>
-</ol>
-<p>综上所述：</p>
-<ul>
-<li>读过程涉及2次空间切换、1次DMA拷贝、1次CPU拷贝；</li>
-<li>写过程涉及2次空间切换、1次DMA拷贝、1次CPU拷贝；</li>
-</ul>
-<p>可见传统模式下，涉及多次空间切换和数据冗余拷贝，效率并不高，接下来就该零拷贝技术出场了。</p>
-<h4 id="1-5-2-NIO-优化"><a href="#1-5-2-NIO-优化" class="headerlink" title="1.5.2 NIO 优化"></a>1.5.2 NIO 优化</h4><p>通过 DirectByteBuf ，即 mmap</p>
-<ul>
-<li>ByteBuffer.allocate(10)  HeapByteBuffer 使用的还是 java 内存</li>
-<li>ByteBuffer.allocateDirect(10)  DirectByteBuffer 使用的是操作系统内存</li>
-</ul>
-<p><img src="mmap.jpg" alt="mmap"></p>
-<p>大部分步骤与优化前相同，不再赘述。唯有一点：java 可以使用 DirectByteBuf 将堆外内存映射到 jvm 内存中来直接访问使用</p>
-<ul>
-<li>这块内存不受 jvm 垃圾回收的影响，因此内存地址固定，有助于 IO 读写</li>
-<li>java 中的 DirectByteBuf 对象仅维护了此内存的虚引用 Cleaner，内存回收分成两步<ul>
-<li>DirectByteBuf 对象被垃圾回收，将虚引用加入引用队列</li>
-<li>通过专门的回收线程访问引用队列，根据虚引用释放堆外内存</li>
-</ul>
-</li>
-<li>减少了一次数据拷贝，用户态与内核态的切换次数没有减少。 2dma + 1cpu</li>
-</ul>
-<p>以下两种方式，由于数据不经过用户缓冲区，因此无法修改。</p>
-<p>进一步优化（底层采用了 linux 2.1 后提供的 sendFile 方法），java 中对应着两个 channel 调用 transferTo/transferFrom 方法拷贝数据</p>
-<p><img src="sendfile.jpg" alt="sendfile"></p>
-<ol>
-<li>java 调用 transferTo 方法后，要从 java 程序的<strong>用户态</strong>切换至<strong>内核态</strong>，使用 DMA将数据读入<strong>内核缓冲区</strong>，不会使用 cpu</li>
-<li>数据从<strong>内核缓冲区</strong>传输到 <strong>socket 缓冲区</strong>，cpu 会参与拷贝</li>
-<li>最后使用 DMA 将 <strong>socket 缓冲区</strong>的数据写入网卡，不会使用 cpu，方法结束后切换回用户态</li>
-</ol>
-<p>可以看到</p>
-<ul>
-<li>只发生了2次用户态与内核态的切换</li>
-<li>数据拷贝了 3 次 。2dma + 1cpu</li>
-</ul>
-<p>进一步优化（linux 2.4）</p>
-<p><img src="sendfile+dma.jpg" alt="sendfile+dma"></p>
-<ol>
-<li>java 调用 transferTo 方法后，要从 java 程序的<strong>用户态</strong>切换至<strong>内核态</strong>，使用 DMA将数据读入<strong>内核缓冲区</strong>，不会使用 cpu</li>
-<li>只会将一些 offset 和 length 信息拷入 <strong>socket 缓冲区</strong>，几乎无消耗</li>
-<li>使用 DMA 将 <strong>内核缓冲区</strong>的数据写入网卡，不会使用 cpu，方法结束后切换回用户态</li>
-</ol>
-<p>整个过程仅只发生了2次用户态与内核态的切换，数据拷贝了 2 次。所谓的【零拷贝】，并不是真正无拷贝，而是在不会在内核态和用户态之间拷贝数据，零拷贝的优点有</p>
-<ul>
-<li>更少的用户态与内核态的切换</li>
-<li>不利用 cpu 计算，减少 cpu 缓存伪共享</li>
-<li>零拷贝适合小文件传输</li>
-</ul>
-<h3 id="1-6-AIO"><a href="#1-6-AIO" class="headerlink" title="1.6 AIO"></a>1.6 AIO</h3><p>netty 不支持 AIO，因为 linux 不支持AIO（现在貌似支持了）</p>
-<h2 id="2-Netty-基础"><a href="#2-Netty-基础" class="headerlink" title="2 Netty 基础"></a>2 Netty 基础</h2><p>Netty 的网络模型依然是多路复用</p>
-<p>一开始需要树立正确的观念</p>
-<ul>
-<li>把 channel 理解为数据的通道</li>
-<li>把 msg 理解为流动的数据，最开始输入是 ByteBuf，但经过 pipeline 的加工，会变成其它类型对象，最后输出又变成 ByteBuf</li>
-<li>把 handler 理解为数据的处理工序<ul>
-<li>工序有多道，合在一起就是 pipeline，pipeline 负责发布事件（读、读取完成…）传播给每个 handler， handler 对自己感兴趣的事件进行处理（重写了相应事件处理方法）</li>
-<li>handler 分 Inbound 和 Outbound 两类，分别对入站和出站的数据处理</li>
-</ul>
-</li>
-<li>把 eventLoop 理解为处理数据的工人<ul>
-<li>工人可以管理多个 channel 的 io 操作，并且一旦工人负责了某个 channel，就要负责到底（绑定）（避免多个线程对同一个channel操作引发并发问题）</li>
-<li>工人既可以执行 io 操作，也可以进行任务处理，每位工人有任务队列，队列里可以堆放多个 channel 的待处理任务，任务分为普通任务、定时任务</li>
-<li>工人按照 pipeline 顺序，依次按照 handler 的规划（代码）处理数据，可以为每道工序指定不同的工人</li>
-</ul>
-</li>
-</ul>
-<h3 id="2-1-初体验"><a href="#2-1-初体验" class="headerlink" title="2.1 初体验"></a>2.1 初体验</h3><p>注意：下方代码都是固定格式，不同场景只需要更换不同处理器即可，格式不变</p>
-<p>服务端：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloServer</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 服务器端启动器，负责组装 netty 组件，启动服务器</span></span><br><span class="line">        <span class="keyword">new</span> ServerBootstrap()</span><br><span class="line">                <span class="comment">// EventLoop 即事件循环，其中包含(selector,thread)，作用和之前手写的 master、worker一样</span></span><br><span class="line">                <span class="comment">// 每个 EventLoop 负责监听一部分事件，group 即有多个 EventLoop</span></span><br><span class="line">                <span class="comment">// 这其中会有一个 master 负责 accept 建立连接</span></span><br><span class="line">                .group(<span class="keyword">new</span> NioEventLoopGroup())</span><br><span class="line">                <span class="comment">// 选择服务器的 ServerSocketChannel</span></span><br><span class="line">                .channel(NioServerSocketChannel.class)</span><br><span class="line">                <span class="comment">// 此处 child 即之前的 worker，负责处理读写，这里编写 child 需要处理的逻辑</span></span><br><span class="line">                <span class="comment">// 此处只是添加了处理器，需要等到 accept 建立连接之后才会真正执行处理器的逻辑</span></span><br><span class="line">                .childHandler(</span><br><span class="line">                        <span class="comment">// 泛型表示这是为 NioSocketChannel 进行初始化，初始化即为这个泛型中通道配置一些 Handler</span></span><br><span class="line">                        <span class="comment">// NioSocketChannel 即与客户端进行数据读写的通道。</span></span><br><span class="line">                        <span class="keyword">new</span> ChannelInitializer&lt;NioSocketChannel&gt;() &#123;</span><br><span class="line">                    <span class="meta">@Override</span>  <span class="comment">// 在连接建立之后被调用</span></span><br><span class="line">                    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(NioSocketChannel ch)</span> </span>&#123;</span><br><span class="line">                        <span class="comment">// 添加具体的处理器</span></span><br><span class="line">                        <span class="comment">// 注意：这里也只是将一个个处理器添加到通道中，真正执行是在数据经过通道时</span></span><br><span class="line">                        <span class="comment">// 不论是收还是发数据都会经过所有的处理器，只是如下方的channelRead它只在读数据时起作用</span></span><br><span class="line">                        <span class="comment">// 客户端的一个个处理器与这里一样，也是收发数据时才真正执行</span></span><br><span class="line">                        ch.pipeline().addLast(<span class="keyword">new</span> StringDecoder());   <span class="comment">// 将 ByteBuf 转化为字符串</span></span><br><span class="line">                        ch.pipeline().addLast(<span class="keyword">new</span> ChannelInboundHandlerAdapter() &#123; <span class="comment">// 自定义 handler</span></span><br><span class="line">                            <span class="meta">@Override</span>     <span class="comment">// 处理读事件</span></span><br><span class="line">                            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">channelRead</span><span class="params">(ChannelHandlerContext ctx, Object msg)</span> </span>&#123;</span><br><span class="line">                                System.out.println(msg);</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;)</span><br><span class="line">                .bind(<span class="number">8080</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>客户端：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloClient</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        <span class="comment">// 客户端启动类</span></span><br><span class="line">        <span class="keyword">new</span> Bootstrap()</span><br><span class="line">                <span class="comment">// EventLoop 对于客户端没啥用，但是 netty 中统一格式</span></span><br><span class="line">                .group(<span class="keyword">new</span> NioEventLoopGroup())</span><br><span class="line">                <span class="comment">// 选择 channel</span></span><br><span class="line">                .channel(NioSocketChannel.class)</span><br><span class="line">                <span class="comment">// 添加处理器</span></span><br><span class="line">                .handler(<span class="keyword">new</span> ChannelInitializer&lt;NioSocketChannel&gt;() &#123;</span><br><span class="line">                    <span class="meta">@Override</span>   <span class="comment">// 在连接建立之后被调用</span></span><br><span class="line">                    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(NioSocketChannel ch)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">                        <span class="comment">// 将字符串编码为 ByteBuf</span></span><br><span class="line">                        ch.pipeline().addLast(<span class="keyword">new</span> StringEncoder());</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;)</span><br><span class="line">                <span class="comment">// 连接到服务器</span></span><br><span class="line">                .connect(<span class="keyword">new</span> InetSocketAddress(<span class="string">&quot;localhost&quot;</span>, <span class="number">8080</span>))</span><br><span class="line">                <span class="comment">// sync 是阻塞方法，等到连接建立之后才允许继续执行下方代码</span></span><br><span class="line">                .sync()</span><br><span class="line">                <span class="comment">// channel 即客户端与服务端之间的数据通道</span></span><br><span class="line">                .channel()</span><br><span class="line">                <span class="comment">// 向服务器发送数据</span></span><br><span class="line">                .writeAndFlush(<span class="string">&quot;hello netty!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="2-2-组件"><a href="#2-2-组件" class="headerlink" title="2.2 组件"></a>2.2 组件</h3><h4 id="2-2-1-EventLoop"><a href="#2-2-1-EventLoop" class="headerlink" title="2.2.1 EventLoop"></a>2.2.1 EventLoop</h4><p>EventLoop 本质是一个单线程执行器（同时维护了一个 Selector），里面有 run 方法处理 Channel 上源源不断的 io 事件。继承了 j.u.c.ScheduledExecutorService 因此包含了线程池中所有的方法</p>
-<p>EventLoopGroup 是一组 EventLoop，Channel 一般会调用 EventLoopGroup 的 register 方法来绑定其中一个 EventLoop，后续这个 Channel 上的 io 事件都由此 EventLoop 来处理（保证了 io 事件处理时的线程安全）</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// EventLoopGroup 基础使用</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">EventLoopTest</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 参数为 EventLoop 的数量，默认为 核心数 * 2</span></span><br><span class="line">        EventLoopGroup group = <span class="keyword">new</span> NioEventLoopGroup(<span class="number">3</span>);   <span class="comment">// IO事件，普通任务，定时任务</span></span><br><span class="line">        <span class="comment">// DefaultEventLoop 不能执行 IO 事件，其他和 NioEventLoopGroup 一样</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 获取下一个 EventLoop</span></span><br><span class="line">        System.out.println(group.next());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 执行普通任务</span></span><br><span class="line">        group.next().submit(() -&gt; System.out.println(<span class="string">&quot;子线程&quot;</span>));</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 执行定时任务 （0秒后开始，每 1 秒执行一次）</span></span><br><span class="line">        group.next().scheduleAtFixedRate(() -&gt; System.out.println(<span class="string">&quot;ok&quot;</span>), <span class="number">0</span>, <span class="number">1</span>, TimeUnit.SECONDS);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>优雅关闭</strong></p>
-<p>优雅关闭 <code>shutdownGracefully</code> 方法。该方法会首先切换 <code>EventLoopGroup</code> 到关闭状态从而拒绝新的任务的加入，然后在任务队列的任务都处理完成后，停止线程的运行。从而确保整体应用是在正常有序的状态下退出的</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/07/09/Java/Netty/" data-id="cl5kfidid0002ycaq0hfn2s5g" data-title="Netty" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-分布式/容器/Kuberbetes/Kuberbetes基础" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/06/06/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/Kuberbetes/Kuberbetes%E5%9F%BA%E7%A1%80/" class="article-date">
-  <time class="dt-published" datetime="2022-06-06T09:12:41.000Z" itemprop="datePublished">2022-06-06</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/06/06/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/Kuberbetes/Kuberbetes%E5%9F%BA%E7%A1%80/">Kuberbetes基础</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>Kubernetes 是 Google 开源的一个容器编排引擎，用于自动化容器化应用程序的部署和管理。</p>
-<h2 id="1、Kubernetes整体架构"><a href="#1、Kubernetes整体架构" class="headerlink" title="1、Kubernetes整体架构"></a>1、Kubernetes整体架构</h2><p><img src="Kubernetes%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84.png" alt="Kubernetes整体架构"></p>
-<p><strong>Master</strong></p>
-<p>k8s集群控制节点，对集群进行调度管理，接受集群外用户去集群操作请求； </p>
-<p>Master Node 由 API Server、Scheduler、ClusterState Store（ETCD 数据库）和 Controller MangerServer 所组成；</p>
-<p><strong>Nodes</strong></p>
-<p>集群工作节点，运行用户业务应用容器； </p>
-<p>Nodes节点也叫Worker Node，包含kubelet、kube proxy 和 Pod（Container Runtime）；</p>
-<h2 id="2、Kubernetes环境搭建"><a href="#2、Kubernetes环境搭建" class="headerlink" title="2、Kubernetes环境搭建"></a>2、Kubernetes环境搭建</h2><p>kubeadm是官方社区推出的一个用于快速部署 kubernetes 集群的工具。两个指令即可完成集群搭建：</p>
-<ol>
-<li>创建一个Master节点：kubeadm init </li>
-<li>将Node节点加入到Master集群中：kubeadm join &lt;Master节点的IP和端口&gt;</li>
-</ol>
-<h3 id="2-1、初始环境准备"><a href="#2-1、初始环境准备" class="headerlink" title="2.1、初始环境准备"></a>2.1、初始环境准备</h3><ol>
-<li><p>硬件：内存2G+，CPU 2核+；</p>
-</li>
-<li><p>关闭防火墙：<code>ufw disable</code></p>
-</li>
-<li><p>关闭selinux：<code>sed -i &#39;s/enforcing/disabled/&#39; /etc/selinux/config #永久</code> ；<code>setenforce 0 #临时</code></p>
-</li>
-<li><p>关闭swap：<code>sed -ri &#39;s/.*swap.*/#&amp;/&#39; /etc/fstab #永久</code> ；<code>swapoff -a #临时</code></p>
-</li>
-<li><p>设置网桥参数</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">cat &gt; /etc/sysctl.d/k8s.conf &lt;&lt; EOF</span><br><span class="line">net.bridge.bridge-nf-call-ip6tables = 1</span><br><span class="line">net.bridge.bridge-nf-call-iptables = 1</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">sysctl --system  #生效</span><br></pre></td></tr></table></figure></li>
-<li><p>在master添加hosts</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cat &gt;&gt; /etc/hosts &lt;&lt; EOF</span><br><span class="line">192.168.172.134 k8smaster</span><br><span class="line">192.168.172.135 k8snode</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure></li>
-<li><p>时间同步</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> apt install ntpdate</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> ntpdate time.windows.com</span></span><br></pre></td></tr></table></figure></li>
-</ol>
-<h3 id="2-2、Kubernetes-安装"><a href="#2-2、Kubernetes-安装" class="headerlink" title="2.2、Kubernetes 安装"></a>2.2、Kubernetes 安装</h3><ol>
-<li><p>安装 docker，并执行 <code>systemctl enable docker.service</code></p>
-</li>
-<li><p>下载 kubelet kubeadm kubectl</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> apt-get update &amp;&amp; apt-get install -y apt-transport-https</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 安装 GPG 证书</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> curl https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | apt-key add -</span></span><br><span class="line"></span><br><span class="line"><span class="meta">$</span><span class="bash"> cat &lt;&lt;<span class="string">EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list</span></span></span><br><span class="line">deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"><span class="meta">$</span><span class="bash"> apt-get update</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> apt-get install -y kubelet kubeadm kubectl</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> systemctl <span class="built_in">enable</span> kubelet.service</span></span><br></pre></td></tr></table></figure></li>
-</ol>
-<ul>
-<li>Kubelet：运行在cluster所有节点上，负责启动POD和容器；</li>
-<li>Kubeadm：用于初始化cluster的一个工具；</li>
-<li>Kubectl：kubectl是kubenetes命令行工具，通过kubectl可以部署和管理应用，查看各种资源，创建，删除和更新组件；</li>
-</ul>
-<ol start="3">
-<li><p>部署Master节点</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 下方参数从前往后依次是：master节点ip；仓库镜像地址；kubernetes版本；最后俩参数不用管，照抄。</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> kubeadm init --apiserver-advertise-address=192.168.36.128 --image-repository registry.aliyuncs.com/google_containers --kubernetes-version v1.24.1 --service-cidr=10.96.0.0/12 --pod-network-cidr=10.244.0.0/16</span></span><br></pre></td></tr></table></figure>
-
-</li>
-</ol>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/06/06/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/Kuberbetes/Kuberbetes%E5%9F%BA%E7%A1%80/" data-id="cl446equx0000ecaq4uwrgc1z" data-title="Kuberbetes基础" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-分布式/分布式基础/分布式基础" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/06/02/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/" class="article-date">
-  <time class="dt-published" datetime="2022-06-02T11:42:15.000Z" itemprop="datePublished">2022-06-02</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2022/06/02/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/">分布式基础</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h2 id="1、分布式Session"><a href="#1、分布式Session" class="headerlink" title="1、分布式Session"></a>1、分布式Session</h2><p>解决分布式Session有两种方案：</p>
-<ol>
-<li>将所有Session存放在Redis服务器中，所有请求过来后先到Redis服务器中获取Session</li>
-<li>token：用户首次登录后，将用户信息加密为token下发给客户端，之后每次请求都携带该token，token验证通过即承认其合法身份。多个服务器都使用相同的密钥和算法对 token 进行验证。</li>
-</ol>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/06/02/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/" data-id="cl40o2cei0002mgaq9dy06cp6" data-title="分布式基础" class="article-share-link">分享</a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
     <article id="post-计算机网络/HTTP" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/06/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/HTTP/" class="article-date">
@@ -555,7 +191,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/06/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/HTTP/" data-id="cl40o2cef0000mgaq47gp358v" data-title="HTTP" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2022/06/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/HTTP/" data-id="clr91qhro001ka8nub7w02ahl" data-title="HTTP" class="article-share-link">分享</a>
       
       
       
@@ -679,7 +315,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/Nginx/Nginx%E5%9F%BA%E7%A1%80/" data-id="cl40o2ceh0001mgaq7jine5e1" data-title="Nginx基础" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/Nginx/Nginx%E5%9F%BA%E7%A1%80/" data-id="clr91qhrp001oa8nugkbt0pre" data-title="Nginx基础" class="article-share-link">分享</a>
       
       
       
@@ -766,7 +402,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" data-id="cl40o2ces0005mgaq4jbhfrn3" data-title="分布式锁" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2022/05/30/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" data-id="clr91qhrw0021a8nuayd96klx" data-title="分布式锁" class="article-share-link">分享</a>
       
       
       
@@ -835,7 +471,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/05/22/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%9B%B6%E7%A2%8E%E7%AE%97%E6%B3%95/" data-id="cl3ir9vui0008kkaqg0sf352y" data-title="零碎算法" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2022/05/22/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E9%9B%B6%E7%A2%8E%E7%AE%97%E6%B3%95/" data-id="clr91qhrn001ha8nu1kqncklg" data-title="零碎算法" class="article-share-link">分享</a>
       
       
       
@@ -914,7 +550,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/05/19/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" data-id="cl3ir9vv00017kkaqdwjfd6wa" data-title="分布式事务" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2022/05/19/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" data-id="clr91qhrv001xa8nu91mpckxq" data-title="分布式事务" class="article-share-link">分享</a>
       
       
       
@@ -976,7 +612,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/05/17/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E9%BB%98%E8%AE%A4%E6%95%B0%E6%8D%AE%E5%BA%93/" data-id="cl3ir9vvf0020kkaq9i5z8sb6" data-title="MySQL默认数据库" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2022/05/17/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/MySQL%E9%BB%98%E8%AE%A4%E6%95%B0%E6%8D%AE%E5%BA%93/" data-id="clr91qhs5002na8nu60d88w72" data-title="MySQL默认数据库" class="article-share-link">分享</a>
       
       
       
@@ -1105,7 +741,309 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ethereal-lu.github.io/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/ZAB%E5%8D%8F%E8%AE%AE/" data-id="cl40o2cex0009mgaq7itkd43j" data-title="ZAB协议" class="article-share-link">分享</a>
+      <a data-url="https://ethereal-lu.github.io/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/ZAB%E5%8D%8F%E8%AE%AE/" data-id="clr91qhrr001sa8nu4xobbq4r" data-title="ZAB协议" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-分布式/Kafka/Kafka基础" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Kafka/Kafka%E5%9F%BA%E7%A1%80/" class="article-date">
+  <time class="dt-published" datetime="2022-05-08T09:42:15.000Z" itemprop="datePublished">2022-05-08</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Kafka/">Kafka</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Kafka/Kafka%E5%9F%BA%E7%A1%80/">Kafka基础</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="1、概述"><a href="#1、概述" class="headerlink" title="1、概述"></a>1、概述</h2><p>定义：Kafka 是分布式的基于发布订阅的消息队列，主要应用于大数据实时处理领域。</p>
+<p>Kafka基础架构：</p>
+<ol>
+<li>为方便扩展，并提高吞吐量，一个topic分为多个partition</li>
+<li>写数据通过分区提高效率，为不拖后腿，读数据也采用多个消费者合为一组并发读数据，每个分区只能被一个消费者消费。</li>
+<li>为提高可用性，为每个分区增加副本，分为 leader 和 follower，读写只与 leader 有关，follower 仅仅用作备份与故障选举。</li>
+<li>Kafka 需配合 Zookeeper 使用，Zookeeper 中存储了哪些分区已经上线，以及每个分区的 leader 是谁。</li>
+</ol>
+<p><img src="Kafka%E5%9F%BA%E7%A1%80%E6%9E%B6%E6%9E%84.png" alt="Kafka基础架构"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Kafka/Kafka%E5%9F%BA%E7%A1%80/" data-id="clr91qhrq001pa8nu6p9pf9i3" data-title="Kafka基础" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-分布式/Zookeeper/Zookeeper基础" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/Zookeeper%E5%9F%BA%E7%A1%80/" class="article-date">
+  <time class="dt-published" datetime="2022-05-08T09:42:15.000Z" itemprop="datePublished">2022-05-08</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Zookeeper/">Zookeeper</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/Zookeeper%E5%9F%BA%E7%A1%80/">Zookeeper基础</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="1、概述"><a href="#1、概述" class="headerlink" title="1、概述"></a>1、概述</h2><p>Zookeeper 是一个分布式程序协调服务，提供的主要功能包括：配置管理、名字服务、分布式锁、集群管理。 由 java 编写。</p>
+<h3 id="1-1、特点"><a href="#1-1、特点" class="headerlink" title="1.1、特点"></a>1.1、特点</h3><ul>
+<li>一主多从：一个 Leader 负责写数据，多个 Follower 负责读数据。</li>
+<li>集群中只要有半数<strong>以上</strong>节点存活，Zookeeper 集群就能正常服务，因此 Zookeeper 适合安装奇数台服务器。</li>
+<li>所有节点数据一致</li>
+<li>来自同一个客户端的多个请求按顺序执行</li>
+<li>每个写操作都是事务，具有原子性。</li>
+<li>在一定时间范围内，Client 能读到最新的数据。最终一致性。</li>
+</ul>
+<h3 id="1-2、应用场景"><a href="#1-2、应用场景" class="headerlink" title="1.2、应用场景"></a>1.2、应用场景</h3><ul>
+<li>分布式协调：客户端先后对不同节点的同一个变量设置不同的值，此时数据不一致。通过 Zookeeper 监听该变量，当变量改变时通知其他节点修改该值。</li>
+<li>分布式锁</li>
+<li>无状态化实现：在分布式登陆场景中，若将用户的登录信息放在某一个节点中，则下一次登录到其他节点就无法获取登录信息。可以将登录信息放在 Zookeeper 中，每个节点都到 Zookeeper 查询登录信息。这样对于每个节点而言就实现了无状态登录。</li>
+</ul>
+<h2 id="2、数据结构"><a href="#2、数据结构" class="headerlink" title="2、数据结构"></a>2、数据结构</h2><p>Zookeeper 的数据结构类似于 Unix 文件系统，可以看作一棵树，每个节点称为一个 ZNode ，每个 ZNode 都可以通过其路径唯一标识。为了保证高吞吐和低延迟，znode只适合存储非常小的数据，不能超过1M。</p>
+<p><img src="%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84.png" alt="数据结构"></p>
+<h3 id="2-1、节点结构"><a href="#2-1、节点结构" class="headerlink" title="2.1、节点结构"></a>2.1、节点结构</h3><p>每个 ZNode 包含四部分：</p>
+<ul>
+<li>data：保存数据</li>
+<li>acl：权限。 c：创建权限；w：更新权限；r：读权限；d：删除权限；a：管理员权限，允许设置该节点的权限。</li>
+<li>stat：元数据</li>
+<li>child：子节点</li>
+</ul>
+<h3 id="2-2、节点类型"><a href="#2-2、节点类型" class="headerlink" title="2.2、节点类型"></a>2.2、节点类型</h3><p><img src="%E8%8A%82%E7%82%B9%E7%B1%BB%E5%9E%8B.png" alt="节点类型"></p>
+<p>临时节点<strong>实现原理</strong>：</p>
+<p>客户端与服务端之间的连接是基于 TCP 长连接，client 端连接 server 端默认的 2181 端口，也就是 session 会话。</p>
+<p>客户端与服务端建立连接后，服务端会给客户端分配一个全局唯一的  session id。这个  session id 是有期限的，会话期间客户端会定时向服务端发送一个 ping 请求（心跳），服务端每次收到 ping 请求都会给  session id 续约。只要  session id 不过期，临时节点就一直存在。会话断开后，客户端便不再发送 ping 信号，session id 就会过期。服务端会定时查看 session id 是否过期，如果过期就将与之绑定的临时节点删除。</p>
+<h3 id="2-3、注册中心"><a href="#2-3、注册中心" class="headerlink" title="2.3、注册中心"></a>2.3、注册中心</h3><p>Zookeeper 可以通过临时节点实现注册中心的功能。服务提供者在 Zookeeper 创建临时节点来注册自己的信息，并且一直与 Zookeeper  保持会话，服务消费者通过该临时节点发现服务提供者。当服务提供者断开连接后，session id 过期，该临时节点就被删除，此时服务消费者便无法获取到该服务。</p>
+<h3 id="2-4、数据持久化"><a href="#2-4、数据持久化" class="headerlink" title="2.4、数据持久化"></a>2.4、数据持久化</h3><p>Zookeeper 的数据运行在内存中，Zookeeper 提供了两种持久化机制。</p>
+<ul>
+<li>事务日志：Zookeeper 把执行的命令以日志的形式保存在 dataLogDir 目录的文件中。</li>
+<li>每次事务操作都会有一条记录保存在事务日志文件中，日志文件名后缀是一条zxid，是写入该事务文件的第一条事务记录的zxid</li>
+<li>数据快照：用于记录zk服务器上某一时刻的全量内存数据内容。snapshot.2c021384ce，后缀也是一个zxid，表示本次数据快照开始时刻的服务器最新zxid。Zookeeper 定时将内存数据快照保存在快照文件中</li>
+</ul>
+<p>Zookeeper 在恢复时，先恢复快照文件中的数据到内存，再用日志文件中的数据做增量恢复，这样恢复速度更快。</p>
+<h2 id="3、客户端使用"><a href="#3、客户端使用" class="headerlink" title="3、客户端使用"></a>3、客户端使用</h2><p>docker 启动 Zookeeper 容器后，Zookeeper 服务端便已自动开启，在容器默认工作目录输入 <code>zkCli.sh -server 127.0.0.1:2181</code>即可进入 Zookeeper  客户端命令行。</p>
+<h3 id="3-1、增删改查"><a href="#3-1、增删改查" class="headerlink" title="3.1、增删改查"></a>3.1、增删改查</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">create /node <span class="string">&quot;firstnode&quot;</span>               <span class="comment"># 创建不带序号的永久节点 node ，节点中存储的值为 &quot;firstnode&quot;</span></span><br><span class="line"></span><br><span class="line">get /node                              <span class="comment"># 获取节点 node 中存储的值；若创建时不设置值，则返回 null</span></span><br><span class="line">firstnode</span><br><span class="line"></span><br><span class="line">get -s /node                           <span class="comment"># 获取节点 node 中存储的值以及 node 节点的元数据</span></span><br><span class="line"><span class="built_in">stat</span> /node                             <span class="comment"># 只获取节点 node 的元数据</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 对于带序号的节点，获取时也必须带序号，否则报错</span></span><br><span class="line">create -s /node/firstchild <span class="string">&quot;baby1&quot;</span>     <span class="comment"># 在 node 节点下创建带序号的永久子节点</span></span><br><span class="line">Created /node/firstchild0000000000     <span class="comment"># 由输出结果可知，该节点带了序号</span></span><br><span class="line">create -s /node/firstchild <span class="string">&quot;baby1&quot;</span>     <span class="comment"># 再次创建相同的节点依然允许</span></span><br><span class="line">Created /node/firstchild0000000001     <span class="comment"># 从输出结果可知，节点序号加1，其实节点已经不同</span></span><br><span class="line"></span><br><span class="line">create -e /node/secondchild            <span class="comment"># 不带序号的临时节点</span></span><br><span class="line">create -e -s /node/secondchild         <span class="comment"># 带序号的临时节点</span></span><br><span class="line"></span><br><span class="line">create -c /node/firstcontainer         <span class="comment"># 容器节点，容器节点中若没有子节点，则 60s 后被删除</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">set</span> /node/secondchild <span class="string">&quot;baby2&quot;</span>          <span class="comment"># 修改节点中的值</span></span><br><span class="line"></span><br><span class="line">ls /node                               <span class="comment"># 查看当前节点的子节点。 -s 元数据  -w 监听</span></span><br><span class="line"></span><br><span class="line">delete /node/firstchild                <span class="comment"># 删除子节点 firstchild。若子节点不为空则不能删除父节点</span></span><br><span class="line">deleteall /node                        <span class="comment"># 不论有没有子节点，删除整个路径</span></span><br><span class="line">delete -v 1 /node                      <span class="comment"># 乐观锁删除。节点的元数据中包含节点版本，节点初始创建时版本号为 0，每次通过</span></span><br><span class="line">                                       <span class="comment"># set 修改节点的值版本号加 1。乐观锁删除时指定版本号，若版本号不一致则删除失败</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3-2、权限设置"><a href="#3-2、权限设置" class="headerlink" title="3.2、权限设置"></a>3.2、权限设置</h3><p>子节点不会继承父节点的权限</p>
+<ol>
+<li>注册当前会话的账号和密码 <code>addauth digest username:passeord </code></li>
+<li>创建节点并设置权限 <code>create /test-node &quot;data&quot; auth:username:password:cdrwa</code></li>
+<li>在另一个会话中必须先执行步骤 1 才能拥有操作该节点的权限</li>
+</ol>
+<h2 id="4、spring-初体验"><a href="#4、spring-初体验" class="headerlink" title="4、spring 初体验"></a>4、spring 初体验</h2><h3 id="4-1、zkClient"><a href="#4-1、zkClient" class="headerlink" title="4.1、zkClient"></a>4.1、zkClient</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 逗号左右不允许有空格</span></span><br><span class="line"><span class="keyword">private</span> String connectString = <span class="string">&quot;192.168.40.130:2181,192.168.40.130:2182,192.168.40.130:2183&quot;</span>;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> sessionTimeout = <span class="number">20000</span>;</span><br><span class="line"><span class="keyword">private</span> ZooKeeper zkClient;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    zkClient = <span class="keyword">new</span> ZooKeeper(connectString, sessionTimeout, <span class="keyword">new</span> Watcher() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">process</span><span class="params">(WatchedEvent watchedEvent)</span> </span>&#123;</span><br><span class="line">			<span class="comment">// 这里写监听程序</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 获取到 zkClient 客户端后，即可进行相应操作，如上方的添加、获取、删除、监听节点等。</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="4-2、Curator"><a href="#4-2、Curator" class="headerlink" title="4.2、Curator"></a>4.2、Curator</h3><p>Curator 比 zkClient 更加优雅，推荐使用 Curator 。</p>
+<ol>
+<li><p>引入依赖</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- zookeeper --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.zookeeper<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>zookeeper<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.8.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!--对 zookeeper 基本命令的封装--&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.curator<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>curator-framework<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>5.2.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- zookeeper 高级使用 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.curator<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>curator-recipes<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>5.2.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><p>配置类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="meta">@EnableConfigurationProperties</span></span><br><span class="line"><span class="meta">@ConfigurationProperties(prefix = &quot;curator&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WrapperZk</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> retryCount;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> elapsedTimeMs;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String connectString;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> sessionTimeoutMs;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> connectionTimeoutMs;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CuratorConfig</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    WrapperZk wrapperZk;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean(initMethod = &quot;start&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> CuratorFramework <span class="title">curatorFramework</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> CuratorFrameworkFactory.newClient(</span><br><span class="line">                wrapperZk.getConnectString(),</span><br><span class="line">                wrapperZk.getSessionTimeoutMs(),</span><br><span class="line">                wrapperZk.getConnectionTimeoutMs(),</span><br><span class="line">                <span class="keyword">new</span> RetryNTimes(wrapperZk.getRetryCount(), wrapperZk.getElapsedTimeMs()));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>对上方配置类配置属性</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">curator:</span></span><br><span class="line">  <span class="attr">retryCount:</span> <span class="number">5</span>    <span class="comment"># 重试次数</span></span><br><span class="line">  <span class="attr">elapsedTimeMs:</span> <span class="number">5000</span>   <span class="comment">#重试间隔时间</span></span><br><span class="line">  <span class="attr">connectString:</span> <span class="number">192.168</span><span class="number">.36</span><span class="number">.128</span><span class="string">:2181</span>   <span class="comment"># zookeeper 地址</span></span><br><span class="line">  <span class="attr">sessionTimeoutMs:</span> <span class="number">60000</span>  <span class="comment"># session超时时间</span></span><br><span class="line">  <span class="attr">connectionTimeoutMs:</span> <span class="number">5000</span>  <span class="comment"># 连接超时时间</span></span><br></pre></td></tr></table></figure></li>
+<li><p>基础使用</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootTest</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ZkApplicationTests</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    CuratorFramework curatorFramework;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 增</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">createNode</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="comment">// 添加持久节点</span></span><br><span class="line">        String path = curatorFramework.create().forPath(<span class="string">&quot;/curator-node&quot;</span>, <span class="string">&quot;hello zookeeper&quot;</span>.getBytes());</span><br><span class="line">        System.out.println(path);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 添加临时节点</span></span><br><span class="line">        String path1 = curatorFramework.create().withMode(CreateMode.EPHEMERAL).</span><br><span class="line">                forPath(<span class="string">&quot;/ephemeral-node&quot;</span>, <span class="string">&quot;data&quot;</span>.getBytes());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 查</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">getNode</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">byte</span>[] bytes = curatorFramework.getData().forPath(<span class="string">&quot;/curator-node&quot;</span>);</span><br><span class="line">        System.out.println(<span class="keyword">new</span> String(bytes));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 改</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setNode</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        curatorFramework.setData().forPath(<span class="string">&quot;/curator-node&quot;</span>, <span class="string">&quot;changed&quot;</span>.getBytes());</span><br><span class="line">        <span class="keyword">byte</span>[] bytes = curatorFramework.getData().forPath(<span class="string">&quot;/curator-node&quot;</span>);</span><br><span class="line">        System.out.println(<span class="keyword">new</span> String(bytes));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 删</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">deleteNode</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        curatorFramework.delete().guaranteed().deletingChildrenIfNeeded().forPath(<span class="string">&quot;/curator-node&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 监听</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">nodeListener</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        CuratorCache curatorCache = CuratorCache.build(curatorFramework, <span class="string">&quot;/listener-node&quot;</span>);</span><br><span class="line">        CuratorCacheListener listener = CuratorCacheListener.builder()</span><br><span class="line">                .forCreates(node -&gt; System.out.printf(<span class="string">&quot;[%s] has been created!%n&quot;</span>, node.getPath()))</span><br><span class="line">                .forChanges(((oldNode, node) -&gt; </span><br><span class="line">                             System.out.printf(<span class="string">&quot;the value [%s] of [%s] has been changed to [%s]%n&quot;</span>,</span><br><span class="line">                        <span class="keyword">new</span> String(oldNode.getData()), oldNode.getPath(), <span class="keyword">new</span> String(node.getData()))))</span><br><span class="line">                .forDeletes(node -&gt; System.out.printf(<span class="string">&quot;[%s] has been deleted!%n&quot;</span>, node.getPath()))</span><br><span class="line">                .build();</span><br><span class="line">        curatorCache.listenable().addListener(listener);</span><br><span class="line">        curatorCache.start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="5、ZooKeeper-实现分布式读写锁"><a href="#5、ZooKeeper-实现分布式读写锁" class="headerlink" title="5、ZooKeeper 实现分布式读写锁"></a>5、ZooKeeper 实现分布式读写锁</h2><h3 id="5-1、ZooKeeper-锁的种类"><a href="#5-1、ZooKeeper-锁的种类" class="headerlink" title="5.1、ZooKeeper 锁的种类"></a>5.1、ZooKeeper 锁的种类</h3><ul>
+<li>读锁：共享读，获取读锁的前提是不存在写锁</li>
+<li>写锁：互斥写，获取写锁的前提是不存在任何锁</li>
+</ul>
+<p>读-读兼容；读-写互斥；写-写互斥。</p>
+<p>对于分辨当前锁是读锁还是写锁有两种方案：1. 节点值分别保存为 read 和 write；2. 节点的路径保存为 read 和 write。对于第一种情况，需要每次额外去获取节点的值，比较浪费性能。因此选用第二种方案。<strong>注：即使临时序号节点的路径名不同，但其后缀序列都是单调递增的。</strong></p>
+<h3 id="5-2、ZooKeeper-上读锁"><a href="#5-2、ZooKeeper-上读锁" class="headerlink" title="5.2、ZooKeeper 上读锁"></a>5.2、ZooKeeper 上读锁</h3><ol>
+<li>在一个永久节点下创建一个临时序号节点，节点路径名是 read，表示是读锁</li>
+<li>获取当前永久节点下的所有子节点</li>
+<li>判断自己是否是最小节点或者序号比自己小的节点是否都是读锁<ul>
+<li>如果比自己小的节点中存在写锁，则上锁失败，为离自己最近的写锁注册监听。</li>
+<li>如果自己是最小节点或者序号比自己小的节点都是读锁，则上锁成功。</li>
+</ul>
+</li>
+</ol>
+<h3 id="5-2、ZooKeeper-上写锁"><a href="#5-2、ZooKeeper-上写锁" class="headerlink" title="5.2、ZooKeeper 上写锁"></a>5.2、ZooKeeper 上写锁</h3><ol>
+<li>创建一个临时序号节点，节点保存的数据是 write，表示是写锁</li>
+<li>获取当前zk中所有子节点</li>
+<li>判断自己是否是最小节点<ul>
+<li>如果是，上写锁成功</li>
+<li>如果不是，说明前面还有锁，上锁失败，监听比自己小的节点，形成链式监听，当比自己小的节点改变时，再次执行步骤 2</li>
+</ul>
+</li>
+</ol>
+<p><strong>惊群效应</strong>：如果在上写锁时，每个节点监听的是最小的节点，那么每次最小节点发生改变都会触发大量的监听事件，对于 zk 压力非常大，这就是惊群效应。故应该使用上述的链式监听，因为如果前一个结点没有获取到锁，自然也轮不到自己获取。这样只能实现公平锁。</p>
+<h3 id="5-3、spring-上锁"><a href="#5-3、spring-上锁" class="headerlink" title="5.3、spring 上锁"></a>5.3、spring 上锁</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootTest</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ZkApplicationTests</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    CuratorFramework curatorFramework;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">getReadLock</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        InterProcessReadWriteLock readWriteLock = <span class="keyword">new</span> InterProcessReadWriteLock(curatorFramework, <span class="string">&quot;/lock-node&quot;</span>);</span><br><span class="line">        InterProcessLock readLock = readWriteLock.readLock();</span><br><span class="line">        System.out.println(<span class="string">&quot;阻塞获取读锁&quot;</span>);</span><br><span class="line">        readLock.acquire();</span><br><span class="line">        System.out.println(<span class="string">&quot;got the read lock&quot;</span>);</span><br><span class="line">        readLock.release();</span><br><span class="line">        System.out.println(<span class="string">&quot;release the lock&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">getWriteLock</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        InterProcessReadWriteLock readWriteLock = <span class="keyword">new</span> InterProcessReadWriteLock(curatorFramework, <span class="string">&quot;/lock-node&quot;</span>);</span><br><span class="line">        InterProcessLock writeLock = readWriteLock.writeLock();</span><br><span class="line">        System.out.println(<span class="string">&quot;阻塞获取写锁&quot;</span>);</span><br><span class="line">        writeLock.acquire();</span><br><span class="line">        System.out.println(<span class="string">&quot;got the write lock&quot;</span>);</span><br><span class="line">        writeLock.release();</span><br><span class="line">        System.out.println(<span class="string">&quot;release the lock&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="6、监听"><a href="#6、监听" class="headerlink" title="6、监听"></a>6、监听</h2><h3 id="6-1、监听"><a href="#6-1、监听" class="headerlink" title="6.1、监听"></a>6.1、监听</h3><p>客户端监听它关心的目录节点，当目录节点发生变化（数据改变、节点删除、子目录节点增加删除）时，Zookeeper 会通知客户端。监听只生效一次，即一旦所监听的节点发生改变，后续该监听便失效了。</p>
+<p>监听相当于客户端向 Znode 节点注入回调函数，当节点改变时调用该函数，此时客户端会收到异步通知。客户端同时也会以 NIO 的方式等待通知的到来。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">get -w /node               # 监听 node 节点的数据改变、节点删除。</span><br><span class="line">WatchedEvent state:SyncConnected type:NodeDataChanged path:/node    # 若 node 节点的值改变，则收到该信息</span><br><span class="line"></span><br><span class="line">ls -w /node                # 监听 node 节点的子节点是否改变。监听不到数据改变</span><br><span class="line">WatchedEvent state:SyncConnected type:NodeChildrenChanged path:/node  # 若 node 节点的子节点增加或删除，收到该信息</span><br><span class="line"></span><br><span class="line">ls -R -w /node             # 监听 node 节点的所有子孙节点。监听不到数据改变</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-2、spring-实现监听"><a href="#6-2、spring-实现监听" class="headerlink" title="6.2、spring 实现监听"></a>6.2、spring 实现监听</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootTest</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ZkApplicationTests</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    CuratorFramework curatorFramework;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 监听</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">nodeListener</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        CuratorCache curatorCache = CuratorCache.build(curatorFramework, <span class="string">&quot;/listener-node&quot;</span>);</span><br><span class="line">        CuratorCacheListener listener = CuratorCacheListener.builder()</span><br><span class="line">                .forCreates(node -&gt; System.out.printf(<span class="string">&quot;[%s] has been created!%n&quot;</span>, node.getPath()))</span><br><span class="line">                .forChanges(((oldNode, node) -&gt; </span><br><span class="line">                             System.out.printf(<span class="string">&quot;the value [%s] of [%s] has been changed to [%s]%n&quot;</span>,</span><br><span class="line">                        <span class="keyword">new</span> String(oldNode.getData()), oldNode.getPath(), <span class="keyword">new</span> String(node.getData()))))</span><br><span class="line">                .forDeletes(node -&gt; System.out.printf(<span class="string">&quot;[%s] has been deleted!%n&quot;</span>, node.getPath()))</span><br><span class="line">                .build();</span><br><span class="line">        curatorCache.listenable().addListener(listener);</span><br><span class="line">        curatorCache.start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="7、Zookeeper-集群"><a href="#7、Zookeeper-集群" class="headerlink" title="7、Zookeeper 集群"></a>7、Zookeeper 集群</h2><h3 id="7-1、角色"><a href="#7-1、角色" class="headerlink" title="7.1、角色"></a>7.1、角色</h3><p>Zookeeper 集群中包含三种角色</p>
+<ul>
+<li>Leader：主节点，主要负责写数据，当然也可以读</li>
+<li>Follower：从节点，只负责读数据，可以参与 Leader 的选举</li>
+<li>Observer：观察者，只负责读数据，不参与 Leader 的选举</li>
+</ul>
+<h3 id="7-2、zoo-cfg"><a href="#7-2、zoo-cfg" class="headerlink" title="7.2、zoo.cfg"></a>7.2、zoo.cfg</h3><p>Zookeeper 配置文件 zoo.cfg 中的各参数含义：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>tickTime</strong></td>
+<td>通信心跳时间，ZK中的一个时间单元。ZK中所有时间都是以这个时间单元为基础，进行整数倍配置的。</td>
+</tr>
+<tr>
+<td><strong>initLimit</strong></td>
+<td>Follower在启动过程中，会从Leader同步所有最新数据，然后确定自己能够对外服务的起始状态。Leader允许Follower在 initLimit 时间内完成这个工作。</td>
+</tr>
+<tr>
+<td><strong>syncLimit</strong></td>
+<td>在运行过程中，Leader负责与ZK集群中所有机器进行通信，例如通过一些心跳检测机制，来检测机器的存活状态。如果Leader发出心跳包在syncLimit之后，还没有从Follower那里收到响应，那么就认为这个Follower已经不在线了。</td>
+</tr>
+<tr>
+<td><strong>dataDir</strong></td>
+<td>存储快照文件snapshot的目录。默认情况下，事务日志也会存储在这里。</td>
+</tr>
+<tr>
+<td><strong>clientPort</strong></td>
+<td>客户端连接server的端口，即对外服务端口，默认2181。</td>
+</tr>
+</tbody></table>
+<h3 id="7-3、多主机搭建"><a href="#7-3、多主机搭建" class="headerlink" title="7.3、多主机搭建"></a>7.3、多主机搭建</h3><p>Zookeeper 集群至少由3个ZooKeeper节点组成.</p>
+<p>在每台 Zookeeper 服务器上的 dataDir 目录下创建名为 myid 的文件，文件中写入一个全局唯一的数字代表其编号。</p>
+<p>在每台 Zookeeper 服务器上的 zoo.cfg 中添加如下配置：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">server.1=hostname1:2888:3888</span><br><span class="line">server.2=hostname2:2888:3888</span><br><span class="line">server.3=hostname3:2888:3888</span><br></pre></td></tr></table></figure>
+
+<p>格式为 server.A=B:C:D</p>
+<ul>
+<li>A：Zookeeper 服务器编号，为 myid 中的数字。</li>
+<li>B：Zookeeper 服务器的机器名或 ip 地址</li>
+<li>C：Leader 和 Follower 交换信息的端口</li>
+<li>D：Leader 下线后， Follower 之间重新选举 Leader 的端口</li>
+</ul>
+<p>之后将所有  Zookeeper 服务器启动即可。</p>
+<h3 id="7-4、docker-搭建"><a href="#7-4、docker-搭建" class="headerlink" title="7.4、docker 搭建"></a>7.4、docker 搭建</h3><p>同一个docoker-compose中定义的<code>service</code>是直接可以通信的,docker-compose在启动后会自动创建默认的<code>default</code>网络用于内部通信。</p>
+<ol>
+<li>创建名为 docker-compose.yml 的文件，内容如下</li>
+</ol>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3.1&#x27;</span>                 <span class="comment"># 这是 compose 的 version</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">zoo1:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">zookeeper:latest</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">hostname:</span> <span class="string">zoo1</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">2181</span><span class="string">:2181</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">ZOO_MY_ID:</span> <span class="number">1</span></span><br><span class="line">      <span class="attr">ZOO_SERVERS:</span> <span class="string">server.1=0.0.0.0:2888:3888;2181</span> <span class="string">server.2=zoo2:2888:3888;2181</span> <span class="string">server.3=zoo3:2888:3888;2181</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">zoo2:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">zookeeper:latest</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">hostname:</span> <span class="string">zoo2</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">2182</span><span class="string">:2181</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">ZOO_MY_ID:</span> <span class="number">2</span></span><br><span class="line">      <span class="attr">ZOO_SERVERS:</span> <span class="string">server.1=zoo1:2888:3888;2181</span> <span class="string">server.2=0.0.0.0:2888:3888;2181</span> <span class="string">server.3=zoo3:2888:3888;2181</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">zoo3:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">zookeeper:latest</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">hostname:</span> <span class="string">zoo3</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">2183</span><span class="string">:2181</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">ZOO_MY_ID:</span> <span class="number">3</span></span><br><span class="line">      <span class="attr">ZOO_SERVERS:</span> <span class="string">server.1=zoo1:2888:3888;2181</span> <span class="string">server.2=zoo2:2888:3888;2181</span> <span class="string">server.3=0.0.0.0:2888:3888;2181</span></span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><p>在 docker-compose.yml 所在目录下运行如下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">COMPOSE_PROJECT_NAME=zookeeper_cluster docker-compose up -d   # zookeeper_cluster 为自定义的工程名称</span><br></pre></td></tr></table></figure></li>
+<li><p>使用 docker ps 查看发现集群已启动。</p>
+</li>
+<li><p>在容器内，通过 <code>zkCli.sh -server localhost:2181</code>连接本节点，或通过                                                                                        <code>zkCli.sh -server localhost:2181,localhost:2182,localhost:2183</code>连接集群</p>
+</li>
+</ol>
+<h2 id="8、NIO、BIO"><a href="#8、NIO、BIO" class="headerlink" title="8、NIO、BIO"></a>8、NIO、BIO</h2><ul>
+<li><p>NIO</p>
+<ul>
+<li>在 2181 端口，使用 NIO 模型与客户端建立连接</li>
+<li>客户端开始 Watch 时，使用 NIO 等待 Zookeeper 服务器的回调</li>
+</ul>
+</li>
+<li><p>BIO</p>
+<p>集群选举时，多个节点之间投票通信端口，使用 BIO 通信</p>
+</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/05/08/%E5%88%86%E5%B8%83%E5%BC%8F/Zookeeper/Zookeeper%E5%9F%BA%E7%A1%80/" data-id="clr91qht5005na8nufslm4lq4" data-title="Zookeeper基础" class="article-share-link">分享</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Linux/swap" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/05/07/Linux/swap/" class="article-date">
+  <time class="dt-published" datetime="2022-05-07T02:42:15.000Z" itemprop="datePublished">2022-05-07</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Linux/">Linux</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/05/07/Linux/swap/">swap</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>swap 分区又叫交换分区，这是一块特殊的硬盘空间，即当实际内存不够用的时候，操作系统会从内存中取出一部分暂时不用的数据，放在交换分区中，从而为当前运行的程序腾出足够的内存空间。</p>
+<p>操作系统为每个线程都在内存中分配一定的页框，当属于该进程的页框用完时，就会根据页面置换算法将一部分页面替换到交换分区中。</p>
+<p>磁盘被分为两部分，一部分是存储文件的文件分区，一部分是交换分区。文件分区散列存储，交换分区顺序存储，因此交换分区的读写速度快于文件分区。</p>
+<p>当文件第一次加载到内存时，从文件分区加载，之后置换到交换分区再次被加载时直接从交换分区加载。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ethereal-lu.github.io/2022/05/07/Linux/swap/" data-id="clr91qhr30007a8nug1pkdov7" data-title="swap" class="article-share-link">分享</a>
       
       
       
@@ -1121,7 +1059,7 @@
 
   <nav id="page-nav">
     
-    <a class="extend prev" rel="prev" href="/">&laquo; 上一页</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/10/">10</a><a class="extend next" rel="next" href="/page/3/">下一页 &raquo;</a>
+    <a class="extend prev" rel="prev" href="/">&laquo; 上一页</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/9/">9</a><a class="extend next" rel="next" href="/page/3/">下一页 &raquo;</a>
   </nav>
 
 </section>
@@ -1132,7 +1070,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">分类</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86/">实习经历</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%93%B6%E8%A1%8C/">银行</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9D%A2%E7%BB%8F/">面经</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Go/">Go</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Kafka/">Kafka</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Nginx/">Nginx</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/RabbitMQ/">RabbitMQ</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Zookeeper/">Zookeeper</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/java-%E8%BF%9B%E9%98%B6/">java 进阶</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%9E%E4%B9%A0%E7%BB%8F%E5%8E%86/">实习经历</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%AE%B9%E5%99%A8/">容器</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/">小碎片知识</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">机器学习笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></li></ul>
     </div>
   </div>
 
@@ -1147,7 +1085,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/11/">十一月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">十月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/09/">九月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">八月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">七月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/09/">九月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">八月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">七月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/06/">六月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">五月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">三月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/11/">十一月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">六月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">五月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/04/">四月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
     </div>
   </div>
 
@@ -1160,14 +1098,6 @@
       <ul>
         
           <li>
-            <a href="/2022/11/04/%E9%93%B6%E8%A1%8C/%E9%9D%A2%E8%AF%95/%E5%B8%B8%E8%A7%81%E9%9D%A2%E8%AF%95%E9%97%AE%E9%A2%98/">常见面试问题</a>
-          </li>
-        
-          <li>
-            <a href="/2022/10/02/%E9%93%B6%E8%A1%8C/%E7%AC%94%E8%AF%95/EPI/">EPI</a>
-          </li>
-        
-          <li>
             <a href="/2022/09/24/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/%E6%85%A2%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96/">慢查询优化</a>
           </li>
         
@@ -1177,6 +1107,14 @@
         
           <li>
             <a href="/2022/08/17/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/Dubbo/">Dubbo</a>
+          </li>
+        
+          <li>
+            <a href="/2022/08/11/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/Raft%E7%AE%97%E6%B3%95/">Raft算法</a>
+          </li>
+        
+          <li>
+            <a href="/2022/08/10/%E6%95%B0%E6%8D%AE%E5%BA%93/ElasticSearch/ElasticSearch%E9%9B%86%E7%BE%A4/">ElasticSearch集群</a>
           </li>
         
       </ul>
@@ -1192,7 +1130,7 @@
   <div class="outer">
     <div id="footer-info" class="inner">
       
-      &copy; 2023 驯鹿先生<br>
+      &copy; 2024 驯鹿先生<br>
       Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>
