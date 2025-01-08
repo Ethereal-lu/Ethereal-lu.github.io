@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Java 进阶 on lu</title>
-    <link>https://ethereal-lu.github.io/categories/java-%E8%BF%9B%E9%98%B6/</link>
+    <link>http://localhost:1313/categories/java-%E8%BF%9B%E9%98%B6/</link>
     <description>Recent content in Java 进阶 on lu</description>
     <generator>Hugo -- 0.140.1</generator>
     <language>zh-CN</language>
     <lastBuildDate>Wed, 06 Apr 2022 21:12:41 +0000</lastBuildDate>
-    <atom:link href="https://ethereal-lu.github.io/categories/java-%E8%BF%9B%E9%98%B6/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/categories/java-%E8%BF%9B%E9%98%B6/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>AQS</title>
-      <link>https://ethereal-lu.github.io/posts/java/java-%E8%BF%9B%E9%98%B6/aqs/</link>
+      <link>http://localhost:1313/posts/java/java-%E8%BF%9B%E9%98%B6/aqs/</link>
       <pubDate>Wed, 06 Apr 2022 21:12:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/java/java-%E8%BF%9B%E9%98%B6/aqs/</guid>
+      <guid>http://localhost:1313/posts/java/java-%E8%BF%9B%E9%98%B6/aqs/</guid>
       <description>&lt;p&gt;&lt;strong&gt;AQS的核心思想&lt;/strong&gt;是，如果被请求的共享资源空闲，则将当前请求资源的线程设置为有效的工作线程，并将共享资源设置为锁定状态，如果被请求的共享资源被占用，那么就通过cas 的方式将当前线程添加到等待队列的尾部，直到它的前继节点释放锁并唤醒它。&lt;/p&gt;
 &lt;p&gt;在 AQS 中用变量 state 代表共享资源，通过 cas 改变 state 的值来竞争锁。&lt;/p&gt;
 &lt;p&gt;ReentrantLock 实现了公平锁和非公平锁，他们都继承了 AQS，公平锁和非公平锁的最大区别就是在获取锁的时候，非公平锁直接和等待队列的头节点竞争锁，而非公平锁只有在自己是队列头结点时才去获取锁。&lt;/p&gt;
@@ -20,9 +20,9 @@
     </item>
     <item>
       <title>BIO,NIO,AIO</title>
-      <link>https://ethereal-lu.github.io/posts/java/java-%E8%BF%9B%E9%98%B6/bionioaio/</link>
+      <link>http://localhost:1313/posts/java/java-%E8%BF%9B%E9%98%B6/bionioaio/</link>
       <pubDate>Wed, 06 Apr 2022 21:12:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/java/java-%E8%BF%9B%E9%98%B6/bionioaio/</guid>
+      <guid>http://localhost:1313/posts/java/java-%E8%BF%9B%E9%98%B6/bionioaio/</guid>
       <description>&lt;p&gt;本文摘自&lt;a href=&#34;https://blog.csdn.net/m0_38109046/article/details/89449305&#34;&gt;(31条消息) Java面试常考的 BIO，NIO，AIO 总结_有梦想的小树的博客-CSDN博客_bio nio&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Java 中的 BIO、NIO和 AIO 理解为是 Java 语言对操作系统的各种 IO 模型的封装。程序员在使用这些 API 的时候，不需要关心操作系统层面的知识，也不需要根据不同操作系统编写不同的代码。只需要使用Java的API就可以了。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;同步与异步&lt;/strong&gt;&lt;/p&gt;
@@ -52,9 +52,9 @@
     </item>
     <item>
       <title>ConcurrentHashMap</title>
-      <link>https://ethereal-lu.github.io/posts/java/java-%E8%BF%9B%E9%98%B6/concurrenthashmap/</link>
+      <link>http://localhost:1313/posts/java/java-%E8%BF%9B%E9%98%B6/concurrenthashmap/</link>
       <pubDate>Sat, 26 Mar 2022 11:12:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/java/java-%E8%BF%9B%E9%98%B6/concurrenthashmap/</guid>
+      <guid>http://localhost:1313/posts/java/java-%E8%BF%9B%E9%98%B6/concurrenthashmap/</guid>
       <description>&lt;h3 id=&#34;1concurrenthashmap-如何保证线程安全&#34;&gt;1、ConcurrentHashMap 如何保证线程安全&lt;/h3&gt;
 &lt;p&gt;ConcurrentHashMap 是由 Node 数组构成，这里先将 Node 数组的每个下标对应的空间称为一个桶，以方便叙述。ConcurrentHashMap 的 get 操作不需要加锁，只有 put 和 remove 需要加锁。当执行 put\remove 操作时，会先定位到桶，然后将桶中的链表头节点或树的根节点锁住，因为必须要获取到链表头节点或树的根节点才能对整个链表或树操作，所以可以保证线程安全。&lt;/p&gt;
 &lt;p&gt;当 put 操作发现桶中没有数据时，会通过 cas 操作赋值，而不是上锁。&lt;/p&gt;

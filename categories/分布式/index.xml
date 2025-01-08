@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>分布式 on lu</title>
-    <link>https://ethereal-lu.github.io/categories/%E5%88%86%E5%B8%83%E5%BC%8F/</link>
+    <link>http://localhost:1313/categories/%E5%88%86%E5%B8%83%E5%BC%8F/</link>
     <description>Recent content in 分布式 on lu</description>
     <generator>Hugo -- 0.140.1</generator>
     <language>zh-CN</language>
     <lastBuildDate>Wed, 17 Aug 2022 23:42:15 +0000</lastBuildDate>
-    <atom:link href="https://ethereal-lu.github.io/categories/%E5%88%86%E5%B8%83%E5%BC%8F/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/categories/%E5%88%86%E5%B8%83%E5%BC%8F/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Dubbo</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/</link>
+      <link>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/</link>
       <pubDate>Wed, 17 Aug 2022 23:42:15 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/</guid>
+      <guid>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/</guid>
       <description>&lt;h2 id=&#34;1-rpc&#34;&gt;1 RPC&lt;/h2&gt;
 &lt;p&gt;RPC 即进程A中的方法A通过网络调用进程B中的方法B，是一种进程间通信方式。&lt;/p&gt;
 &lt;p&gt;为了实现RPC远程调用，请求时在网络中传输的数据应该包括&lt;code&gt;类名&lt;/code&gt;、&lt;code&gt;方法名&lt;/code&gt;、&lt;code&gt;参数类型列表&lt;/code&gt;、&lt;code&gt;参数值列表&lt;/code&gt;，前三项可以唯一确定一个方法。除了上述4项，企业内部使用时还可以自定义需要传输的数据以便于业务开发。确定好要传什么数据后还需要确定怎么传数据，如 &lt;code&gt;Tomcat + HttpClient&lt;/code&gt; 、 &lt;code&gt;Netty&lt;/code&gt; 、&lt;code&gt;Socket&lt;/code&gt;等都可以选择。&lt;/p&gt;
@@ -25,7 +25,7 @@
 &lt;/ul&gt;
 &lt;h2 id=&#34;3-dubbo-架构&#34;&gt;3 Dubbo 架构&lt;/h2&gt;
 &lt;p&gt;Dubbo是一款高性能、轻量级的开源Java RPC框架，它提供了三大核心能力：面向接口的远程方法调用，智能容错和负载均衡，以及服务自动注册和发现。&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;Dubbo架构&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/Dubbo%E6%9E%B6%E6%9E%84.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;Dubbo架构&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/Dubbo%E6%9E%B6%E6%9E%84.png&#34;&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Monitor： 统计服务的调用次数和调用时间的监控中心&lt;/li&gt;
 &lt;li&gt;Container： 运行服务的容器&lt;/li&gt;
@@ -59,9 +59,9 @@
 &lt;li&gt;&lt;strong&gt;远程通信与信息交换&lt;/strong&gt;：支持Triple 协议和 Netty 框架&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;服务调用&lt;/strong&gt;：下图展示 RPC 层的服务调用&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;img alt=&#34;服务调用&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8.jpg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;服务调用&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8.jpg&#34;&gt;&lt;/p&gt;
 &lt;p&gt;详细调用流程如下图&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;详细调用&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/%E8%AF%A6%E7%BB%86%E8%B0%83%E7%94%A8.jpg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;详细调用&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/%E8%AF%A6%E7%BB%86%E8%B0%83%E7%94%A8.jpg&#34;&gt;&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;服务提供者启动，开启Netty服务，创建Zookeeper客户端，向注册中心注册服务。&lt;/li&gt;
 &lt;li&gt;服务消费者启动，从Zookeeper注册中心获取服务提供者列表，与服务提供者通过Netty建立长连接。&lt;/li&gt;
@@ -77,9 +77,9 @@
     </item>
     <item>
       <title>Raft算法</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/raft%E7%AE%97%E6%B3%95/</link>
+      <link>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/raft%E7%AE%97%E6%B3%95/</link>
       <pubDate>Thu, 11 Aug 2022 13:42:15 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/raft%E7%AE%97%E6%B3%95/</guid>
+      <guid>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/raft%E7%AE%97%E6%B3%95/</guid>
       <description>&lt;h2 id=&#34;一-概述&#34;&gt;一、 概述&lt;/h2&gt;
 &lt;p&gt;分布式一致性算法Raft将一致性分解为多个子问题：Leader选举、日志同步、安全性、日志压缩、成员变更等。&lt;/p&gt;
 &lt;p&gt;Raft将系统中的角色分为领导者（Leader）、跟从者（Follower）和候选人（Candidate）：&lt;/p&gt;
@@ -90,7 +90,7 @@
 &lt;/ul&gt;
 &lt;p&gt;Raft要求系统在任意时刻最多只有一个Leader，正常工作期间只有Leader和Followers。&lt;/p&gt;
 &lt;p&gt;只有 Leader 节点能够处理客户端的一切请求（如果客户端的请求发到了 Follower，Follower 将会把请求重定向到 Leader）。Raft算法将时间分为一个个的任期（term），每一个term的开始都是Leader选举。在成功选举Leader之后，Leader会在整个term内管理整个集群。如果Leader选举失败，该term就会因为没有Leader而结束。&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;term&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/raft%E7%AE%97%E6%B3%95/term.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;term&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/raft%E7%AE%97%E6%B3%95/term.png&#34;&gt;&lt;/p&gt;
 &lt;h2 id=&#34;二leader选举&#34;&gt;二、Leader选举&lt;/h2&gt;
 &lt;p&gt;Raft 使用心跳（heartbeat）触发Leader选举。Leader向所有Followers周期性发送heartbeat。如果Follower在超时时间内没有收到Leader的heartbeat（也许此时还没有选出Leader，大家都在等；也许Leader挂了；也许只是Leader与该Follower之间网络故障），就会随机睡眠一段时间后发起Leader选举。&lt;/p&gt;
 &lt;p&gt;当服务器启动时，初始化为Follower，此时可能是集群刚启动，那么所有节点全部等待leader的心跳，当某个或某些节点超时后变为Candidate发起选举；也可能是新节点加入集群，那它会直接收到leader的心跳。&lt;/p&gt;
@@ -111,7 +111,7 @@
 &lt;p&gt;Raft保证选举出的Leader上一定具有最新的已提交的日志，这一点将在四、安全性中说明。&lt;/p&gt;
 &lt;h2 id=&#34;三日志同步&#34;&gt;三、日志同步&lt;/h2&gt;
 &lt;p&gt;Leader选出后，就开始接收客户端的请求。Leader把请求作为日志条目（Log entries）加入到它的日志中，然后并行的向其他服务器发起 AppendEntries RPC 复制日志条目。当这条日志被复制到大多数服务器上，Leader将这条日志应用到它的状态机并向客户端返回执行结果。&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;日志同步&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/raft%E7%AE%97%E6%B3%95/%E6%97%A5%E5%BF%97%E5%90%8C%E6%AD%A5.jpeg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;日志同步&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/raft%E7%AE%97%E6%B3%95/%E6%97%A5%E5%BF%97%E5%90%8C%E6%AD%A5.jpeg&#34;&gt;&lt;/p&gt;
 &lt;p&gt;某些Followers可能没有成功的复制日志，Leader会无限的重试 AppendEntries RPC直到所有的Followers最终存储了所有的日志条目。&lt;/p&gt;
 &lt;p&gt;日志由有序编号（log index，索引）的日志条目组成。每个日志条目包含它被创建时的任期号（term），和用于状态机执行的命令。如果一个日志条目被复制到大多数服务器上，就被认为可以提交（commit）了。log index 与 term 无关，Leader 每生成一条日志条目都会消耗一个 log index ，log index 只会一直递增。&lt;/p&gt;
 &lt;p&gt;Raft日志同步保证如下两点：&lt;/p&gt;
@@ -124,9 +124,9 @@
     </item>
     <item>
       <title>分布式基础</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/</link>
+      <link>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/</link>
       <pubDate>Thu, 02 Jun 2022 19:42:15 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/</guid>
+      <guid>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/</guid>
       <description>&lt;h2 id=&#34;1分布式session&#34;&gt;1、分布式Session&lt;/h2&gt;
 &lt;p&gt;解决分布式Session有两种方案：&lt;/p&gt;
 &lt;ol&gt;
@@ -136,9 +136,9 @@
     </item>
     <item>
       <title>分布式锁</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</link>
+      <link>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</link>
       <pubDate>Mon, 30 May 2022 10:42:15 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</guid>
+      <guid>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</guid>
       <description>&lt;h2 id=&#34;1前言&#34;&gt;1、前言&lt;/h2&gt;
 &lt;p&gt;单纯的Java Api并不能提供分布式锁的能力。目前比较常用的分布式锁的实现方案有如下三种：&lt;/p&gt;
 &lt;ul&gt;
@@ -198,9 +198,9 @@
     </item>
     <item>
       <title>分布式事务</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/</link>
+      <link>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/</link>
       <pubDate>Thu, 19 May 2022 17:42:15 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/</guid>
+      <guid>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/</guid>
       <description>&lt;h2 id=&#34;1-事务&#34;&gt;1 事务&lt;/h2&gt;
 &lt;p&gt;事务可以看做是一次大的活动，它由不同的小活动组成，这些活动要么全部成功，要么全部失败。&lt;/p&gt;
 &lt;h3 id=&#34;11-本地事务&#34;&gt;1.1 本地事务&lt;/h3&gt;
@@ -233,9 +233,9 @@
     </item>
     <item>
       <title>微服务学习笔记</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E7%AC%94%E8%AE%B0/</link>
+      <link>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E7%AC%94%E8%AE%B0/</link>
       <pubDate>Mon, 25 Oct 2021 17:42:15 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E7%AC%94%E8%AE%B0/</guid>
+      <guid>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E7%AC%94%E8%AE%B0/</guid>
       <description>&lt;h2 id=&#34;1微服务架构介绍httpsmartinfowlercomarticlesmicroserviceshtml&#34;&gt;1、&lt;a href=&#34;https://martinfowler.com/articles/microservices.html&#34;&gt;微服务架构介绍&lt;/a&gt;&lt;/h2&gt;
 &lt;h3 id=&#34;11微服务概念&#34;&gt;1.1、微服务概念&lt;/h3&gt;
 &lt;p&gt;微服务就是将一个单体架构的应用按业务划分为一个个独立运行的程序即服务，他们之间通过 HTTP 协议进行通信（也可以采用消息队列来通信，如 RabbotMQ、Kafaka 等），可以采用不同的编程语言，使用不同的存储技术，自动化部署（如Jenkins）减少人为控制，降低出错概率。服务数量越多，管理起来越复杂，因此采用集中化管理。例如 Eureka，Zookeeper 等都是比较常见的服务集中化管理框架。&lt;/p&gt;

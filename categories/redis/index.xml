@@ -2,23 +2,23 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Redis on lu</title>
-    <link>https://ethereal-lu.github.io/categories/redis/</link>
+    <link>http://localhost:1313/categories/redis/</link>
     <description>Recent content in Redis on lu</description>
     <generator>Hugo -- 0.140.1</generator>
     <language>zh-CN</language>
     <lastBuildDate>Mon, 02 May 2022 21:39:41 +0000</lastBuildDate>
-    <atom:link href="https://ethereal-lu.github.io/categories/redis/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/categories/redis/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Redis集群</title>
-      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E9%9B%86%E7%BE%A4/</link>
+      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E9%9B%86%E7%BE%A4/</link>
       <pubDate>Mon, 02 May 2022 21:39:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E9%9B%86%E7%BE%A4/</guid>
+      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E9%9B%86%E7%BE%A4/</guid>
       <description>&lt;p&gt;主从复制和哨兵机制保障了高可用，就读写分离而言虽然slave节点扩展了主从的读并发能力，但是&lt;strong&gt;写能力&lt;/strong&gt;和&lt;strong&gt;存储能力&lt;/strong&gt;是无法进行扩展，就只能是master节点能够承载的上限。如果面对海量数据那么必然需要构建master之间的集群，同时必然需要吸收高可用（主从复制和哨兵机制）能力，即每个master分片节点还需要有slave节点。这就是为社么要使用Redis集群。&lt;/p&gt;
 &lt;h2 id=&#34;1概述&#34;&gt;1、概述&lt;/h2&gt;
 &lt;p&gt;Redis集群可以理解为n个主从架构组合在一起对外服务。Redis Cluster要求至少需要3个master才能组成一个集群，同时每个master至少需要有一个slave节点。&lt;/p&gt;
 &lt;p&gt;如此，Redis集群的写能力和存储能力就是所有master之和了。&lt;/p&gt;
 &lt;p&gt;虽然每个master下都挂载了一个slave节点，但是在Redis Cluster中的读、写请求其实都是在&lt;strong&gt;master&lt;/strong&gt;上完成的。slave节点只是充当了一个数据备份的角色，当master发生了宕机，就会将对应的slave节点提拔为master，来重新对外提供服务。&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;redis-cluster&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E9%9B%86%E7%BE%A4/redis-cluster.jpg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;redis-cluster&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E9%9B%86%E7%BE%A4/redis-cluster.jpg&#34;&gt;&lt;/p&gt;
 &lt;h2 id=&#34;2-主要模块介绍&#34;&gt;2、 主要模块介绍&lt;/h2&gt;
 &lt;h3 id=&#34;21-哈希槽hash-slot&#34;&gt;2.1、 哈希槽(Hash Slot)&lt;/h3&gt;
 &lt;p&gt;Redis-cluster没有使用&lt;a href=&#34;https://zhuanlan.zhihu.com/p/129049724&#34;&gt;一致性hash&lt;/a&gt;，而是引入了&lt;strong&gt;哈希槽&lt;/strong&gt;的概念。Redis-cluster中有16384(即2的14次方）个哈希槽，每个key通过CRC16校验后对16383取模来决定放置哪个槽。Cluster中的每个节点负责一部分hash槽（hash slot）。&lt;/p&gt;
@@ -62,9 +62,9 @@
     </item>
     <item>
       <title>Redis主从复制</title>
-      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</link>
+      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</link>
       <pubDate>Mon, 02 May 2022 15:39:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</guid>
+      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</guid>
       <description>&lt;h1 id=&#34;1概述&#34;&gt;1、概述&lt;/h1&gt;
 &lt;p&gt;主从复制，是指将一台Redis服务器的数据，复制到其他的Redis服务器。前者称为主节点(master)，后者称为从节点(slave)；数据的复制是单向的，只能由主节点到从节点。主从节点建立连接后会保持心跳检测。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;主从复制的作用&lt;/strong&gt;主要包括：&lt;/p&gt;
@@ -106,9 +106,9 @@
     </item>
     <item>
       <title>Redis哨兵机制</title>
-      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/</link>
+      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/</link>
       <pubDate>Mon, 02 May 2022 15:39:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/</guid>
+      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/</guid>
       <description>&lt;p&gt;由于主从模式是读写分离的，如果主节点故障，那么将没有主节点来执行写操作，也没有主节点给从节点进行数据同步了。若是每次主节点故障都需要人工切换主从节点太繁琐，于是哨兵机制出现了。哨兵的核心功能是主节点的自动故障转移。&lt;/p&gt;
 &lt;h2 id=&#34;1哨兵集群的组建&#34;&gt;1、哨兵集群的组建&lt;/h2&gt;
 &lt;p&gt;哨兵实例之间可以相互发现，要归功于 Redis 提供的发布 / 订阅机制。&lt;/p&gt;
@@ -147,14 +147,14 @@
     </item>
     <item>
       <title>Redis底层数据结构</title>
-      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</link>
+      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</link>
       <pubDate>Sun, 01 May 2022 17:39:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</guid>
+      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</guid>
       <description>&lt;h2 id=&#34;1压缩列表---ziplist&#34;&gt;1、压缩列表 - ZipList&lt;/h2&gt;
 &lt;p&gt;Redis是基于内存的nosql，有些场景下为了节省内存redis会用“时间”换“空间”。ziplist就是很典型的例子。&lt;/p&gt;
 &lt;h3 id=&#34;11整体布局&#34;&gt;1.1、整体布局&lt;/h3&gt;
 &lt;p&gt;ziplist是为了&lt;strong&gt;节省内存空间&lt;/strong&gt;而设计的由一系列特殊编码的&lt;strong&gt;连续内存块&lt;/strong&gt;组成的&lt;strong&gt;顺序存储&lt;/strong&gt;结构，类似于数组，ziplist在内存中是连续存储的，但是不同于数组，为了节省内存 ziplist的每个元素所占的内存大小可以不同（数组中叫元素，ziplist叫节点&lt;strong&gt;entry&lt;/strong&gt;），每个节点可以用来存储一个整数或者一个字符串。存储整数时是采用整数的二进制而不是字符串形式存储。&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;ziplist内存布局&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ziplist%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;ziplist内存布局&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ziplist%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80.png&#34;&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;zlbytes: ziplist的长度（单位: 字节)，是一个32位无符号整数&lt;/li&gt;
 &lt;li&gt;zltail: ziplist最后一个节点的偏移量，反向遍历ziplist或者pop尾部节点的时候有用。&lt;/li&gt;
@@ -170,7 +170,7 @@
 &lt;li&gt;data: 当前节点的值，可以是数字或字符串&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;为了节省内存，根据上一个节点的长度prevlength 可以将ziplist节点分为两类：&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;entry布局&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/entry%E5%B8%83%E5%B1%80.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;entry布局&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/entry%E5%B8%83%E5%B1%80.png&#34;&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;entry的前8位小于254，则这8位就表示上一个节点的长度&lt;/li&gt;
 &lt;li&gt;entry的前8位等于254，则意味着上一个节点的长度无法用8位表示，后面32位才是真实的prevlength。用254 不用255(11111111)作为分界是因为255是zlend的值，它用于判断ziplist是否到达尾部。&lt;/li&gt;
@@ -196,9 +196,9 @@
     </item>
     <item>
       <title>Redis缓存一致性</title>
-      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7/</link>
+      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7/</link>
       <pubDate>Mon, 25 Apr 2022 22:39:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7/</guid>
+      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7/</guid>
       <description>&lt;h3 id=&#34;1先更新缓存再更新db&#34;&gt;1、先更新缓存再更新DB&lt;/h3&gt;
 &lt;p&gt;缓存更新后 DB 更新失败回滚，此时缓存与 DB 数据不一致。因此不推荐&lt;/p&gt;
 &lt;h3 id=&#34;2先删除缓存再更新db&#34;&gt;2、先删除缓存再更新DB&lt;/h3&gt;
@@ -223,9 +223,9 @@
     </item>
     <item>
       <title>缓存穿透、击穿、雪崩</title>
-      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E5%87%BB%E7%A9%BF%E9%9B%AA%E5%B4%A9/</link>
+      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E5%87%BB%E7%A9%BF%E9%9B%AA%E5%B4%A9/</link>
       <pubDate>Sat, 16 Apr 2022 22:39:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E5%87%BB%E7%A9%BF%E9%9B%AA%E5%B4%A9/</guid>
+      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E5%87%BB%E7%A9%BF%E9%9B%AA%E5%B4%A9/</guid>
       <description>&lt;h2 id=&#34;1缓存穿透&#34;&gt;1、缓存穿透&lt;/h2&gt;
 &lt;h3 id=&#34;11问题描述&#34;&gt;1.1、问题描述&lt;/h3&gt;
 &lt;p&gt;如果在请求数据时，在缓存层和数据库层都没有命中，这种情况就叫作缓存穿透。&lt;/p&gt;
@@ -268,9 +268,9 @@
     </item>
     <item>
       <title>Redis分布式锁</title>
-      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</link>
+      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</link>
       <pubDate>Tue, 12 Apr 2022 22:39:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</guid>
+      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</guid>
       <description>&lt;h2 id=&#34;1什么是分布式锁&#34;&gt;1、什么是分布式锁&lt;/h2&gt;
 &lt;p&gt;分布式锁，顾名思义，就是分布式项目开发中用到的锁，可以用来控制分布式系统之间同步访问共享资源，一般来说，分布式锁需要满足的特性有这么几点：&lt;/p&gt;
 &lt;p&gt;1、互斥性：在任何时刻，对于同一条数据，只有一台应用可以获取到分布式锁；&lt;/p&gt;
@@ -303,9 +303,9 @@
     </item>
     <item>
       <title>Redis持久化</title>
-      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E6%8C%81%E4%B9%85%E5%8C%96/</link>
+      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E6%8C%81%E4%B9%85%E5%8C%96/</link>
       <pubDate>Sat, 09 Apr 2022 23:39:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E6%8C%81%E4%B9%85%E5%8C%96/</guid>
+      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E6%8C%81%E4%B9%85%E5%8C%96/</guid>
       <description>&lt;h2 id=&#34;1redis-核心主流程&#34;&gt;1、Redis 核心主流程&lt;/h2&gt;
 &lt;p&gt;AOF 和 RDB 的持久化过程中，有不少操作是在时间事件 serverCron 中被触发的。所以，这边有必要先了解下 Redis 中的事件核心流程。&lt;/p&gt;
 &lt;p&gt;Redis 的服务器进程就是一个事件循环，最重要的有两个事件：文件事件和时间事件。Redis 在服务器初始化后，会无限循环，处理产生的文件事件和时间事件。&lt;/p&gt;
@@ -331,9 +331,9 @@
     </item>
     <item>
       <title>Redis基础</title>
-      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E7%AC%94%E8%AE%B0/</link>
+      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E7%AC%94%E8%AE%B0/</link>
       <pubDate>Fri, 01 Apr 2022 17:39:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E7%AC%94%E8%AE%B0/</guid>
+      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E7%AC%94%E8%AE%B0/</guid>
       <description>&lt;h3 id=&#34;概述&#34;&gt;概述&lt;/h3&gt;
 &lt;p&gt;Redis是什么？&lt;/p&gt;
 &lt;p&gt;Redis（Remote Dictionary Server )，即远程字典服务！&lt;/p&gt;

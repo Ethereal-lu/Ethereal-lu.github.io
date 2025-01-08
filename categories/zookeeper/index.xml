@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Zookeeper on lu</title>
-    <link>https://ethereal-lu.github.io/categories/zookeeper/</link>
+    <link>http://localhost:1313/categories/zookeeper/</link>
     <description>Recent content in Zookeeper on lu</description>
     <generator>Hugo -- 0.140.1</generator>
     <language>zh-CN</language>
     <lastBuildDate>Sun, 08 May 2022 19:42:15 +0000</lastBuildDate>
-    <atom:link href="https://ethereal-lu.github.io/categories/zookeeper/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/categories/zookeeper/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>ZAB协议</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zab%E5%8D%8F%E8%AE%AE/</link>
+      <link>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zab%E5%8D%8F%E8%AE%AE/</link>
       <pubDate>Sun, 08 May 2022 19:42:15 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zab%E5%8D%8F%E8%AE%AE/</guid>
+      <guid>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zab%E5%8D%8F%E8%AE%AE/</guid>
       <description>&lt;h1 id=&#34;1zab协议介绍&#34;&gt;1、ZAB协议介绍&lt;/h1&gt;
 &lt;p&gt;Zookeeper Atomic Broadcast，是 Zookeeper 专门设计的一种支持崩溃恢复的原子广播协议。用来实现分布式数据一致性。包含两种基本模式，分别是 崩溃恢复、原子广播。&lt;/p&gt;
 &lt;p&gt;当整个集群在启动时，或当leader 节点崩溃时，ZAB协议就会进入恢复模式并选举产生新的leader，当leader选举出来后，并且集群中有过半机器和该leader节点完成数据同步后，ZAB协议就会退出恢复模式进入消息广播模式。&lt;/p&gt;
@@ -59,9 +59,9 @@
     </item>
     <item>
       <title>Zookeeper基础</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zookeeper%E5%9F%BA%E7%A1%80/</link>
+      <link>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zookeeper%E5%9F%BA%E7%A1%80/</link>
       <pubDate>Sun, 08 May 2022 17:42:15 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zookeeper%E5%9F%BA%E7%A1%80/</guid>
+      <guid>http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zookeeper%E5%9F%BA%E7%A1%80/</guid>
       <description>&lt;h2 id=&#34;1概述&#34;&gt;1、概述&lt;/h2&gt;
 &lt;p&gt;Zookeeper 是一个分布式程序协调服务，提供的主要功能包括：配置管理、名字服务、分布式锁、集群管理。 由 java 编写。&lt;/p&gt;
 &lt;h3 id=&#34;11特点&#34;&gt;1.1、特点&lt;/h3&gt;
@@ -81,7 +81,7 @@
 &lt;/ul&gt;
 &lt;h2 id=&#34;2数据结构&#34;&gt;2、数据结构&lt;/h2&gt;
 &lt;p&gt;Zookeeper 的数据结构类似于 Unix 文件系统，可以看作一棵树，每个节点称为一个 ZNode ，每个 ZNode 都可以通过其路径唯一标识。为了保证高吞吐和低延迟，znode只适合存储非常小的数据，不能超过1M。&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;数据结构&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zookeeper%E5%9F%BA%E7%A1%80/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;数据结构&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zookeeper%E5%9F%BA%E7%A1%80/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84.png&#34;&gt;&lt;/p&gt;
 &lt;h3 id=&#34;21节点结构&#34;&gt;2.1、节点结构&lt;/h3&gt;
 &lt;p&gt;每个 ZNode 包含四部分：&lt;/p&gt;
 &lt;ul&gt;
@@ -91,7 +91,7 @@
 &lt;li&gt;child：子节点&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 id=&#34;22节点类型&#34;&gt;2.2、节点类型&lt;/h3&gt;
-&lt;p&gt;&lt;img alt=&#34;节点类型&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zookeeper%E5%9F%BA%E7%A1%80/%E8%8A%82%E7%82%B9%E7%B1%BB%E5%9E%8B.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;节点类型&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zookeeper%E5%9F%BA%E7%A1%80/%E8%8A%82%E7%82%B9%E7%B1%BB%E5%9E%8B.png&#34;&gt;&lt;/p&gt;
 &lt;p&gt;临时节点&lt;strong&gt;实现原理&lt;/strong&gt;：&lt;/p&gt;
 &lt;p&gt;客户端与服务端之间的连接是基于 TCP 长连接，client 端连接 server 端默认的 2181 端口，也就是 session 会话。&lt;/p&gt;
 &lt;p&gt;客户端与服务端建立连接后，服务端会给客户端分配一个全局唯一的  session id。这个  session id 是有期限的，会话期间客户端会定时向服务端发送一个 ping 请求（心跳），服务端每次收到 ping 请求都会给  session id 续约。只要  session id 不过期，临时节点就一直存在。会话断开后，客户端便不再发送 ping 信号，session id 就会过期。服务端会定时查看 session id 是否过期，如果过期就将与之绑定的临时节点删除。&lt;/p&gt;</description>

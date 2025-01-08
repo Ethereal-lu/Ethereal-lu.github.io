@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>ElasticSearch on lu</title>
-    <link>https://ethereal-lu.github.io/categories/elasticsearch/</link>
+    <link>http://localhost:1313/categories/elasticsearch/</link>
     <description>Recent content in ElasticSearch on lu</description>
     <generator>Hugo -- 0.140.1</generator>
     <language>zh-CN</language>
     <lastBuildDate>Mon, 22 Aug 2022 17:39:41 +0000</lastBuildDate>
-    <atom:link href="https://ethereal-lu.github.io/categories/elasticsearch/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/categories/elasticsearch/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Mysql同步ElasticSearch</title>
-      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/mysql%E5%90%8C%E6%AD%A5elasticsearch/</link>
+      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/mysql%E5%90%8C%E6%AD%A5elasticsearch/</link>
       <pubDate>Mon, 22 Aug 2022 17:39:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/mysql%E5%90%8C%E6%AD%A5elasticsearch/</guid>
+      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/mysql%E5%90%8C%E6%AD%A5elasticsearch/</guid>
       <description>&lt;p&gt;Mysql 同步 ElasticSearch 采用 Canal 监听 binlog，然后将数据发送到 MQ 的 topic 中，ElasticSearch 作为 MQ 的消费者进行处理。&lt;/p&gt;
 &lt;h2 id=&#34;1-canal&#34;&gt;1 Canal&lt;/h2&gt;
 &lt;p&gt;&lt;code&gt;Canal&lt;/code&gt;是阿里开源的一款基于Mysql数据库binlog的增量订阅和消费组件，通过它可以订阅数据库的binlog日志，然后进行一些数据消费，相对于消息队列，通过这种机制可以实现数据的有序化和一致性。&lt;/p&gt;
@@ -40,9 +40,9 @@
     </item>
     <item>
       <title>ElasticSearch集群</title>
-      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E9%9B%86%E7%BE%A4/</link>
+      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E9%9B%86%E7%BE%A4/</link>
       <pubDate>Wed, 10 Aug 2022 21:39:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E9%9B%86%E7%BE%A4/</guid>
+      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E9%9B%86%E7%BE%A4/</guid>
       <description>&lt;h2 id=&#34;1-节点自动发现&#34;&gt;1 节点自动发现&lt;/h2&gt;
 &lt;p&gt;Zen Discovery是Elasticsearch内置的默认发现模块，支持多播模式和单播模式。发现模块用于发现集群中的节点 及选举主节点。多播模式已经不被大多数操作系统所支持，Elasticsearch的发现机制默认为单播模式，以防止节点无意中加入集群。&lt;/p&gt;
 &lt;p&gt;在同一台机器上运行的Elasticsearch节点会自动组成集群，当集群的节点运行在不同的机器上时，需要在每个节点的配置文件&lt;code&gt;elasticsearch.yml&lt;/code&gt;中配置节点列表，即其他节点的IP和端口。集群建立后，每个节点都会每隔一定时间对节点列表中的所有节点发送心跳检测，心跳响应包中包含响应者所认可的master节点。&lt;/p&gt;
@@ -61,12 +61,12 @@
 若在给定的时间内没有收到这些节点回复的消息，则自己成为主节点，并向比自己ID小的节点发送Victory消息。
 节点收到比自己ID小的节点发送的Election消息，则回复Alive消息。&lt;/p&gt;
 &lt;p&gt;假设有三个节点，选举过程如下图：&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;Bully算法&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E9%9B%86%E7%BE%A4/Bully%E7%AE%97%E6%B3%95.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;Bully算法&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E9%9B%86%E7%BE%A4/Bully%E7%AE%97%E6%B3%95.png&#34;&gt;&lt;/p&gt;
 &lt;h2 id=&#34;3-选举流程&#34;&gt;3 选举流程&lt;/h2&gt;
 &lt;h3 id=&#34;31-选举时机&#34;&gt;3.1 选举时机&lt;/h3&gt;
 &lt;p&gt;当一个节点发现包括自己在内的多数派的master-eligible节点认为集群没有master时，就可以发起master选举。&lt;/p&gt;
 &lt;h3 id=&#34;32-选举流程&#34;&gt;3.2 选举流程&lt;/h3&gt;
-&lt;p&gt;&lt;img alt=&#34;选举流程&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E9%9B%86%E7%BE%A4/%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B.jpg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;选举流程&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E9%9B%86%E7%BE%A4/%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B.jpg&#34;&gt;&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;Elasticsearch节点向节点列表中的所有节点发送ping消息&lt;/li&gt;
 &lt;li&gt;对收到的响应包进行过滤，筛选出activeMasters列表和masterCandidates列表。activeMasters列表是其它节点认为的当前集群的Master节点，masterCandidates列表是当前集群有资格成为Master的节点（即配置文件中 &lt;code&gt;node.master:true&lt;/code&gt;的节点）&lt;/li&gt;
@@ -81,9 +81,9 @@
     </item>
     <item>
       <title>ElasticSearch基础</title>
-      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E5%9F%BA%E7%A1%80/</link>
+      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E5%9F%BA%E7%A1%80/</link>
       <pubDate>Sun, 24 Jul 2022 17:39:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E5%9F%BA%E7%A1%80/</guid>
+      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E5%9F%BA%E7%A1%80/</guid>
       <description>&lt;p&gt;Elasticsearch 是一个分布式、RESTful 风格的搜索和数据分析引擎&lt;/p&gt;
 &lt;h2 id=&#34;1-基础&#34;&gt;1 基础&lt;/h2&gt;
 &lt;p&gt;9300 端口为 Elasticsearch 集群间组件的通信端口， 9200 端口为浏览器访问的 http协议 RESTful端口。&lt;/p&gt;
@@ -129,7 +129,7 @@
 &lt;/table&gt;
 &lt;h3 id=&#34;12-数据库结构&#34;&gt;1.2 数据库结构&lt;/h3&gt;
 &lt;p&gt;Elasticsearch 是面向文档型数据库，一条数据在这里就是一个文档。 Elasticsearch 里存储文档数据和关系型数据库 MySQL 存储数据的概念进行一个类比&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;数据库结构类比&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E5%9F%BA%E7%A1%80/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%BB%93%E6%9E%84%E7%B1%BB%E6%AF%94.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;数据库结构类比&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E5%9F%BA%E7%A1%80/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%BB%93%E6%9E%84%E7%B1%BB%E6%AF%94.png&#34;&gt;&lt;/p&gt;
 &lt;p&gt;ES 里的 Index 可以看做一个库，而 Types 相当于表， Documents 则相当于表的行，Fields相当于表中的字段。这里 Types 的概念已经被逐渐弱化， Elasticsearch 6.X 中，一个 index 下已经只能包含一个type， Elasticsearch 7.X 中, Type 的概念已经被删除了。&lt;/p&gt;</description>
     </item>
   </channel>

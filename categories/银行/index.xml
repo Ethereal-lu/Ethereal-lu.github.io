@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>银行 on lu</title>
-    <link>https://ethereal-lu.github.io/categories/%E9%93%B6%E8%A1%8C/</link>
+    <link>http://localhost:1313/categories/%E9%93%B6%E8%A1%8C/</link>
     <description>Recent content in 银行 on lu</description>
     <generator>Hugo -- 0.140.1</generator>
     <language>zh-CN</language>
     <lastBuildDate>Fri, 04 Nov 2022 21:12:41 +0000</lastBuildDate>
-    <atom:link href="https://ethereal-lu.github.io/categories/%E9%93%B6%E8%A1%8C/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/categories/%E9%93%B6%E8%A1%8C/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>常见面试问题</title>
-      <link>https://ethereal-lu.github.io/posts/%E9%93%B6%E8%A1%8C/%E9%9D%A2%E8%AF%95/%E5%B8%B8%E8%A7%81%E9%9D%A2%E8%AF%95%E9%97%AE%E9%A2%98/</link>
+      <link>http://localhost:1313/posts/%E9%93%B6%E8%A1%8C/%E9%9D%A2%E8%AF%95/%E5%B8%B8%E8%A7%81%E9%9D%A2%E8%AF%95%E9%97%AE%E9%A2%98/</link>
       <pubDate>Fri, 04 Nov 2022 21:12:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E9%93%B6%E8%A1%8C/%E9%9D%A2%E8%AF%95/%E5%B8%B8%E8%A7%81%E9%9D%A2%E8%AF%95%E9%97%AE%E9%A2%98/</guid>
+      <guid>http://localhost:1313/posts/%E9%93%B6%E8%A1%8C/%E9%9D%A2%E8%AF%95/%E5%B8%B8%E8%A7%81%E9%9D%A2%E8%AF%95%E9%97%AE%E9%A2%98/</guid>
       <description>&lt;h2 id=&#34;1为什么应聘我们单位&#34;&gt;1、为什么应聘我们单位？&lt;/h2&gt;
 &lt;p&gt;考核维度：是否了解本银行，是否真正想要进入银行工作&lt;/p&gt;
 &lt;p&gt;回答方向：本人专业对口情况、对该银行的了解、与其他银行相比该银行有哪些优势、选择该银行对本人今后发展的正面影响，表达想要进入该银行的强烈意愿&lt;/p&gt;
@@ -33,9 +33,9 @@
     </item>
     <item>
       <title>EPI</title>
-      <link>https://ethereal-lu.github.io/posts/%E9%93%B6%E8%A1%8C/%E7%AC%94%E8%AF%95/epi/</link>
+      <link>http://localhost:1313/posts/%E9%93%B6%E8%A1%8C/%E7%AC%94%E8%AF%95/epi/</link>
       <pubDate>Sun, 02 Oct 2022 00:00:00 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E9%93%B6%E8%A1%8C/%E7%AC%94%E8%AF%95/epi/</guid>
+      <guid>http://localhost:1313/posts/%E9%93%B6%E8%A1%8C/%E7%AC%94%E8%AF%95/epi/</guid>
       <description>&lt;h2 id=&#34;1入门&#34;&gt;1、入门&lt;/h2&gt;
 &lt;h3 id=&#34;1时间型问题&#34;&gt;1、时间型问题&lt;/h3&gt;
 &lt;p&gt;题型特征：题干只有时间，没有效率、效率比&lt;/p&gt;

@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>小碎片知识 on lu</title>
-    <link>https://ethereal-lu.github.io/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/</link>
+    <link>http://localhost:1313/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/</link>
     <description>Recent content in 小碎片知识 on lu</description>
     <generator>Hugo -- 0.140.1</generator>
     <language>zh-CN</language>
     <lastBuildDate>Fri, 08 Apr 2022 23:08:18 +0000</lastBuildDate>
-    <atom:link href="https://ethereal-lu.github.io/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>编码</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/</link>
+      <link>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/</link>
       <pubDate>Fri, 08 Apr 2022 23:08:18 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/</guid>
+      <guid>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/</guid>
       <description>&lt;h2 id=&#34;1为什么使用编码&#34;&gt;1、为什么使用编码&lt;/h2&gt;
 &lt;p&gt;人类的语言并不适合计算机使用，所以就需要发明一种适合计算机的语言，这就是二进制。电脑读不懂人类语言，所以需要将人类语言转换为二进制语言，这就是编码；人类读不懂电脑的二进制语言，所以需要转换为人类语言，这就是解码。&lt;/p&gt;
 &lt;h2 id=&#34;2为什么会乱码&#34;&gt;2、为什么会乱码&lt;/h2&gt;
@@ -36,9 +36,9 @@
     </item>
     <item>
       <title>C# 学习笔记</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/c%23-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</link>
+      <link>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/c%23-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</link>
       <pubDate>Wed, 01 Dec 2021 21:39:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/c%23-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</guid>
+      <guid>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/c%23-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</guid>
       <description>&lt;h2 id=&#34;1基础概念&#34;&gt;1、基础概念&lt;/h2&gt;
 &lt;h3 id=&#34;11net--概念&#34;&gt;1.1、.Net  概念&lt;/h3&gt;
 &lt;p&gt;通常所说的 .Net 包括 .Net 平台和 .Net FrameWork 框架。它们两者的关系即 jvm 和 jre 的关系。&lt;/p&gt;
@@ -69,9 +69,9 @@
     </item>
     <item>
       <title>VMware &#43; Ubuntu18.04设置静态 IP</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%AE%BE%E7%BD%AE%E9%9D%99%E6%80%81-ip/</link>
+      <link>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%AE%BE%E7%BD%AE%E9%9D%99%E6%80%81-ip/</link>
       <pubDate>Sun, 14 Nov 2021 22:08:18 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%AE%BE%E7%BD%AE%E9%9D%99%E6%80%81-ip/</guid>
+      <guid>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%AE%BE%E7%BD%AE%E9%9D%99%E6%80%81-ip/</guid>
       <description>&lt;p&gt;进入VMware 的虚拟网络编辑器；&lt;/p&gt;
 &lt;p&gt;选择 VMnet8，点击 DHCP 设置，记住子网 IP，子网掩码和起始终止 IP，关闭。&lt;/p&gt;
 &lt;p&gt;点击右下方的更改设置，取消勾选 DHCP 分配 IP。再输入刚才记住的子网 IP 和子网掩码。&lt;/p&gt;
@@ -96,9 +96,9 @@
     </item>
     <item>
       <title>feign发起https请求</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/feign%E5%8F%91%E8%B5%B7https%E8%AF%B7%E6%B1%82/</link>
+      <link>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/feign%E5%8F%91%E8%B5%B7https%E8%AF%B7%E6%B1%82/</link>
       <pubDate>Tue, 02 Nov 2021 11:08:18 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/feign%E5%8F%91%E8%B5%B7https%E8%AF%B7%E6%B1%82/</guid>
+      <guid>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/feign%E5%8F%91%E8%B5%B7https%E8%AF%B7%E6%B1%82/</guid>
       <description>&lt;h3 id=&#34;1安装-openssl&#34;&gt;1、安装 openssl&lt;/h3&gt;
 &lt;p&gt;2、bash 进入任意目录执行以下命令&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mkdir certs                              &lt;span style=&#34;color:#75715e&#34;&gt;# 证书目录&lt;/span&gt;
@@ -116,9 +116,9 @@
     </item>
     <item>
       <title>指令重排与内存屏障</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%8C%87%E4%BB%A4%E9%87%8D%E6%8E%92%E4%B8%8E%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C/</link>
+      <link>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%8C%87%E4%BB%A4%E9%87%8D%E6%8E%92%E4%B8%8E%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C/</link>
       <pubDate>Thu, 26 Aug 2021 23:08:18 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%8C%87%E4%BB%A4%E9%87%8D%E6%8E%92%E4%B8%8E%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C/</guid>
+      <guid>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%8C%87%E4%BB%A4%E9%87%8D%E6%8E%92%E4%B8%8E%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C/</guid>
       <description>&lt;h2 id=&#34;指令重排&#34;&gt;指令重排&lt;/h2&gt;
 &lt;p&gt;有两种发生指令重排的情况：一个是编译的时候，由编译原理的知识知道，编译器会对代码进行优化，这一步就涉及到指令重排，当然，编译完成之后的目标代码中指令的顺序就是确定的，不同线程执行该代码的顺序是一样的；另一个就是CPU在执行具体的指令的时候，也会因为计算机当前的状态（比如寄存器的占用情况、ALU的使用情况，cup缓存层的存在等原因）的不同导致指令最终的执行顺序发生变化(实际上，cpu本身并不会对指令进行重排，它本身是按照编译后的顺序来执行指令的，只是由于执行不同的指令需要的时间长短不同，以及缓存层的存在，再加上CPU执行指令的流水线并不是串行化等因素，那么就有可能出现排在靠前位置的指令还没执行完，而排在靠后的指令已经执行完了的情况，这一情况就是所谓的CPU执行指令的乱序）&lt;/p&gt;
 &lt;h4 id=&#34;编译器指令重排&#34;&gt;编译器指令重排&lt;/h4&gt;
@@ -133,9 +133,9 @@
     </item>
     <item>
       <title>lambda 表达式中使用的变量为什么必须是 final</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/lambda/</link>
+      <link>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/lambda/</link>
       <pubDate>Wed, 18 Aug 2021 23:08:18 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/lambda/</guid>
+      <guid>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/lambda/</guid>
       <description>&lt;p&gt;Java 规范中规定：Lambda 表达式中要用到的，但又未在 Lambda 表达式中声明的变量，必须声明为 final 或者是 effectively final，否则就会出现编译错误。&lt;/p&gt;
 &lt;p&gt;有效 final 即不用显示声明为 final，由 JVM 添加 final。&lt;/p&gt;
 &lt;hr&gt;
@@ -168,9 +168,9 @@
     </item>
     <item>
       <title>文件的 MD5 值</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%96%87%E4%BB%B6md5/</link>
+      <link>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%96%87%E4%BB%B6md5/</link>
       <pubDate>Wed, 18 Aug 2021 23:08:18 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%96%87%E4%BB%B6md5/</guid>
+      <guid>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%96%87%E4%BB%B6md5/</guid>
       <description>&lt;h3 id=&#34;是什么&#34;&gt;是什么&lt;/h3&gt;
 &lt;p&gt;文件的 MD5 值不是文件的属性也不是文件存储的内容，而是由分析程序根据文件的信息分析得到的一串独一无二的字符值。当两个文件的 MD5 值相同时说明这两个文件的内容完全一样。任何数据计算得到的 MD5 值长度都相等。&lt;/p&gt;
 &lt;h3 id=&#34;作用&#34;&gt;作用&lt;/h3&gt;
@@ -190,9 +190,9 @@
     </item>
     <item>
       <title>Enum 向注解赋值问题</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/enum%E8%B5%8B%E5%80%BC/</link>
+      <link>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/enum%E8%B5%8B%E5%80%BC/</link>
       <pubDate>Wed, 11 Aug 2021 16:39:41 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/enum%E8%B5%8B%E5%80%BC/</guid>
+      <guid>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/enum%E8%B5%8B%E5%80%BC/</guid>
       <description>&lt;h3 id=&#34;问题&#34;&gt;问题&lt;/h3&gt;
 &lt;p&gt;Enum 如下&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Getter&lt;/span&gt;
@@ -232,9 +232,9 @@
     </item>
     <item>
       <title>c语言数组赋值问题</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%95%B0%E7%BB%84%E8%B5%8B%E5%80%BC/</link>
+      <link>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%95%B0%E7%BB%84%E8%B5%8B%E5%80%BC/</link>
       <pubDate>Sun, 06 Jun 2021 20:57:45 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%95%B0%E7%BB%84%E8%B5%8B%E5%80%BC/</guid>
+      <guid>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%95%B0%E7%BB%84%E8%B5%8B%E5%80%BC/</guid>
       <description>&lt;p&gt;数组正常初始化是没问题的&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; ch[&lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Reindeer&amp;#34;&lt;/span&gt;;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;但是分步赋值，或重新赋值就会报错&lt;/p&gt;
@@ -255,9 +255,9 @@
     </item>
     <item>
       <title>javaScript学习笔记</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/javascript%E7%AC%94%E8%AE%B0/</link>
+      <link>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/javascript%E7%AC%94%E8%AE%B0/</link>
       <pubDate>Mon, 31 May 2021 19:42:15 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/javascript%E7%AC%94%E8%AE%B0/</guid>
+      <guid>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/javascript%E7%AC%94%E8%AE%B0/</guid>
       <description>&lt;p&gt;javaScript 也是万物皆对象。&lt;/p&gt;
 &lt;h2 id=&#34;数据类型&#34;&gt;数据类型&lt;/h2&gt;
 &lt;p&gt;ES6开始，所有的局部变量声明都用let，ES5及之前所有的变量声明都用var。&lt;/p&gt;
@@ -306,9 +306,9 @@
     </item>
     <item>
       <title>MarkDown无法显示本地图片</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/markdown/</link>
+      <link>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/markdown/</link>
       <pubDate>Wed, 21 Apr 2021 21:08:18 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/markdown/</guid>
+      <guid>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/markdown/</guid>
       <description>&lt;ol&gt;
 &lt;li&gt;访问控制的原因：在vscode中按ctrl+shift+p打开命令面板，输入更改预览安全设置，选中允许不安全的本地内容&lt;/li&gt;
 &lt;li&gt;本地图片不允许使用png格式（网络图片却可以），最好换为jpg格式（有可能只适用于本机）&lt;/li&gt;
@@ -317,9 +317,9 @@
     </item>
     <item>
       <title>hexo的常见问题</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/hexo/</link>
+      <link>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/hexo/</link>
       <pubDate>Tue, 20 Apr 2021 20:07:32 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/hexo/</guid>
+      <guid>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/hexo/</guid>
       <description>&lt;h3 id=&#34;hexo的分类问题&#34;&gt;hexo的分类问题&lt;/h3&gt;
 &lt;p&gt;在每个markdown文件的头部，date的下一行添加一行&lt;br&gt;
 &lt;u&gt;categories: 类别1&lt;/u&gt;
@@ -335,9 +335,9 @@
     </item>
     <item>
       <title>Tomcat启动一闪而过以及报java.lang.IllegalStateException: 无输出目录以及乱码</title>
-      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/tomcat/</link>
+      <link>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/tomcat/</link>
       <pubDate>Tue, 20 Apr 2021 17:20:53 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/tomcat/</guid>
+      <guid>http://localhost:1313/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/tomcat/</guid>
       <description>&lt;h4 id=&#34;黑屏一闪而过&#34;&gt;黑屏一闪而过&lt;/h4&gt;
 &lt;p&gt;&lt;strong&gt;问题&lt;/strong&gt;：环境变量中没有JAVA_HOME变量。&lt;br&gt;
 &lt;strong&gt;解决&lt;/strong&gt;：添加该变量，值为jdk的根目录，例如  D:\java\jdk&lt;/p&gt;

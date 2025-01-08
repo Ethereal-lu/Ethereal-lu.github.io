@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Linux on lu</title>
-    <link>https://ethereal-lu.github.io/categories/linux/</link>
+    <link>http://localhost:1313/categories/linux/</link>
     <description>Recent content in Linux on lu</description>
     <generator>Hugo -- 0.140.1</generator>
     <language>zh-CN</language>
     <lastBuildDate>Sat, 07 May 2022 10:42:15 +0000</lastBuildDate>
-    <atom:link href="https://ethereal-lu.github.io/categories/linux/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/categories/linux/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>swap</title>
-      <link>https://ethereal-lu.github.io/posts/linux/swap/</link>
+      <link>http://localhost:1313/posts/linux/swap/</link>
       <pubDate>Sat, 07 May 2022 10:42:15 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/linux/swap/</guid>
+      <guid>http://localhost:1313/posts/linux/swap/</guid>
       <description>&lt;p&gt;swap 分区又叫交换分区，这是一块特殊的硬盘空间，即当实际内存不够用的时候，操作系统会从内存中取出一部分暂时不用的数据，放在交换分区中，从而为当前运行的程序腾出足够的内存空间。&lt;/p&gt;
 &lt;p&gt;操作系统为每个线程都在内存中分配一定的页框，当属于该进程的页框用完时，就会根据页面置换算法将一部分页面替换到交换分区中。&lt;/p&gt;
 &lt;p&gt;磁盘被分为两部分，一部分是存储文件的文件分区，一部分是交换分区。文件分区散列存储，交换分区顺序存储，因此交换分区的读写速度快于文件分区。&lt;/p&gt;
@@ -20,9 +20,9 @@
     </item>
     <item>
       <title>进程状态</title>
-      <link>https://ethereal-lu.github.io/posts/linux/%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/</link>
+      <link>http://localhost:1313/posts/linux/%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/</link>
       <pubDate>Sat, 07 May 2022 10:42:15 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/linux/%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/</guid>
+      <guid>http://localhost:1313/posts/linux/%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/</guid>
       <description>&lt;p&gt;操作系统为每个线程都在内存中分配一定的页框&lt;/p&gt;
 &lt;h3 id=&#34;1可运行状态&#34;&gt;1、可运行状态&lt;/h3&gt;
 &lt;p&gt;处于运行状态或就绪状态&lt;/p&gt;
@@ -49,9 +49,9 @@
     </item>
     <item>
       <title>Linux基础</title>
-      <link>https://ethereal-lu.github.io/posts/linux/linux%E5%9F%BA%E7%A1%80/</link>
+      <link>http://localhost:1313/posts/linux/linux%E5%9F%BA%E7%A1%80/</link>
       <pubDate>Thu, 28 Apr 2022 14:42:15 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/linux/linux%E5%9F%BA%E7%A1%80/</guid>
+      <guid>http://localhost:1313/posts/linux/linux%E5%9F%BA%E7%A1%80/</guid>
       <description>&lt;h3 id=&#34;1binbash&#34;&gt;1、#!/bin/bash&lt;/h3&gt;
 &lt;p&gt;shell 脚本第一行的 &lt;code&gt;#!/bin/bash&lt;/code&gt; 用于指定执行该文件的解释器路径，不写默认是 &lt;code&gt;/bin/bash&lt;/code&gt;；也可以执行时手动指定解释器路径，如：&lt;code&gt;/usr/bin/python3 test_py&lt;/code&gt;，手动指定优先级高于文件内第一行指定的优先级。&lt;/p&gt;
 &lt;h3 id=&#34;2-binsbinusrsbinusrbin&#34;&gt;2、 /bin；/sbin；/usr/sbin；/usr/bin&lt;/h3&gt;
@@ -73,9 +73,9 @@
     </item>
     <item>
       <title>IO 多路复用</title>
-      <link>https://ethereal-lu.github.io/posts/linux/io/</link>
+      <link>http://localhost:1313/posts/linux/io/</link>
       <pubDate>Sat, 09 Apr 2022 19:42:15 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/linux/io/</guid>
+      <guid>http://localhost:1313/posts/linux/io/</guid>
       <description>&lt;h2 id=&#34;1概念&#34;&gt;1、概念&lt;/h2&gt;
 &lt;p&gt;&lt;strong&gt;IO多路复用&lt;/strong&gt;是一种同步IO模型，实现一个线程可以监视多个文件描述符；一旦某个文件描述符就绪，就能够通知应用程序进行相应的读写操作；没有文件描述符就绪时会阻塞应用程序，交出cpu。多路是指网络连接，复用指的是同一个线程。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;&lt;a href=&#34;https://zhuanlan.zhihu.com/p/143847169&#34;&gt;文件描述符&lt;/a&gt;&lt;/strong&gt;：Linux 中一切都可以看作文件，包括普通文件、链接文件、Socket  以及设备驱动等，对其进行相关操作时，都可能会创建对应的文件描述符。文件描述符（file  descriptor）是内核为了高效管理已被打开的文件所创建的索引，用于指代被打开的文件，对文件所有 I/O  操作相关的系统调用都需要通过文件描述符。&lt;/p&gt;
@@ -124,9 +124,9 @@
     </item>
     <item>
       <title>linux创建子进程--fork()方法</title>
-      <link>https://ethereal-lu.github.io/posts/linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork%E6%96%B9%E6%B3%95/</link>
+      <link>http://localhost:1313/posts/linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork%E6%96%B9%E6%B3%95/</link>
       <pubDate>Sat, 09 Apr 2022 19:42:15 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork%E6%96%B9%E6%B3%95/</guid>
+      <guid>http://localhost:1313/posts/linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork%E6%96%B9%E6%B3%95/</guid>
       <description>&lt;h3 id=&#34;1fork的定义&#34;&gt;1、fork()的定义&lt;/h3&gt;
 &lt;p&gt;fork()函数是Unix中派生新进程的唯一方法，子进程和父进程独立运行互不干扰。&lt;/p&gt;
 &lt;p&gt;声明如下：&lt;/p&gt;
@@ -199,9 +199,9 @@
     </item>
     <item>
       <title>ubuntu的ufw与iptables</title>
-      <link>https://ethereal-lu.github.io/posts/linux/ubuntu%E7%9A%84ufw%E4%B8%8Eiptables/</link>
+      <link>http://localhost:1313/posts/linux/ubuntu%E7%9A%84ufw%E4%B8%8Eiptables/</link>
       <pubDate>Thu, 07 Apr 2022 14:42:15 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/posts/linux/ubuntu%E7%9A%84ufw%E4%B8%8Eiptables/</guid>
+      <guid>http://localhost:1313/posts/linux/ubuntu%E7%9A%84ufw%E4%B8%8Eiptables/</guid>
       <description>&lt;h2 id=&#34;1概述&#34;&gt;1、概述&lt;/h2&gt;
 &lt;p&gt;进出计算机的流量通过“端口”进行过滤，“端口”是附加到特定应用程序使用的流量数据包的相对任意名称。&lt;/p&gt;
 &lt;p&gt;按照惯例，某些端口通常用于特定类型的应用程序。例如，端口 80 通常用于不安全的 Web 浏览，端口 443 用于安全的 Web 浏览。&lt;/p&gt;
