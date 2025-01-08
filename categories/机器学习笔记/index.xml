@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>机器学习笔记 on lu</title>
-    <link>http://localhost:1313/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</link>
+    <link>https://ethereal-lu.github.io/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</link>
     <description>Recent content in 机器学习笔记 on lu</description>
     <generator>Hugo -- 0.140.1</generator>
     <language>zh-CN</language>
     <lastBuildDate>Fri, 02 Jul 2021 17:45:10 +0000</lastBuildDate>
-    <atom:link href="http://localhost:1313/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://ethereal-lu.github.io/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>数据预处理</title>
-      <link>http://localhost:1313/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/%E6%95%B0%E6%8D%AE%E9%A2%84%E5%A4%84%E7%90%86/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/%E6%95%B0%E6%8D%AE%E9%A2%84%E5%A4%84%E7%90%86/</link>
       <pubDate>Fri, 02 Jul 2021 17:45:10 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/%E6%95%B0%E6%8D%AE%E9%A2%84%E5%A4%84%E7%90%86/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/%E6%95%B0%E6%8D%AE%E9%A2%84%E5%A4%84%E7%90%86/</guid>
       <description>&lt;h2 id=&#34;无量纲化&#34;&gt;无量纲化&lt;/h2&gt;
 &lt;h4 id=&#34;归一化normalization&#34;&gt;归一化(Normalization)&lt;/h4&gt;
 &lt;blockquote&gt;
@@ -52,30 +52,30 @@
     </item>
     <item>
       <title>Matplotlib笔记</title>
-      <link>http://localhost:1313/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/matplotlib%E5%AD%A6%E4%B9%A0/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/matplotlib%E5%AD%A6%E4%B9%A0/</link>
       <pubDate>Thu, 01 Jul 2021 17:45:10 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/matplotlib%E5%AD%A6%E4%B9%A0/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/matplotlib%E5%AD%A6%E4%B9%A0/</guid>
       <description>&lt;p&gt;&lt;a href=&#34;plt_quickStart.html&#34;&gt;Matplotlib笔记&lt;/a&gt;&lt;/p&gt;</description>
     </item>
     <item>
       <title>Numpy笔记</title>
-      <link>http://localhost:1313/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/numpy%E5%AD%A6%E4%B9%A0/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/numpy%E5%AD%A6%E4%B9%A0/</link>
       <pubDate>Thu, 01 Jul 2021 17:45:10 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/numpy%E5%AD%A6%E4%B9%A0/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/numpy%E5%AD%A6%E4%B9%A0/</guid>
       <description>&lt;p&gt;&lt;a href=&#34;numpy_QuickStart.html&#34;&gt;Numpy笔记&lt;/a&gt;&lt;/p&gt;</description>
     </item>
     <item>
       <title>Pandas笔记</title>
-      <link>http://localhost:1313/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/pandas%E5%AD%A6%E4%B9%A0/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/pandas%E5%AD%A6%E4%B9%A0/</link>
       <pubDate>Thu, 01 Jul 2021 17:45:10 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/pandas%E5%AD%A6%E4%B9%A0/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/pandas%E5%AD%A6%E4%B9%A0/</guid>
       <description>&lt;p&gt;&lt;a href=&#34;Pandas_quickStart.html&#34;&gt;Pandas笔记&lt;/a&gt;&lt;/p&gt;</description>
     </item>
     <item>
       <title>PyTorch笔记</title>
-      <link>http://localhost:1313/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/pytorch%E5%AD%A6%E4%B9%A0/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/pytorch%E5%AD%A6%E4%B9%A0/</link>
       <pubDate>Thu, 01 Jul 2021 17:45:10 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/pytorch%E5%AD%A6%E4%B9%A0/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/pytorch%E5%AD%A6%E4%B9%A0/</guid>
       <description>&lt;p&gt;torch的tensor默认为FloatTensor类型，可以使用&lt;code&gt;torch.set_default_tensor_type(torch.DoubleTensor)&lt;/code&gt;设置默认类型为DoubleTensor，pytorch和numpy的张量在内存中都是默认按行优先顺序排列。&lt;/p&gt;
 &lt;hr&gt;
 &lt;h2 id=&#34;基础&#34;&gt;基础&lt;/h2&gt;

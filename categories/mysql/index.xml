@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>MySQL on lu</title>
-    <link>http://localhost:1313/categories/mysql/</link>
+    <link>https://ethereal-lu.github.io/categories/mysql/</link>
     <description>Recent content in MySQL on lu</description>
     <generator>Hugo -- 0.140.1</generator>
     <language>zh-CN</language>
     <lastBuildDate>Sat, 24 Sep 2022 23:39:41 +0000</lastBuildDate>
-    <atom:link href="http://localhost:1313/categories/mysql/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://ethereal-lu.github.io/categories/mysql/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>慢查询优化</title>
-      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E6%85%A2%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E6%85%A2%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96/</link>
       <pubDate>Sat, 24 Sep 2022 23:39:41 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E6%85%A2%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E6%85%A2%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96/</guid>
       <description>&lt;h2 id=&#34;1开启慢查询&#34;&gt;1、开启慢查询&lt;/h2&gt;
 &lt;p&gt;慢查询的时间定义：可设置为超过 1 秒就是慢查询（MySql 默认是 10 秒）&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mysql&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;show&lt;/span&gt; variables &lt;span style=&#34;color:#66d9ef&#34;&gt;like&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;long_query_time&amp;#39;&lt;/span&gt;;
@@ -91,9 +91,9 @@
     </item>
     <item>
       <title>MySQL默认数据库</title>
-      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E9%BB%98%E8%AE%A4%E6%95%B0%E6%8D%AE%E5%BA%93/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E9%BB%98%E8%AE%A4%E6%95%B0%E6%8D%AE%E5%BA%93/</link>
       <pubDate>Tue, 17 May 2022 17:39:41 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E9%BB%98%E8%AE%A4%E6%95%B0%E6%8D%AE%E5%BA%93/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E9%BB%98%E8%AE%A4%E6%95%B0%E6%8D%AE%E5%BA%93/</guid>
       <description>&lt;h2 id=&#34;mysql系统默认数据库&#34;&gt;Mysql系统默认数据库&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;information_schema&lt;/li&gt;
@@ -122,9 +122,9 @@
     </item>
     <item>
       <title>分库分表</title>
-      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/</link>
       <pubDate>Fri, 06 May 2022 17:39:41 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/</guid>
       <description>&lt;p&gt;当一张表的字段数过多或数据量过大时，即使添加从库、优化索引，做很多操作时性能仍下降严重。此时就要考虑对其进行切分了，切分的目的就在于减少数据库的负担，缩短查询时间。&lt;/p&gt;
 &lt;p&gt;数据库分布式核心内容就是数据切分（Sharding），以及切分后对数据的定位、整合。数据切分就是将数据分散存储到多个数据库中，使得单一数据库中的数据量变小，通过扩充主机的数量缓解单一数据库的性能问题，从而达到提升数据库操作性能的目的。&lt;/p&gt;
 &lt;p&gt;数据切分根据其切分类型，可以分为两种方式：垂直（纵向）切分和水平（横向）切分&lt;/p&gt;
@@ -148,11 +148,11 @@
     </item>
     <item>
       <title>MySQL数据类型</title>
-      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/</link>
       <pubDate>Wed, 04 May 2022 12:39:41 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/</guid>
       <description>&lt;h3 id=&#34;1整型&#34;&gt;1、整型&lt;/h3&gt;
-&lt;p&gt;&lt;img alt=&#34;int类型&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/int%E7%B1%BB%E5%9E%8B.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;int类型&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/int%E7%B1%BB%E5%9E%8B.png&#34;&gt;&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;int(11)&lt;/strong&gt;：括号中的 11 表示&lt;em&gt;字符的显示宽度&lt;/em&gt;，它不影响存储，即它所能存储的数据还是在上图 int 的范围内。&lt;/p&gt;
 &lt;p&gt;那它什么时候起作用：&lt;/p&gt;
 &lt;p&gt;只有 int 字段类型设置为无符号且填充零（UNSIGNED  ZEROFILL）时，当数值位数未达到设置的显示宽度时，会在数值前面补充零直到满足设定的显示宽度，为什么会有无符号的限制呢，是因为  ZEROFILL 属性会隐式地将数值转为无符号型，因此不能存储负的数值。&lt;/p&gt;
@@ -193,9 +193,9 @@
     </item>
     <item>
       <title>MySQL主从复制</title>
-      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</link>
       <pubDate>Sun, 27 Mar 2022 21:39:41 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</guid>
       <description>&lt;h3 id=&#34;复制原理&#34;&gt;复制原理&lt;/h3&gt;
 &lt;p&gt;主从复制的原理其实就是把主服务器上的 binlog 日志复制到从服务器上执行一遍，这样从服务器上的数据就和主服务器上的数据相同了。&lt;/p&gt;
 &lt;h3 id=&#34;复制过程&#34;&gt;复制过程&lt;/h3&gt;
@@ -234,9 +234,9 @@
     </item>
     <item>
       <title>InnoDB锁</title>
-      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/innodb%E9%94%81/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/innodb%E9%94%81/</link>
       <pubDate>Sun, 27 Mar 2022 17:39:41 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/innodb%E9%94%81/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/innodb%E9%94%81/</guid>
       <description>&lt;p&gt;锁机制用于管理对共享资源的并发访问。&lt;/p&gt;
 &lt;h2 id=&#34;1锁粒度&#34;&gt;1、锁粒度&lt;/h2&gt;
 &lt;ul&gt;
@@ -252,7 +252,7 @@
 &lt;/ul&gt;
 &lt;h2 id=&#34;2行锁详解&#34;&gt;2、行锁详解&lt;/h2&gt;
 &lt;p&gt;InnoDB默认使用行锁，实现了两种标准的行锁——共享锁与排他锁；&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;共享锁与排他锁&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/innodb%E9%94%81/%E5%85%B1%E4%BA%AB%E9%94%81%E4%B8%8E%E6%8E%92%E4%BB%96%E9%94%81.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;共享锁与排他锁&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/innodb%E9%94%81/%E5%85%B1%E4%BA%AB%E9%94%81%E4%B8%8E%E6%8E%92%E4%BB%96%E9%94%81.png&#34;&gt;&lt;/p&gt;
 &lt;p&gt;1、除了显式加锁的情况，其他情况下的加锁与解锁都无需人工干预。
 2、InnoDB所有的行锁算法都是基于索引实现的，锁定的也都是索引或索引区间&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;lock in share mode&lt;/strong&gt;与&lt;strong&gt;for update&lt;/strong&gt;的区别：&lt;/p&gt;
@@ -267,10 +267,10 @@
 &lt;h2 id=&#34;4mvcc&#34;&gt;4、MVCC&lt;/h2&gt;
 &lt;p&gt;MVCC『多版本并发控制』，与之对应的是『基于锁的并发控制』；&lt;/p&gt;
 &lt;p&gt;MVCC的最大好处：读不加任何锁，读写不冲突，对于读操作多于写操作的应用，极大的增加了系统的并发性能；&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;mvcc&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/innodb%E9%94%81/mvcc.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;mvcc&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/innodb%E9%94%81/mvcc.png&#34;&gt;&lt;/p&gt;
 &lt;h2 id=&#34;5锁算法&#34;&gt;5、锁算法&lt;/h2&gt;
 &lt;p&gt;InnoDB主要实现了三种行锁算法：&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;三种行锁算法&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/innodb%E9%94%81/%E4%B8%89%E7%A7%8D%E8%A1%8C%E9%94%81%E7%AE%97%E6%B3%95.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;三种行锁算法&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/innodb%E9%94%81/%E4%B8%89%E7%A7%8D%E8%A1%8C%E9%94%81%E7%AE%97%E6%B3%95.png&#34;&gt;&lt;/p&gt;
 &lt;h3 id=&#34;51记录锁&#34;&gt;5.1、记录锁&lt;/h3&gt;
 &lt;p&gt;&lt;code&gt;记录锁(Record Locks)&lt;/code&gt;也称为行锁，顾名思义，表示对某一行记录加锁。&lt;/p&gt;
 &lt;h3 id=&#34;52间隙锁&#34;&gt;5.2、间隙锁&lt;/h3&gt;
@@ -283,9 +283,9 @@
     </item>
     <item>
       <title>MySQL小知识</title>
-      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E5%B0%8F%E7%9F%A5%E8%AF%86/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E5%B0%8F%E7%9F%A5%E8%AF%86/</link>
       <pubDate>Sun, 27 Mar 2022 17:39:41 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E5%B0%8F%E7%9F%A5%E8%AF%86/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E5%B0%8F%E7%9F%A5%E8%AF%86/</guid>
       <description>&lt;h3 id=&#34;1or和union的区别&#34;&gt;1、or和union的区别&lt;/h3&gt;
 &lt;p&gt;对于单列来说，用or是没有任何问题的，但是or涉及到多个列的时候，每次select只能选取一个index，另一列需要进行table-scan，即全部扫描一遍，但是使用union就可以解决这个问题，分别使用各自列的index进行查询。 但是这里还会有一个问题就是，UNION会对结果进行排序去重，可能会降低一些performance。&lt;/p&gt;
 &lt;h3 id=&#34;2having和where的区别&#34;&gt;2、having和where的区别&lt;/h3&gt;
@@ -298,9 +298,9 @@
     </item>
     <item>
       <title>MySQL索引</title>
-      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E7%B4%A2%E5%BC%95/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E7%B4%A2%E5%BC%95/</link>
       <pubDate>Sun, 27 Mar 2022 17:39:41 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E7%B4%A2%E5%BC%95/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E7%B4%A2%E5%BC%95/</guid>
       <description>&lt;p&gt;索引对于InnoDB（对索引支持行级锁）非常重要，因为它可以让查询锁更少的元组。&lt;/p&gt;
 &lt;h2 id=&#34;1索引类型&#34;&gt;1、索引类型&lt;/h2&gt;
 &lt;ul&gt;
@@ -330,9 +330,9 @@
     </item>
     <item>
       <title>事务实现原理</title>
-      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
       <pubDate>Sun, 27 Mar 2022 17:39:41 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid>
       <description>&lt;p&gt;MySQL 默认开启事务自动提交模式，即除非显式的开启事务（BEGIN 或 START TRANSACTION），否则每条 SOL 语句都会被当做一个单独的事务自动执行。&lt;/p&gt;
 &lt;p&gt;在 MySQL 中，可以使用 SET autocommit 语句设置事务的自动提交模式，语法格式如下：&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; autocommit &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;OFF&lt;/span&gt;;
@@ -368,9 +368,9 @@
     </item>
     <item>
       <title>MyISAM与InnoDB 的区别</title>
-      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/myisam%E4%B8%8Einnodb%E7%9A%84%E5%8C%BA%E5%88%AB/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/myisam%E4%B8%8Einnodb%E7%9A%84%E5%8C%BA%E5%88%AB/</link>
       <pubDate>Sat, 22 May 2021 17:39:41 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/myisam%E4%B8%8Einnodb%E7%9A%84%E5%8C%BA%E5%88%AB/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/myisam%E4%B8%8Einnodb%E7%9A%84%E5%8C%BA%E5%88%AB/</guid>
       <description>&lt;ol&gt;
 &lt;li&gt;
 &lt;p&gt;InnoDB支持事务，MyISAM不支持，对于InnoDB每一条SQL语言都默认封装成事务&lt;/p&gt;
@@ -382,7 +382,7 @@
 &lt;p&gt;InnoDB是聚集索引，InnoDB的B+树主键索引的叶子节点就是数据文件，辅助索引的叶子节点是主键的值；而MyISAM的B+树主键索引和辅助索引的叶子节点都是数据文件的地址指针。&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;&lt;img alt=&#34;MyISAM与InnoDB的索引&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/myisam%E4%B8%8Einnodb%E7%9A%84%E5%8C%BA%E5%88%AB/MyISAM%E4%B8%8EInnoDB%E7%9A%84%E7%B4%A2%E5%BC%95.jpg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;MyISAM与InnoDB的索引&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/myisam%E4%B8%8Einnodb%E7%9A%84%E5%8C%BA%E5%88%AB/MyISAM%E4%B8%8EInnoDB%E7%9A%84%E7%B4%A2%E5%BC%95.jpg&#34;&gt;&lt;/p&gt;
 &lt;ol start=&#34;4&#34;&gt;
 &lt;li&gt;
 &lt;p&gt;InnoDB不保存表的具体行数，而MyISAM用一个变量保存了整个表的行数。（因为事务）&lt;/p&gt;
@@ -397,9 +397,9 @@
     </item>
     <item>
       <title>MySQL概述</title>
-      <link>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E7%AC%94%E8%AE%B0/</link>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E7%AC%94%E8%AE%B0/</link>
       <pubDate>Sat, 22 May 2021 17:39:41 +0000</pubDate>
-      <guid>http://localhost:1313/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E7%AC%94%E8%AE%B0/</guid>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E7%AC%94%E8%AE%B0/</guid>
       <description>&lt;h3 id=&#34;基本命令&#34;&gt;基本命令&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;show columns from user&lt;/code&gt; == &lt;code&gt;describe user&lt;/code&gt; == &lt;code&gt;desc user&lt;/code&gt;查询user表的结构&lt;/li&gt;
