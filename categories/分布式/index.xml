@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>分布式 on lu</title>
+    <link>https://ethereal-lu.github.io/categories/%E5%88%86%E5%B8%83%E5%BC%8F/</link>
+    <description>Recent content in 分布式 on lu</description>
+    <generator>Hugo -- 0.140.1</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Wed, 17 Aug 2022 23:42:15 +0000</lastBuildDate>
+    <atom:link href="https://ethereal-lu.github.io/categories/%E5%88%86%E5%B8%83%E5%BC%8F/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Dubbo</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/</link>
+      <pubDate>Wed, 17 Aug 2022 23:42:15 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/</guid>
+      <description>&lt;h2 id=&#34;1-rpc&#34;&gt;1 RPC&lt;/h2&gt;
+&lt;p&gt;RPC 即进程A中的方法A通过网络调用进程B中的方法B，是一种进程间通信方式。&lt;/p&gt;
+&lt;p&gt;为了实现RPC远程调用，请求时在网络中传输的数据应该包括&lt;code&gt;类名&lt;/code&gt;、&lt;code&gt;方法名&lt;/code&gt;、&lt;code&gt;参数类型列表&lt;/code&gt;、&lt;code&gt;参数值列表&lt;/code&gt;，前三项可以唯一确定一个方法。除了上述4项，企业内部使用时还可以自定义需要传输的数据以便于业务开发。确定好要传什么数据后还需要确定怎么传数据，如 &lt;code&gt;Tomcat + HttpClient&lt;/code&gt; 、 &lt;code&gt;Netty&lt;/code&gt; 、&lt;code&gt;Socket&lt;/code&gt;等都可以选择。&lt;/p&gt;
+&lt;h2 id=&#34;2-dubbo-优势&#34;&gt;2 Dubbo 优势&lt;/h2&gt;
+&lt;p&gt;分布式系统中，Dubbo 相较于 HTTP 的优势：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;负载均衡&lt;/li&gt;
+&lt;li&gt;服务调用链路生成：服务间依赖关系错踪复杂，Dubbo 可以解决服务之间互相是如何调用的。&lt;/li&gt;
+&lt;li&gt;资源调度：基于访问压力实时管理集群容量，提高集群利用率。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-dubbo-架构&#34;&gt;3 Dubbo 架构&lt;/h2&gt;
+&lt;p&gt;Dubbo是一款高性能、轻量级的开源Java RPC框架，它提供了三大核心能力：面向接口的远程方法调用，智能容错和负载均衡，以及服务自动注册和发现。&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;Dubbo架构&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/Dubbo%E6%9E%B6%E6%9E%84.png&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Monitor： 统计服务的调用次数和调用时间的监控中心&lt;/li&gt;
+&lt;li&gt;Container： 运行服务的容器&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;调用关系说明：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;服务容器负责启动，加载，运行服务提供者。&lt;/li&gt;
+&lt;li&gt;服务提供者在启动时，向注册中心注册自己提供的服务。&lt;/li&gt;
+&lt;li&gt;服务消费者在启动时，向注册中心订阅自己所需的服务。&lt;/li&gt;
+&lt;li&gt;注册中心返回服务提供者地址列表给消费者，如果有变更，注册中心将基于长连接推送变更数据给消费者。&lt;/li&gt;
+&lt;li&gt;服务消费者，从提供者地址列表中，基于软负载均衡算法，选一台提供者进行调用，如果调用失败，再选另一台调用。&lt;/li&gt;
+&lt;li&gt;服务消费者和提供者，在内存中累计调用次数和调用时间，定时每分钟发送一次统计数据到监控中心。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;重要知识点总结：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;注册中心负责服务地址的注册与查找，相当于目录服务，服务提供者和消费者只在启动时与注册中心交互，注册中心不转发请求，压力较小&lt;/li&gt;
+&lt;li&gt;监控中心负责统计各服务调用次数，调用时间等，统计先在内存汇总后每分钟一次发送到监控中心服务器，并以报表展示&lt;/li&gt;
+&lt;li&gt;注册中心，服务提供者，服务消费者三者之间均为长连接，监控中心除外&lt;/li&gt;
+&lt;li&gt;注册中心通过长连接感知服务提供者的存在，服务提供者宕机，注册中心将立即推送事件通知消费者&lt;/li&gt;
+&lt;li&gt;注册中心和监控中心全部宕机，不影响已运行的提供者和消费者，消费者在本地缓存了提供者列表&lt;/li&gt;
+&lt;li&gt;注册中心和监控中心都是可选的，服务消费者可以直连服务提供者&lt;/li&gt;
+&lt;li&gt;服务提供者无状态，任意一台宕掉后，不影响使用&lt;/li&gt;
+&lt;li&gt;服务提供者全部宕掉后，服务消费者应用将无法使用，并无限次重连等待服务提供者恢复&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;4-核心要点&#34;&gt;4 核心要点&lt;/h2&gt;
+&lt;p&gt;Dubbo作为一个分布式服务框架，主要具有如下几个核心的要点：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;服务定义&lt;/strong&gt;：服务提供方实现服务，而服务消费方调用服务。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;服务注册&lt;/strong&gt;：随着系统扩展，提供者需要暴露的服务和消费者需要调用的服务都不断膨胀，而一个服务既可以是提供者又可以是调用者，会使服务任务繁重，且管理混乱。将服务管理抽离进行统一管理可以进行优化。Dubbo提供多种注册中心以选择，包括Redis和Zookeeper。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;服务监控&lt;/strong&gt;：无论是服务提供方，还是服务消费方，他们都需要对服务调用的实际状态进行有效的监控，从而改进服务质量。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;远程通信与信息交换&lt;/strong&gt;：支持Triple 协议和 Netty 框架&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;服务调用&lt;/strong&gt;：下图展示 RPC 层的服务调用&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img alt=&#34;服务调用&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8.jpg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;详细调用流程如下图&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;详细调用&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/%E8%AF%A6%E7%BB%86%E8%B0%83%E7%94%A8.jpg&#34;&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;服务提供者启动，开启Netty服务，创建Zookeeper客户端，向注册中心注册服务。&lt;/li&gt;
+&lt;li&gt;服务消费者启动，从Zookeeper注册中心获取服务提供者列表，与服务提供者通过Netty建立长连接。&lt;/li&gt;
+&lt;li&gt;服务消费者通过接口开始远程调用服务，ProxyFactory初始化Proxy对象，Proxy创建动态代理对象。&lt;/li&gt;
+&lt;li&gt;动态代理对象调用invoke方法，层层包装生成一个Invoker对象，该对象包含了代理对象。&lt;/li&gt;
+&lt;li&gt;Invoker通过负载均衡选择一个合适的服务提供者，再加入各种过滤器，协议层包装成一个新的DubboInvoker对象。&lt;/li&gt;
+&lt;li&gt;交换层将DubboInvoker对象包装成一个Reuqest对象，该对象序列化后通过NettyClient传输到服务提供者的NettyServer端。&lt;/li&gt;
+&lt;li&gt;到了服务提供者这边，再通过反序列化、协议解密等操作生成一个DubboExporter对象,再层层传递处理,会生成一个服务提供端的Invoker对象.&lt;/li&gt;
+&lt;li&gt;这个Invoker对象会调用本地服务，获得结果再通过层层回调返回到服务消费者，服务消费者拿到结果后，再解析获得最终结果。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;5-负载均衡&#34;&gt;5 负载均衡&lt;/h2&gt;
+&lt;p&gt;Dubbo 提供了多种均衡策略，默认为 &lt;code&gt;random&lt;/code&gt; 随机负载均衡。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Raft算法</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/raft%E7%AE%97%E6%B3%95/</link>
+      <pubDate>Thu, 11 Aug 2022 13:42:15 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/raft%E7%AE%97%E6%B3%95/</guid>
+      <description>&lt;h2 id=&#34;一-概述&#34;&gt;一、 概述&lt;/h2&gt;
+&lt;p&gt;分布式一致性算法Raft将一致性分解为多个子问题：Leader选举、日志同步、安全性、日志压缩、成员变更等。&lt;/p&gt;
+&lt;p&gt;Raft将系统中的角色分为领导者（Leader）、跟从者（Follower）和候选人（Candidate）：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Leader&lt;/strong&gt;：接受客户端请求，并向Follower同步请求日志，当日志同步到大多数节点上后告诉Follower提交日志。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Follower&lt;/strong&gt;：接受并持久化Leader同步的日志，在Leader告之日志可以提交之后，提交日志。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Candidate&lt;/strong&gt;：Leader选举过程中的临时角色。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Raft要求系统在任意时刻最多只有一个Leader，正常工作期间只有Leader和Followers。&lt;/p&gt;
+&lt;p&gt;只有 Leader 节点能够处理客户端的一切请求（如果客户端的请求发到了 Follower，Follower 将会把请求重定向到 Leader）。Raft算法将时间分为一个个的任期（term），每一个term的开始都是Leader选举。在成功选举Leader之后，Leader会在整个term内管理整个集群。如果Leader选举失败，该term就会因为没有Leader而结束。&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;term&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/raft%E7%AE%97%E6%B3%95/term.png&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;二leader选举&#34;&gt;二、Leader选举&lt;/h2&gt;
+&lt;p&gt;Raft 使用心跳（heartbeat）触发Leader选举。Leader向所有Followers周期性发送heartbeat。如果Follower在超时时间内没有收到Leader的heartbeat（也许此时还没有选出Leader，大家都在等；也许Leader挂了；也许只是Leader与该Follower之间网络故障），就会随机睡眠一段时间后发起Leader选举。&lt;/p&gt;
+&lt;p&gt;当服务器启动时，初始化为Follower，此时可能是集群刚启动，那么所有节点全部等待leader的心跳，当某个或某些节点超时后变为Candidate发起选举；也可能是新节点加入集群，那它会直接收到leader的心跳。&lt;/p&gt;
+&lt;p&gt;不论外部环境如何，只要一个节点在超时时间内没有收到Leader的心跳，那它就会发起选举。也即选举时只有一个或几个节点会成为Candidate，并不是所有节点都成为Candidate。&lt;/p&gt;
+&lt;p&gt;Follower按如下规则投票：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;每个 term 只能投一票&lt;/li&gt;
+&lt;li&gt;只能给 term 和 logindex 不低于自己的 Candidate 投票&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;注意：只有Candidate会给自己投票，Follower不能给自己投票，Follower按上方规则给自己收到的第一个投票请求投票。醒的最早的Candidate最有可能成为Leader。&lt;/p&gt;
+&lt;p&gt;Follower将其当前term加一然后转换为Candidate。它首先给自己投票并且给集群中的其他服务器发送 RequestVote RPC。结果有以下三种情况：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;赢得了多数的选票，成功选举为Leader；&lt;/li&gt;
+&lt;li&gt;收到了Leader的消息，表示有其它服务器已经抢先当选了Leader；&lt;/li&gt;
+&lt;li&gt;没有服务器赢得多数的选票，Leader选举失败，等待选举时间超时后发起下一次选举。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;选举出Leader后，Leader通过定期向所有Followers发送心跳信息维持其统治。若Follower一段时间未收到Leader的心跳则认为Leader可能已经挂了，再次发起Leader选举过程。&lt;/p&gt;
+&lt;p&gt;Raft保证选举出的Leader上一定具有最新的已提交的日志，这一点将在四、安全性中说明。&lt;/p&gt;
+&lt;h2 id=&#34;三日志同步&#34;&gt;三、日志同步&lt;/h2&gt;
+&lt;p&gt;Leader选出后，就开始接收客户端的请求。Leader把请求作为日志条目（Log entries）加入到它的日志中，然后并行的向其他服务器发起 AppendEntries RPC 复制日志条目。当这条日志被复制到大多数服务器上，Leader将这条日志应用到它的状态机并向客户端返回执行结果。&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;日志同步&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/raft%E7%AE%97%E6%B3%95/%E6%97%A5%E5%BF%97%E5%90%8C%E6%AD%A5.jpeg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;某些Followers可能没有成功的复制日志，Leader会无限的重试 AppendEntries RPC直到所有的Followers最终存储了所有的日志条目。&lt;/p&gt;
+&lt;p&gt;日志由有序编号（log index，索引）的日志条目组成。每个日志条目包含它被创建时的任期号（term），和用于状态机执行的命令。如果一个日志条目被复制到大多数服务器上，就被认为可以提交（commit）了。log index 与 term 无关，Leader 每生成一条日志条目都会消耗一个 log index ，log index 只会一直递增。&lt;/p&gt;
+&lt;p&gt;Raft日志同步保证如下两点：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;如果不同日志中的两个条目有着相同的索引和任期号，则它们所存储的命令是相同的。&lt;/li&gt;
+&lt;li&gt;如果不同日志中的两个条目有着相同的索引和任期号，则它们之前的所有条目都是完全一样的。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;第一条特性源于Leader在一个term内在给定的一个log index最多创建一条日志条目，同时该条目在日志中的位置也从来不会改变。&lt;/p&gt;
+&lt;p&gt;第二条特性源于 AppendEntries 的一个简单的一致性检查。当发送一个 AppendEntries RPC 时，Leader会把新日志条目紧接着之前的条目的log index和term都包含在里面。如果Follower没有在它的日志中找到log index和term都相同的日志，它就会拒绝新的日志条目。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>分布式基础</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/</link>
+      <pubDate>Thu, 02 Jun 2022 19:42:15 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/</guid>
+      <description>&lt;h2 id=&#34;1分布式session&#34;&gt;1、分布式Session&lt;/h2&gt;
+&lt;p&gt;解决分布式Session有两种方案：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;将所有Session存放在Redis服务器中，所有请求过来后先到Redis服务器中获取Session&lt;/li&gt;
+&lt;li&gt;token：用户首次登录后，将用户信息加密为token下发给客户端，之后每次请求都携带该token，token验证通过即承认其合法身份。多个服务器都使用相同的密钥和算法对 token 进行验证。&lt;/li&gt;
+&lt;/ol&gt;</description>
+    </item>
+    <item>
+      <title>分布式锁</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</link>
+      <pubDate>Mon, 30 May 2022 10:42:15 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</guid>
+      <description>&lt;h2 id=&#34;1前言&#34;&gt;1、前言&lt;/h2&gt;
+&lt;p&gt;单纯的Java Api并不能提供分布式锁的能力。目前比较常用的分布式锁的实现方案有如下三种：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;基于数据库实现分布式锁&lt;/li&gt;
+&lt;li&gt;基于缓存实现分布式锁&lt;/li&gt;
+&lt;li&gt;基于Zookeeper实现分布式锁&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;分布式锁应该实现如下功能：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;互斥性：在任何时刻，对于同一条数据，只有一台应用可以获取到分布式锁；&lt;/li&gt;
+&lt;li&gt;高可用性：在分布式场景下，一小部分服务器宕机不影响正常使用，这种情况就需要将提供分布式锁的服务以集群的方式部署；&lt;/li&gt;
+&lt;li&gt;防止锁超时：如果客户端没有主动释放锁，服务器会在一段时间之后自动释放锁，防止客户端宕机或者网络不可达时产生死锁；&lt;/li&gt;
+&lt;li&gt;独占性：加锁解锁必须由同一台服务器进行，也就是锁的持有者才可以释放锁，不能出现你加的锁，别人给你解锁了；&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2基于数据库实现分布式锁&#34;&gt;2、基于数据库实现分布式锁&lt;/h2&gt;
+&lt;h3 id=&#34;21实现方式&#34;&gt;2.1、实现方式&lt;/h3&gt;
+&lt;p&gt;在数据库中存储方法名，将数据库的自动提交关闭，然后在查询语句后面增加&lt;code&gt;for update&lt;/code&gt;来查询需要上锁的方法名，数据库会在查询过程中给数据库表增加排他锁。值得注意的是：只有通过索引进行检索的时候才会使用行级锁，所以应该给方法名加上唯一锁，同时为了避免重载方法也被锁住，应该在方法名上将参数类型也加上。等临界资源使用完毕后再手动提交事务。&lt;/p&gt;
+&lt;h3 id=&#34;22缺点&#34;&gt;2.2、缺点&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;数据在磁盘中，查询开销很大&lt;/li&gt;
+&lt;li&gt;事务提交之前客户端失联，会导致死锁&lt;/li&gt;
+&lt;li&gt;如果表中数据量不大，查询优化器可能会通过全表扫描执行，此时会使用表锁，而非行锁。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3基于缓存实现分布式锁&#34;&gt;3、基于缓存实现分布式锁&lt;/h2&gt;
+&lt;h3 id=&#34;31实现方式&#34;&gt;3.1、实现方式&lt;/h3&gt;
+&lt;p&gt;以 redis 为例来说明基于缓存实现分布式锁。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Redis&lt;/code&gt;分布式锁主要是通过在 set 命令中添加 nx 和 ex 这两个参数实现的。&lt;/p&gt;
+&lt;p&gt;核心思想就是每次想要获取锁的时候，就对一个固定的 key 值以 &lt;code&gt;SET  NX  EX&lt;/code&gt;的方式存放，如果成功，就说明获取锁成功，否则以自旋的方式持续获取锁，直到超时获取失败。解锁通过 LUA 代码实现，LUA是原子性的。&lt;/p&gt;
+&lt;h3 id=&#34;32优缺点&#34;&gt;3.2、优缺点&lt;/h3&gt;
+&lt;p&gt;优点：性能好，redis 是 NoSQL，数据在内存中，支持高性能，高并发。&lt;/p&gt;
+&lt;p&gt;缺点：过期时间需要手动提前设置，若设置太长当线程阻塞后需要较长时间才锁过期，会影响性能，若设置太短会导致提前释放产生并发问题。所以可靠性稍低。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://ethereal-lu.github.io/2022/04/12/%E6%95%B0%E6%8D%AE%E5%BA%93/Redis/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/&#34;&gt;关于 redis 实现分布式锁更多内容查看 redis 目录中的分布式锁篇章&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4基于zookeeper实现分布式锁&#34;&gt;4、基于Zookeeper实现分布式锁&lt;/h2&gt;
+&lt;h3 id=&#34;41实现方式&#34;&gt;4.1、实现方式&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;在与方法对应的永久节点下创建一个临时序号节点&lt;/li&gt;
+&lt;li&gt;获取当前永久节点下的所有子节点&lt;/li&gt;
+&lt;li&gt;判断自己是否是最小节点
+&lt;ul&gt;
+&lt;li&gt;如果是，上锁成功&lt;/li&gt;
+&lt;li&gt;如果不是，说明前面还有锁，上锁失败，监听比自己小的节点，形成链式监听，当触发监听时，再次执行步骤 2&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;惊群效应&lt;/strong&gt;（羊群效应）：如果在上锁时，每个节点监听的是最小的节点，那么每次最小节点发生改变都会触发大量的监听事件，对于 zk 压力非常大，这就是惊群效应。故应该使用上述的链式监听，因为如果前一个结点没有获取到锁，自然也轮不到自己获取。这样只能实现公平锁。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;客户端突然失联，会自动释放锁&lt;/li&gt;
+&lt;li&gt;可以在临时序号节点的值中保存当前主机和线程的信息，实现可重入锁&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;42优缺点&#34;&gt;4.2、优缺点&lt;/h3&gt;
+&lt;p&gt;优点：可靠性高；断开连接自动释放锁，无需手动设置过期时间&lt;/p&gt;
+&lt;p&gt;缺点：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;性能没有 reids 高。因为每次在创建锁和释放锁的过程中，都要动态创建、销毁瞬时节点来实现锁功能。ZK中创建和删除节点只能通过Leader服务器来执行，然后将数据同不到所有的Follower机器上。&lt;/li&gt;
+&lt;li&gt;可能产生并发问题：如果由于网络抖动，服务端没有收到客户端的心跳包，服务端就会删除临时节点让其他节点获取锁，从而使多个客户端获取到锁。但是 zk 有重试机制，如果检测不到客户端的心跳，就会重试连接，所以这种情况并不常见。&lt;/li&gt;
+&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>分布式事务</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/</link>
+      <pubDate>Thu, 19 May 2022 17:42:15 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/</guid>
+      <description>&lt;h2 id=&#34;1-事务&#34;&gt;1 事务&lt;/h2&gt;
+&lt;p&gt;事务可以看做是一次大的活动，它由不同的小活动组成，这些活动要么全部成功，要么全部失败。&lt;/p&gt;
+&lt;h3 id=&#34;11-本地事务&#34;&gt;1.1 本地事务&lt;/h3&gt;
+&lt;p&gt;在计算机系统中，更多的是通过关系型数据库来控制事务，这是利用数据库本身的事务特性来实现的，因此叫数据库事务，由于应用主要靠关系数据库来控制事务，而数据库通常和应用在同一个服务器，所以基于关系型数据库的事务又被称为本地事务。&lt;/p&gt;
+&lt;h3 id=&#34;12-分布式事务&#34;&gt;1.2 分布式事务&lt;/h3&gt;
+&lt;p&gt;随着互联网的快速发展，软件系统由原来的单体应用转变为分布式应用。分布式系统会把一个应用系统拆分为可独立部署的多个服务，因此需要服务与服务之间远程协作才能完成事务操作，这种分布式系统环境下由不同的服务之间通过网络远程协作完成事务称之为&lt;strong&gt;分布式事务&lt;/strong&gt;，例如用户注册送积分事务、创建订单减库存事务，银行转账事务等都是分布式事务。&lt;/p&gt;
+&lt;h3 id=&#34;13-base-理论&#34;&gt;1.3 BASE 理论&lt;/h3&gt;
+&lt;p&gt;由于 CAP 理论，大型互联网应用为达到良好的响应性能来提高用户体验，一般会保证 P 和 A ，舍弃 C 强一致，保证最终一致性。&lt;/p&gt;
+&lt;p&gt;BASE 是 Basically Available（基本可用）、Soft state（软状态）和 Eventually consistent （最终一致性）三个短语的缩写。BASE 理论通过牺牲强一致性来获得可用性，当出现故障允许部分不可用但要保证核心功能可用，允许数据在一段时间内是不一致的，但最终达到一致状态。满足BASE理论的事务，我们称之为“&lt;strong&gt;柔性事务&lt;/strong&gt;”。&lt;/p&gt;
+&lt;p&gt;基本可用：分布式系统在出现故障时，允许损失部分可用功能，保证核心功能可用。如电商网站交易付款出现问题了，商品依然可以正常浏览。&lt;/p&gt;
+&lt;p&gt;软状态：由于不要求强一致性，所以BASE允许系统中存在中间状态（也叫软状态），这个状态不影响系统可用性，如订单的&amp;quot;支付中&amp;quot;、“数据同步中”等状态，待数据最终一致后状态改为“成功”状态。&lt;/p&gt;
+&lt;p&gt;最终一致：最终一致是指经过一段时间后，所有节点数据都将会达到一致。如订单的&amp;quot;支付中&amp;quot;状态，最终会变 为“支付成功”或者&amp;quot;支付失败&amp;quot;，使订单状态与实际交易结果达成一致，但需要一定时间的延迟、等待。&lt;/p&gt;
+&lt;h2 id=&#34;2-分布式事务解决方案&#34;&gt;2 分布式事务解决方案&lt;/h2&gt;
+&lt;h3 id=&#34;21-2pc&#34;&gt;2.1 2PC&lt;/h3&gt;
+&lt;p&gt;2PC 即两阶段提交协议，是将整个事务流程分为两个阶段，准备阶段（Prepare phase）、提交阶段（commit phase），2 是指两个阶段，P 是指准备阶段，C 是指提交阶段。&lt;/p&gt;
+&lt;p&gt;整个事务过程由事务管理器和参与者组成，事务管理器负责决策整个分布式事务的提交和回滚，事务参与者负责自己本地事务的提交和回滚。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;在&lt;strong&gt;准备阶段&lt;/strong&gt; 事务管理器给每个参与者发送 Prepare 消息，每个数据库参与者在本地执行事务（此时本地事务不提交），并将自己的执行结果发送给事务管理器。&lt;/li&gt;
+&lt;li&gt;在&lt;strong&gt;提交阶段&lt;/strong&gt; 事务管理器只要发现有任意一个数据库参与者执行失败，就会直接给每个参与者发送回滚（Rollback）消息；否则，发送提交（Commit）消息；参与者根据事务管理器的指令执行提交或者回滚操作，并释放事务处理过程中使用的锁资源。注意：&lt;strong&gt;必须在最后阶段释放锁资源&lt;/strong&gt;。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;tips：Mysql 中，事务执行是指在内存中修改值；事务提交是指将 undolog 和  redolog 存储在磁盘中。事务已经提交，仍然可以回滚。&lt;/p&gt;
+&lt;h3 id=&#34;22-tcc&#34;&gt;2.2 TCC&lt;/h3&gt;
+&lt;p&gt;TCC 是 Try、Conﬁrm、Cancel 三个词语的缩写，TCC 要求每个分支事务实现三个操作：预处理、确认 、撤销 。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Try&lt;/strong&gt; 阶段是做完业务检查（一致性）及资源预留（隔离），此阶段仅是一个初步操作，它和后续的  Conﬁrm 一起才能真正构成一个完整的业务逻辑。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Confirm&lt;/strong&gt; 阶段是做确认提交，Try 阶段所有分支事务执行成功后开始执行 Conﬁrm。通常情况下，采用 TCC 则认为 Conﬁrm 阶段是不会出错的。即：只要 Try 成功，Conﬁrm 一定成功。若 Conﬁrm 阶段真的出错了，需引入重试机制或人工处理。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Cancel&lt;/strong&gt; 阶段是在业务执行错误需要回滚的状态下执行分支事务的业务取消，预留资源释放。通常情况下，采用 TCC 则认为 Cancel 阶段也是一定成功的。若 Cancel 阶段真的出错了，需引入重试机制或人工处理。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;事务管理器首先发起所有的分支事务的 Try 操作，任何一个分支事务的Try操作执行失败，事务管理器将会发起所有分支事务的 Cancel 操作，若 Try 操作全部成功，事务管理器将会发起所有分支事务的 Conﬁrm 操作，其中 Conﬁrm/Cancel 操作若执行失败，事务管理器会进行重试。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>微服务学习笔记</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E7%AC%94%E8%AE%B0/</link>
+      <pubDate>Mon, 25 Oct 2021 17:42:15 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E7%AC%94%E8%AE%B0/</guid>
+      <description>&lt;h2 id=&#34;1微服务架构介绍httpsmartinfowlercomarticlesmicroserviceshtml&#34;&gt;1、&lt;a href=&#34;https://martinfowler.com/articles/microservices.html&#34;&gt;微服务架构介绍&lt;/a&gt;&lt;/h2&gt;
+&lt;h3 id=&#34;11微服务概念&#34;&gt;1.1、微服务概念&lt;/h3&gt;
+&lt;p&gt;微服务就是将一个单体架构的应用按业务划分为一个个独立运行的程序即服务，他们之间通过 HTTP 协议进行通信（也可以采用消息队列来通信，如 RabbotMQ、Kafaka 等），可以采用不同的编程语言，使用不同的存储技术，自动化部署（如Jenkins）减少人为控制，降低出错概率。服务数量越多，管理起来越复杂，因此采用集中化管理。例如 Eureka，Zookeeper 等都是比较常见的服务集中化管理框架。&lt;/p&gt;
+&lt;p&gt;微服务是一种架构风格。有两个特点：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;职责单一：一个微服务解决一个业务问题（注意是一个业务问题而不是一个接口）。&lt;/li&gt;
+&lt;li&gt;面向服务：将自己的业务能力封装并对外提供服务，这是继承SOA的核心思想，一个微服务本身也可能调用其它的微服务。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;12微服务设计原则&#34;&gt;1.2、微服务设计原则&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;AKF 拆分原则&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;前后端分离原则&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;无状态服务&lt;/p&gt;
+&lt;p&gt;状态：如果一个数据需要被多个服务共享，才能完成一笔交易，那么这个数据被称为状态。进而依赖这个状态数据的服务被称为有状态服务，反之称为无状态服务。&lt;/p&gt;
+&lt;p&gt;例如对空调的设置：1、若空调遥控器发送加一或减一的指令，空调根据现在的温度计算并调整温度，则空调提供的是有状态服务，状态是空调当前温度。2、若空调遥控器发送的是加一或减一之后的温度数值，空调根据接收到的温度数值设置温度，则空调提供的是无状态服务。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Restful 通信风格&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2eureka-注册中心&#34;&gt;2、Eureka 注册中心&lt;/h2&gt;
+&lt;p&gt;应用微服务化之后，首先遇到的第一个问题就是服务发现问题，一个微服务如何发现其他微服务呢？最简单的方式就是每个微服务里面配置其他微服务的地址，但是当微服务数量众多的时候，这样做明显不现实。所以需要使用到微服务架构中的一个最重要的组件：&lt;strong&gt;服务注册中心&lt;/strong&gt;，所有服务都注册到服务注册中心，同时也可以从服务注册中心获取当前可用的服务清单。&lt;/p&gt;
+&lt;h3 id=&#34;21注册中心概念&#34;&gt;2.1、注册中心概念&lt;/h3&gt;
+&lt;p&gt;注册中心可以理解为微服务架构中的“通讯录”。它记录了服务和服务地址的映射关系。在分布式架构中，服务会注册到这里，当服务需要调用其他服务时，就到这里找到服务的地址，进行调用。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;张三办了张新的电话卡并将号码告诉我，我将其名字和号码的映射保存进通讯录。              -- 服务注册&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;我想给张三打电话，于是在通讯录中根据其名字找到张三，然后根据映射到的电话号码拨打       -- 服务发现&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;---------------------------------------------------------
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;上例中我和张三分别代表一个微服务，通讯录是独立于我和张三的服务注册中心&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;总结：服务注册中心的作用就是&lt;strong&gt;服务的注册&lt;/strong&gt;和&lt;strong&gt;服务的发现&lt;/strong&gt;。&lt;/p&gt;
+&lt;h3 id=&#34;22eureka-入门案例&#34;&gt;2.2、Eureka 入门案例&lt;/h3&gt;
+&lt;p&gt;1、创建一个 SpringBoot 项目并引入web、test和下方两个依赖 。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.cloud&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-cloud-dependencies&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;2020.0.4&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;type&amp;gt;&lt;/span&gt;pom&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/type&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;scope&amp;gt;&lt;/span&gt;runtime&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/scope&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.cloud&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-cloud-starter-netflix-eureka-server&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;3.0.4&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;2、application.yaml 如下&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;server&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;port&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;8761&lt;/span&gt;               &lt;span style=&#34;color:#75715e&#34;&gt;# 官方文档使用的端口&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;application&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;eureka-server   &lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# 应用名称&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 配置 eureka-server 注册中心&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;eureka&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;instance&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;hostname&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;localhost             &lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# 主机名，默认根据操作系统的主机名获取&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;client&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 下方值为 false 的两项，只有当自身为单节点的注册中心时才需要设置为 false 。&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 单节点指的是只有一个注册中心，不是只有一个微服务。&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 当自身是微服务或者是集群中的注册中心之一时无需设置，使用默认 true。&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;register-with-eureka&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;# 是否将自己注册到注册中心，默认为 true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;fetch-registry&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;# 是否从注册中心获取服务注册信息，默认 true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;service-url&lt;/span&gt;:                     &lt;span style=&#34;color:#75715e&#34;&gt;# 注册中心对外暴露的注册地址&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;defaultZone&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;http://${eureka.instance.hostname}:${server.port}/eureka/&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;3、启动类前添加 @EnableEurekaServer 注解&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

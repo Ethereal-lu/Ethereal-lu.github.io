@@ -1,0 +1,140 @@
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>C# 学习笔记 | lu</title>
+<meta name=keywords content><meta name=description content='1、基础概念
+1.1、.Net  概念
+通常所说的 .Net 包括 .Net 平台和 .Net FrameWork 框架。它们两者的关系即 jvm 和 jre 的关系。
+.Net FrameWork 框架由两部分组成，分别是 .Net 类库和 CLR（公共语言运行时）。
+1.2、C# 语言
+C# 是一种编程语言，可以开发基于  .Net 平台 的应用。
+1.3、.Net 作用
+
+Winform 开发桌面应用程序
+ASP.NET 开发 web 网站
+Unity3D 开发游戏和虚拟现实
+
+1.4、.Net 两种交互模式
+
+C/S：客户机（Client）/服务器模式。客户端需要安装专用的客户端软件，如 微信。
+B/S：浏览器（Browser）/服务器模式。客户端只需要安装浏览器即可。
+
+2、语法规则
+C# 的基础语法规则几乎与 java 一样。
+2.1、基本类型
+与 java 一样，包括 byte、short、int、long、float、double、bool等，u开头表示无符号。
+如果一个小数是浮点类型，则其后需加个 f ，否则默认为 double 型。
+2.2、字符串
+类名为 string ，小写。它的使用和 java 几乎一样，注意方法名为大写开头。
+字符串格式化：string str = $"{name}的年龄为{age}"，其中name和age为之前声明的变量。
+2.3、函数
+C# 的函数名要大写开头。'><meta name=author content="lu"><link rel=canonical href=https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/c%23-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/><link crossorigin=anonymous href=/assets/css/stylesheet.d72444526d7ecbdb0015438a7fa89054a658bf759d0542e2e5df81ce94b493ee.css integrity="sha256-1yREUm1+y9sAFUOKf6iQVKZYv3WdBULi5d+BzpS0k+4=" rel="preload stylesheet" as=style><link rel=icon href=https://ethereal-lu.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://ethereal-lu.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://ethereal-lu.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://ethereal-lu.github.io/apple-touch-icon.png><link rel=mask-icon href=https://ethereal-lu.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/c%23-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51)}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style></noscript><meta property="og:url" content="https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/c%23-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"><meta property="og:site_name" content="lu"><meta property="og:title" content="C# 学习笔记"><meta property="og:description" content='1、基础概念 1.1、.Net 概念 通常所说的 .Net 包括 .Net 平台和 .Net FrameWork 框架。它们两者的关系即 jvm 和 jre 的关系。
+.Net FrameWork 框架由两部分组成，分别是 .Net 类库和 CLR（公共语言运行时）。
+1.2、C# 语言 C# 是一种编程语言，可以开发基于 .Net 平台 的应用。
+1.3、.Net 作用 Winform 开发桌面应用程序 ASP.NET 开发 web 网站 Unity3D 开发游戏和虚拟现实 1.4、.Net 两种交互模式 C/S：客户机（Client）/服务器模式。客户端需要安装专用的客户端软件，如 微信。 B/S：浏览器（Browser）/服务器模式。客户端只需要安装浏览器即可。 2、语法规则 C# 的基础语法规则几乎与 java 一样。
+2.1、基本类型 与 java 一样，包括 byte、short、int、long、float、double、bool等，u开头表示无符号。
+如果一个小数是浮点类型，则其后需加个 f ，否则默认为 double 型。
+2.2、字符串 类名为 string ，小写。它的使用和 java 几乎一样，注意方法名为大写开头。
+字符串格式化：string str = $"{name}的年龄为{age}"，其中name和age为之前声明的变量。
+2.3、函数 C# 的函数名要大写开头。'><meta property="og:locale" content="zh-CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2021-12-01T21:39:41+00:00"><meta property="article:modified_time" content="2021-12-01T21:39:41+00:00"><meta name=twitter:card content="summary"><meta name=twitter:title content="C# 学习笔记"><meta name=twitter:description content='1、基础概念
+1.1、.Net  概念
+通常所说的 .Net 包括 .Net 平台和 .Net FrameWork 框架。它们两者的关系即 jvm 和 jre 的关系。
+.Net FrameWork 框架由两部分组成，分别是 .Net 类库和 CLR（公共语言运行时）。
+1.2、C# 语言
+C# 是一种编程语言，可以开发基于  .Net 平台 的应用。
+1.3、.Net 作用
+
+Winform 开发桌面应用程序
+ASP.NET 开发 web 网站
+Unity3D 开发游戏和虚拟现实
+
+1.4、.Net 两种交互模式
+
+C/S：客户机（Client）/服务器模式。客户端需要安装专用的客户端软件，如 微信。
+B/S：浏览器（Browser）/服务器模式。客户端只需要安装浏览器即可。
+
+2、语法规则
+C# 的基础语法规则几乎与 java 一样。
+2.1、基本类型
+与 java 一样，包括 byte、short、int、long、float、double、bool等，u开头表示无符号。
+如果一个小数是浮点类型，则其后需加个 f ，否则默认为 double 型。
+2.2、字符串
+类名为 string ，小写。它的使用和 java 几乎一样，注意方法名为大写开头。
+字符串格式化：string str = $"{name}的年龄为{age}"，其中name和age为之前声明的变量。
+2.3、函数
+C# 的函数名要大写开头。'><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Posts","item":"https://ethereal-lu.github.io/posts/"},{"@type":"ListItem","position":2,"name":"C# 学习笔记","item":"https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/c%23-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"C# 学习笔记","name":"C# 学习笔记","description":"1、基础概念 1.1、.Net 概念 通常所说的 .Net 包括 .Net 平台和 .Net FrameWork 框架。它们两者的关系即 jvm 和 jre 的关系。\n.Net FrameWork 框架由两部分组成，分别是 .Net 类库和 CLR（公共语言运行时）。\n1.2、C# 语言 C# 是一种编程语言，可以开发基于 .Net 平台 的应用。\n1.3、.Net 作用 Winform 开发桌面应用程序 ASP.NET 开发 web 网站 Unity3D 开发游戏和虚拟现实 1.4、.Net 两种交互模式 C/S：客户机（Client）/服务器模式。客户端需要安装专用的客户端软件，如 微信。 B/S：浏览器（Browser）/服务器模式。客户端只需要安装浏览器即可。 2、语法规则 C# 的基础语法规则几乎与 java 一样。\n2.1、基本类型 与 java 一样，包括 byte、short、int、long、float、double、bool等，u开头表示无符号。\n如果一个小数是浮点类型，则其后需加个 f ，否则默认为 double 型。\n2.2、字符串 类名为 string ，小写。它的使用和 java 几乎一样，注意方法名为大写开头。\n字符串格式化：string str = $\u0026quot;{name}的年龄为{age}\u0026quot;，其中name和age为之前声明的变量。\n2.3、函数 C# 的函数名要大写开头。\n","keywords":[],"articleBody":"1、基础概念 1.1、.Net 概念 通常所说的 .Net 包括 .Net 平台和 .Net FrameWork 框架。它们两者的关系即 jvm 和 jre 的关系。\n.Net FrameWork 框架由两部分组成，分别是 .Net 类库和 CLR（公共语言运行时）。\n1.2、C# 语言 C# 是一种编程语言，可以开发基于 .Net 平台 的应用。\n1.3、.Net 作用 Winform 开发桌面应用程序 ASP.NET 开发 web 网站 Unity3D 开发游戏和虚拟现实 1.4、.Net 两种交互模式 C/S：客户机（Client）/服务器模式。客户端需要安装专用的客户端软件，如 微信。 B/S：浏览器（Browser）/服务器模式。客户端只需要安装浏览器即可。 2、语法规则 C# 的基础语法规则几乎与 java 一样。\n2.1、基本类型 与 java 一样，包括 byte、short、int、long、float、double、bool等，u开头表示无符号。\n如果一个小数是浮点类型，则其后需加个 f ，否则默认为 double 型。\n2.2、字符串 类名为 string ，小写。它的使用和 java 几乎一样，注意方法名为大写开头。\n字符串格式化：string str = $\"{name}的年龄为{age}\"，其中name和age为之前声明的变量。\n2.3、函数 C# 的函数名要大写开头。\n返回值类型 函数名 （参数列表）{任意指令；return 返回值；}\n// 示例 float MulAdd(float val1, float val2, float val3) { return val1 + val2 + val3; } 2.4、switch 和 enum // 对枚举进行switch，一种书写思想，不针对与特定语言。 static void SwitchEnum(GenderType genderType) { switch (genderType) { case GenderType.Male: Console.WriteLine(\"男\"); break; case GenderType.Female: Console.WriteLine(\"女\"); break; case GenderType.Other: Console.WriteLine(\"其他\"); break; } } enum GenderType { Male, Female, Other } 2.5、ref 关键字 ref 可以让变量在函数内被修改，可以让函数有多个返回值。即引用，传地址。\nint TestRef(int val1, ref int val2) { val2 -= 1; return val1 + 1; } int val1 = 0; int val2 = 3; int val3 = TestRef(val1, ref val2); // val3 == 1 val2 == 2 3、面向对象 3.1、类 类修饰符：public、internal、 partial、abstract、sealed、static、new、protected、private、protected internal\n成员修饰符：public、protected、private、internal、protected internal、abstract、virtual、override、readonly、const、sealed、new\npartial：部分类，可以将一个类分成几部分写在不同文件中，最终编译时将合并成一个文件，且各个部分不能分散在不同程序集中\n类内成员如果没有修饰符，默认为 private。\npartial class Person { private const int MaxAge = 150; public static bool canFly = false; int age; // 相当于 private int age; public string? name; // string? 可以用 null 初始化 public Person(int age, string name) { // 显示声明有参构造后，就不再赠送无参构造。和 java 一样。 this.age = age; this.name = name; } public void SetAge(int age) { this.age = age; } public static void SetAge(Person person, int age) { person.age = age; } public static void PrintTypeName() { Console.WriteLine(\"TypeName = Person\"); } } // 与上方是同一个类，写在不同的文件中 partial class Person { public int Age { get { Console.WriteLine($\"getAge{age}\"); return age; } set { Console.WriteLine($\"setAge{age}=\u003e{value}\"); age = value; } } public static bool CanFly { // 与 Age 的作用一样，是上方的简化写法。 get =\u003e canFly; set =\u003e canFly = value; } } 属性 Property ：如上方的 Age、Canfly，看起来像变量，其实是函数。可进行下方操作：\nPerson person = new Person(18, \"qin\"); person.Age = 20; // 调用 Age 中的 set 方法，value 的值即为 20； int myAge = person.Age; // 调用 Age 中的 get 方法。 Person.Canfly = true; // 调用 CanFly 中的 set 方法。 bool isCanFly = Person.Canfly; // 调用 CanFly 中的 get 方法。 3.2、结构体 ","wordCount":"349","inLanguage":"en","datePublished":"2021-12-01T21:39:41Z","dateModified":"2021-12-01T21:39:41Z","author":{"@type":"Person","name":"lu"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/c%23-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"},"publisher":{"@type":"Organization","name":"lu","logo":{"@type":"ImageObject","url":"https://ethereal-lu.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"?document.body.classList.add("dark"):localStorage.getItem("pref-theme")==="light"?document.body.classList.remove("dark"):window.matchMedia("(prefers-color-scheme: dark)").matches&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://ethereal-lu.github.io/ accesskey=h title="Home (Alt + H)"><img src=https://ethereal-lu.github.io/apple-touch-icon.png alt aria-label=logo height=35>Home</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://ethereal-lu.github.io/categories/ title=categories><span>categories</span></a></li><li><a href=https://ethereal-lu.github.io/search/ title="search (Alt + /)" accesskey=/><span>search</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://ethereal-lu.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://ethereal-lu.github.io/posts/>Posts</a></div><h1 class="post-title entry-hint-parent">C# 学习笔记</h1><div class=post-meta><span title='2021-12-01 21:39:41 +0000 UTC'>2021-12-01</span>&nbsp;·&nbsp;349 words&nbsp;·&nbsp;lu</div></header><div class=toc><details><summary accesskey=c title="(Alt + C)"><span class=details>Table of Contents</span></summary><div class=inner><nav id=TableOfContents><ul><li><a href=#1基础概念>1、基础概念</a><ul><li><a href=#11net--概念>1.1、.Net 概念</a></li><li><a href=#12c-语言>1.2、C# 语言</a></li><li><a href=#13net-作用>1.3、.Net 作用</a></li><li><a href=#14net-两种交互模式>1.4、.Net 两种交互模式</a></li></ul></li><li><a href=#2语法规则>2、语法规则</a><ul><li><a href=#21基本类型>2.1、基本类型</a></li><li><a href=#22字符串>2.2、字符串</a></li><li><a href=#23函数>2.3、函数</a></li><li><a href=#24switch-和-enum>2.4、switch 和 enum</a></li><li><a href=#25ref-关键字>2.5、ref 关键字</a></li></ul></li><li><a href=#3面向对象>3、面向对象</a><ul><li><a href=#31类>3.1、类</a></li><li><a href=#32结构体>3.2、结构体</a></li></ul></li></ul></nav></div></details></div><div class=post-content><h2 id=1基础概念>1、基础概念<a hidden class=anchor aria-hidden=true href=#1基础概念>#</a></h2><h3 id=11net--概念>1.1、.Net 概念<a hidden class=anchor aria-hidden=true href=#11net--概念>#</a></h3><p>通常所说的 .Net 包括 .Net 平台和 .Net FrameWork 框架。它们两者的关系即 jvm 和 jre 的关系。</p><p>.Net FrameWork 框架由两部分组成，分别是 .Net 类库和 CLR（公共语言运行时）。</p><h3 id=12c-语言>1.2、C# 语言<a hidden class=anchor aria-hidden=true href=#12c-语言>#</a></h3><p>C# 是一种编程语言，可以开发基于 .Net 平台 的应用。</p><h3 id=13net-作用>1.3、.Net 作用<a hidden class=anchor aria-hidden=true href=#13net-作用>#</a></h3><ul><li>Winform 开发桌面应用程序</li><li>ASP.NET 开发 web 网站</li><li>Unity3D 开发游戏和虚拟现实</li></ul><h3 id=14net-两种交互模式>1.4、.Net 两种交互模式<a hidden class=anchor aria-hidden=true href=#14net-两种交互模式>#</a></h3><ul><li>C/S：客户机（Client）/服务器模式。客户端需要安装专用的客户端软件，如 微信。</li><li>B/S：浏览器（Browser）/服务器模式。客户端只需要安装浏览器即可。</li></ul><h2 id=2语法规则>2、语法规则<a hidden class=anchor aria-hidden=true href=#2语法规则>#</a></h2><p>C# 的基础语法规则几乎与 java 一样。</p><h3 id=21基本类型>2.1、基本类型<a hidden class=anchor aria-hidden=true href=#21基本类型>#</a></h3><p>与 java 一样，包括 byte、short、int、long、float、double、bool等，u开头表示无符号。</p><p>如果一个小数是浮点类型，则其后需加个 f ，否则默认为 double 型。</p><h3 id=22字符串>2.2、字符串<a hidden class=anchor aria-hidden=true href=#22字符串>#</a></h3><p>类名为 string ，小写。它的使用和 java 几乎一样，注意方法名为大写开头。</p><p>字符串格式化：<code>string str = $"{name}的年龄为{age}"</code>，其中name和age为之前声明的变量。</p><h3 id=23函数>2.3、函数<a hidden class=anchor aria-hidden=true href=#23函数>#</a></h3><p>C# 的函数名要大写开头。</p><p>返回值类型 函数名 （参数列表）{任意指令；return 返回值；}</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c# data-lang=c#><span style=display:flex><span><span style=color:#75715e>// 示例</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>float</span> MulAdd(<span style=color:#66d9ef>float</span> val1, <span style=color:#66d9ef>float</span> val2, <span style=color:#66d9ef>float</span> val3) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> val1 + val2 + val3;
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h3 id=24switch-和-enum>2.4、switch 和 enum<a hidden class=anchor aria-hidden=true href=#24switch-和-enum>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c# data-lang=c#><span style=display:flex><span><span style=color:#75715e>// 对枚举进行switch，一种书写思想，不针对与特定语言。</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> SwitchEnum(GenderType genderType) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>switch</span> (genderType) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>case</span> GenderType.Male: Console.WriteLine(<span style=color:#e6db74>&#34;男&#34;</span>); <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>case</span> GenderType.Female: Console.WriteLine(<span style=color:#e6db74>&#34;女&#34;</span>); <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>case</span> GenderType.Other: Console.WriteLine(<span style=color:#e6db74>&#34;其他&#34;</span>); <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>enum</span> GenderType {
+</span></span><span style=display:flex><span>    Male,
+</span></span><span style=display:flex><span>    Female,
+</span></span><span style=display:flex><span>    Other
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h3 id=25ref-关键字>2.5、ref 关键字<a hidden class=anchor aria-hidden=true href=#25ref-关键字>#</a></h3><p>ref 可以让变量在函数内被修改，可以让函数有多个返回值。即引用，传地址。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c# data-lang=c#><span style=display:flex><span><span style=color:#66d9ef>int</span> TestRef(<span style=color:#66d9ef>int</span> val1, <span style=color:#66d9ef>ref</span> <span style=color:#66d9ef>int</span> val2) {
+</span></span><span style=display:flex><span>    val2 -= <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> val1 + <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span><span style=color:#66d9ef>int</span> val1 = <span style=color:#ae81ff>0</span>; <span style=color:#66d9ef>int</span>  val2 = <span style=color:#ae81ff>3</span>;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>int</span> val3 = TestRef(val1, <span style=color:#66d9ef>ref</span> val2);
+</span></span><span style=display:flex><span><span style=color:#75715e>// val3 == 1   val2 == 2</span>
+</span></span></code></pre></div><h2 id=3面向对象>3、面向对象<a hidden class=anchor aria-hidden=true href=#3面向对象>#</a></h2><h3 id=31类>3.1、类<a hidden class=anchor aria-hidden=true href=#31类>#</a></h3><p>类修饰符：public、internal、 partial、abstract、sealed、static、new、protected、private、protected internal</p><p>成员修饰符：public、protected、private、internal、protected internal、abstract、virtual、override、readonly、const、sealed、new</p><p>partial：部分类，可以将一个类分成几部分写在不同文件中，最终编译时将合并成一个文件，且各个部分不能分散在不同程序集中</p><p>类内成员如果没有修饰符，默认为 private。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c# data-lang=c#><span style=display:flex><span><span style=color:#66d9ef>partial</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Person</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>const</span> <span style=color:#66d9ef>int</span> MaxAge = <span style=color:#ae81ff>150</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>bool</span> canFly = <span style=color:#66d9ef>false</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>int</span> age;               <span style=color:#75715e>// 相当于 private int age;</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>string?</span> name;   <span style=color:#75715e>// string? 可以用 null 初始化</span>
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Person(<span style=color:#66d9ef>int</span> age, <span style=color:#66d9ef>string</span> name) {   <span style=color:#75715e>//  显示声明有参构造后，就不再赠送无参构造。和 java 一样。</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.age = age;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.name = name;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> SetAge(<span style=color:#66d9ef>int</span> age) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.age = age;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> SetAge(Person person, <span style=color:#66d9ef>int</span> age) {
+</span></span><span style=display:flex><span>        person.age = age;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> PrintTypeName() {
+</span></span><span style=display:flex><span>        Console.WriteLine(<span style=color:#e6db74>&#34;TypeName = Person&#34;</span>);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// 与上方是同一个类，写在不同的文件中</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>partial</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Person</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>int</span> Age {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>get</span> {
+</span></span><span style=display:flex><span>            Console.WriteLine(<span style=color:#e6db74>$&#34;getAge{age}&#34;</span>);
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> age;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>set</span> {
+</span></span><span style=display:flex><span>            Console.WriteLine(<span style=color:#e6db74>$&#34;setAge{age}=&gt;{value}&#34;</span>);
+</span></span><span style=display:flex><span>            age = <span style=color:#66d9ef>value</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>bool</span> CanFly {   <span style=color:#75715e>// 与 Age 的作用一样，是上方的简化写法。</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>get</span> =&gt; canFly;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>set</span> =&gt; canFly = <span style=color:#66d9ef>value</span>;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>属性 Property ：如上方的 Age、Canfly，看起来像变量，其实是函数。可进行下方操作：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c# data-lang=c#><span style=display:flex><span>Person person = <span style=color:#66d9ef>new</span> Person(<span style=color:#ae81ff>18</span>, <span style=color:#e6db74>&#34;qin&#34;</span>);
+</span></span><span style=display:flex><span>person.Age = <span style=color:#ae81ff>20</span>;            <span style=color:#75715e>// 调用 Age 中的 set 方法，value 的值即为 20；</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>int</span> myAge = person.Age;     <span style=color:#75715e>// 调用 Age 中的 get 方法。</span>
+</span></span><span style=display:flex><span>Person.Canfly = <span style=color:#66d9ef>true</span>;       <span style=color:#75715e>// 调用 CanFly 中的 set 方法。</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>bool</span> isCanFly = Person.Canfly;   <span style=color:#75715e>// 调用 CanFly 中的 get 方法。</span>
+</span></span></code></pre></div><h3 id=32结构体>3.2、结构体<a hidden class=anchor aria-hidden=true href=#32结构体>#</a></h3></div><footer class=post-footer><ul class=post-tags></ul><nav class=paginav><a class=prev href=https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/docker/docker%E7%AC%94%E8%AE%B0/><span class=title>« Prev</span><br><span>Docker基础</span>
+</a><a class=next href=https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%AE%BE%E7%BD%AE%E9%9D%99%E6%80%81-ip/><span class=title>Next »</span><br><span>VMware + Ubuntu18.04设置静态 IP</span></a></nav></footer></article></main><footer class=footer><span>&copy; 2025 <a href=https://ethereal-lu.github.io/>lu</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>

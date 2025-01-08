@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Java 进阶 on lu</title>
+    <link>https://ethereal-lu.github.io/categories/java-%E8%BF%9B%E9%98%B6/</link>
+    <description>Recent content in Java 进阶 on lu</description>
+    <generator>Hugo -- 0.140.1</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Wed, 06 Apr 2022 21:12:41 +0000</lastBuildDate>
+    <atom:link href="https://ethereal-lu.github.io/categories/java-%E8%BF%9B%E9%98%B6/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>AQS</title>
+      <link>https://ethereal-lu.github.io/posts/java/java-%E8%BF%9B%E9%98%B6/aqs/</link>
+      <pubDate>Wed, 06 Apr 2022 21:12:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/java/java-%E8%BF%9B%E9%98%B6/aqs/</guid>
+      <description>&lt;p&gt;&lt;strong&gt;AQS的核心思想&lt;/strong&gt;是，如果被请求的共享资源空闲，则将当前请求资源的线程设置为有效的工作线程，并将共享资源设置为锁定状态，如果被请求的共享资源被占用，那么就通过cas 的方式将当前线程添加到等待队列的尾部，直到它的前继节点释放锁并唤醒它。&lt;/p&gt;
+&lt;p&gt;在 AQS 中用变量 state 代表共享资源，通过 cas 改变 state 的值来竞争锁。&lt;/p&gt;
+&lt;p&gt;ReentrantLock 实现了公平锁和非公平锁，他们都继承了 AQS，公平锁和非公平锁的最大区别就是在获取锁的时候，非公平锁直接和等待队列的头节点竞争锁，而非公平锁只有在自己是队列头结点时才去获取锁。&lt;/p&gt;
+&lt;p&gt;ReentrantLock 中，若 state 的值为0，说明当前共享资源是空闲的，可以获取。若获取到锁的线程再次获取锁时，state 的值加 1，这就是可重入锁。同时这样会避免多余的 cas 开销。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>BIO,NIO,AIO</title>
+      <link>https://ethereal-lu.github.io/posts/java/java-%E8%BF%9B%E9%98%B6/bionioaio/</link>
+      <pubDate>Wed, 06 Apr 2022 21:12:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/java/java-%E8%BF%9B%E9%98%B6/bionioaio/</guid>
+      <description>&lt;p&gt;本文摘自&lt;a href=&#34;https://blog.csdn.net/m0_38109046/article/details/89449305&#34;&gt;(31条消息) Java面试常考的 BIO，NIO，AIO 总结_有梦想的小树的博客-CSDN博客_bio nio&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Java 中的 BIO、NIO和 AIO 理解为是 Java 语言对操作系统的各种 IO 模型的封装。程序员在使用这些 API 的时候，不需要关心操作系统层面的知识，也不需要根据不同操作系统编写不同的代码。只需要使用Java的API就可以了。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;同步与异步&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;同步：&lt;/strong&gt; 同步就是发起一个调用后，需要等待被调用者返回结果。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;异步：&lt;/strong&gt; 异步就是发起一个调用后，立刻得到被调用者的回应表示已接收到请求，但是被调用者并没有返回结果，此时我们可以处理其他的请求，被调用者通常依靠事件，回调等机制来通知调用者其返回结果。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;同步和异步的区别最大在于异步的话调用者不需要等待处理结果，被调用者会通过回调等机制来通知调用者其返回结果。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;阻塞和非阻塞&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;阻塞：&lt;/strong&gt; 阻塞就是发起一个请求，调用者一直等待请求结果返回，也就是当前线程会被挂起，无法从事其他任务，只有当条件就绪才能继续。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;非阻塞：&lt;/strong&gt; 非阻塞就是发起一个请求，调用者不用一直等着结果返回，可以先去干其他事情。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;同步和阻塞最大的区别就是线程是否会被挂起。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;那么同步阻塞、同步非阻塞和异步非阻塞又代表什么意思呢？&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;在等待返回结果前如果什么也不干就是同步阻塞；如果可以做一些其他的事只需要以轮询的方式查看结果是否返回就是同步非阻塞；如果不需要等待返回结果就是异步非阻塞。&lt;/p&gt;
+&lt;p&gt;举个生活中简单的例子，你妈妈让你烧水，小时候你比较笨啊，在哪里傻等着水开（&lt;strong&gt;同步阻塞&lt;/strong&gt;）。等你稍微再长大一点，你知道每次烧水的空隙可以去干点其他事，然后只需要时不时来看看水开了没有（&lt;strong&gt;同步非阻塞&lt;/strong&gt;）。后来，你们家用上了水开了会发出声音的壶，这样你就只需要听到响声后就知道水开了，在这期间你可以随便干自己的事情，你需要去倒水了（&lt;strong&gt;异步非阻塞&lt;/strong&gt;）。&lt;/p&gt;
+&lt;h2 id=&#34;1-bio-blocking-io&#34;&gt;1. BIO (Blocking I/O)&lt;/h2&gt;
+&lt;p&gt;最传统的一种IO模型，即在读写数据过程中会发生阻塞现象。
+  当用户线程发出IO请求之后，内核会去查看数据是否就绪，如果没有就绪就会等待数据就绪，而用户线程就会处于阻塞状态，用户线程交出CPU。当数据就绪之后，内核会将数据拷贝到用户线程，并返回结果给用户线程，用户线程才解除block状态。
+  典型的阻塞IO模型的例子为 &lt;code&gt;data = socket.read(); &lt;/code&gt;如果数据没有就绪，就会一直阻塞在read方法。&lt;/p&gt;
+&lt;h3 id=&#34;11-传统-bio&#34;&gt;1.1 传统 BIO&lt;/h3&gt;
+&lt;p&gt;BIO通信（一请求一应答）模型图如下(图源网络，原出处不明)：&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;img&#34; loading=&#34;lazy&#34; src=&#34;https://img-blog.csdnimg.cn/2019042212100021.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L20wXzM4MTA5MDQ2,size_16,color_FFFFFF,t_70&#34;&gt;&lt;/p&gt;
+&lt;p&gt;采用 &lt;strong&gt;BIO 通信模型&lt;/strong&gt; 的服务端，通常由一个独立的 Acceptor 线程负责监听客户端的连接。我们一般通过在 &lt;code&gt;while(true)&lt;/code&gt; 循环中服务端会调用 &lt;code&gt;accept()&lt;/code&gt; 方法等待接收客户端的连接的方式监听请求，请求一旦接收到一个连接请求，就可以建立通信套接字在这个通信套接字上进行读写操作，此时不能再接收其他客户端连接请求，只能等待同当前连接的客户端的操作执行完成， 不过可以通过多线程来支持多个客户端的连接，如上图所示。&lt;/p&gt;
+&lt;p&gt;如果要让 &lt;strong&gt;BIO 通信模型&lt;/strong&gt; 能够同时处理多个客户端请求，就必须使用多线程（主要原因是 &lt;code&gt;socket.accept()&lt;/code&gt;、 &lt;code&gt;socket.read()&lt;/code&gt;、 &lt;code&gt;socket.write()&lt;/code&gt; 涉及的三个主要函数都是同步阻塞的），也就是说它在接收到客户端连接请求之后为每个客户端创建一个新的线程进行链路处理，处理完成之后，通过输出流返回应答给客户端，线程销毁。这就是典型的 &lt;strong&gt;一请求一应答通信模型&lt;/strong&gt; 。我们可以设想一下如果这个连接不做任何事情的话就会造成不必要的线程开销，不过可以通过 &lt;strong&gt;线程池机制&lt;/strong&gt; 改善，线程池还可以让线程的创建和回收成本相对较低。使用&lt;code&gt;FixedThreadPool&lt;/code&gt; 可以有效的控制了线程的最大数量，保证了系统有限的资源的控制，实现了N(客户端请求数量):M(处理客户端请求的线程数量)的伪异步I/O模型（N 可以远远大于 M），下面一节&amp;quot;伪异步 BIO&amp;quot;中会详细介绍到。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>ConcurrentHashMap</title>
+      <link>https://ethereal-lu.github.io/posts/java/java-%E8%BF%9B%E9%98%B6/concurrenthashmap/</link>
+      <pubDate>Sat, 26 Mar 2022 11:12:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/java/java-%E8%BF%9B%E9%98%B6/concurrenthashmap/</guid>
+      <description>&lt;h3 id=&#34;1concurrenthashmap-如何保证线程安全&#34;&gt;1、ConcurrentHashMap 如何保证线程安全&lt;/h3&gt;
+&lt;p&gt;ConcurrentHashMap 是由 Node 数组构成，这里先将 Node 数组的每个下标对应的空间称为一个桶，以方便叙述。ConcurrentHashMap 的 get 操作不需要加锁，只有 put 和 remove 需要加锁。当执行 put\remove 操作时，会先定位到桶，然后将桶中的链表头节点或树的根节点锁住，因为必须要获取到链表头节点或树的根节点才能对整个链表或树操作，所以可以保证线程安全。&lt;/p&gt;
+&lt;p&gt;当 put 操作发现桶中没有数据时，会通过 cas 操作赋值，而不是上锁。&lt;/p&gt;
+&lt;h3 id=&#34;2concurrenthashmap-扩容&#34;&gt;2、ConcurrentHashMap 扩容&lt;/h3&gt;
+&lt;p&gt;ConcurrentHashMap 中有一个 sizeCtl 变量，它类似于 HashMap 中的 threshold ，通过比较元素数量与 sizeCtl 的大小判断是否需要扩容。扩容时，先创建一个2倍大小的新数组并初始化一个forwardNode实例fwd，然后遍历每一个桶，若桶中元素为 null 时，直接将其赋值为fwd，否则将桶中的元素转移到新数组，再将其赋值为fwd。在扩容的过程中若进来其他的读线程，若读线程发现桶中的元素是 fwd，就会帮助进行转移，否则进行正常的读操作。若进来写线程，若写线程发现桶中的元素是 fwd，就会帮助进行转移，否则阻塞，直到扩容完成。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

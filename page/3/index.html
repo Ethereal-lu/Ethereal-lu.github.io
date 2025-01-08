@@ -1,0 +1,124 @@
+<!doctype html><html lang=en dir=auto><head><meta name=generator content="Hugo 0.140.1"><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>lu</title>
+<meta name=description content><meta name=author content="lu"><link rel=canonical href=https://ethereal-lu.github.io/><link crossorigin=anonymous href=/assets/css/stylesheet.d72444526d7ecbdb0015438a7fa89054a658bf759d0542e2e5df81ce94b493ee.css integrity="sha256-1yREUm1+y9sAFUOKf6iQVKZYv3WdBULi5d+BzpS0k+4=" rel="preload stylesheet" as=style><link rel=icon href=https://ethereal-lu.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://ethereal-lu.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://ethereal-lu.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://ethereal-lu.github.io/apple-touch-icon.png><link rel=mask-icon href=https://ethereal-lu.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate type=application/rss+xml href=https://ethereal-lu.github.io/index.xml><link rel=alternate type=application/json href=https://ethereal-lu.github.io/index.json><link rel=alternate hreflang=en href=https://ethereal-lu.github.io/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51)}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style></noscript><meta property="og:url" content="https://ethereal-lu.github.io/"><meta property="og:site_name" content="lu"><meta property="og:title" content="lu"><meta property="og:locale" content="zh-CN"><meta property="og:type" content="website"><meta name=twitter:card content="summary"><meta name=twitter:title content="lu"><meta name=twitter:description content><script type=application/ld+json>{"@context":"https://schema.org","@type":"Organization","name":"lu","url":"https://ethereal-lu.github.io/","description":"","logo":"https://ethereal-lu.github.io/favicon.ico","sameAs":[]}</script></head><body class=list id=top><script>localStorage.getItem("pref-theme")==="dark"?document.body.classList.add("dark"):localStorage.getItem("pref-theme")==="light"?document.body.classList.remove("dark"):window.matchMedia("(prefers-color-scheme: dark)").matches&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://ethereal-lu.github.io/ accesskey=h title="Home (Alt + H)"><img src=https://ethereal-lu.github.io/apple-touch-icon.png alt aria-label=logo height=35>Home</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://ethereal-lu.github.io/categories/ title=categories><span>categories</span></a></li><li><a href=https://ethereal-lu.github.io/search/ title="search (Alt + /)" accesskey=/><span>search</span></a></li></ul></nav></header><main class=main><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Kafka基础</h2></header><div class=entry-content><p>1、概述 定义：Kafka 是分布式的基于发布订阅的消息队列，主要应用于大数据实时处理领域。
+Kafka基础架构：
+为方便扩展，并提高吞吐量，一个topic分为多个partition 写数据通过分区提高效率，为不拖后腿，读数据也采用多个消费者合为一组并发读数据，每个分区只能被一个消费者消费。 为提高可用性，为每个分区增加副本，分为 leader 和 follower，读写只与 leader 有关，follower 仅仅用作备份与故障选举。 Kafka 需配合 Zookeeper 使用，Zookeeper 中存储了哪些分区已经上线，以及每个分区的 leader 是谁。</p></div><footer class=entry-footer><span title='2022-05-08 17:42:15 +0000 UTC'>2022-05-08</span>&nbsp;·&nbsp;20 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to Kafka基础" href=https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/kafka/kafka%E5%9F%BA%E7%A1%80/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Zookeeper基础</h2></header><div class=entry-content><p>1、概述 Zookeeper 是一个分布式程序协调服务，提供的主要功能包括：配置管理、名字服务、分布式锁、集群管理。 由 java 编写。
+1.1、特点 一主多从：一个 Leader 负责写数据，多个 Follower 负责读数据。 集群中只要有半数以上节点存活，Zookeeper 集群就能正常服务，因此 Zookeeper 适合安装奇数台服务器。 所有节点数据一致 来自同一个客户端的多个请求按顺序执行 每个写操作都是事务，具有原子性。 在一定时间范围内，Client 能读到最新的数据。最终一致性。 1.2、应用场景 分布式协调：客户端先后对不同节点的同一个变量设置不同的值，此时数据不一致。通过 Zookeeper 监听该变量，当变量改变时通知其他节点修改该值。 分布式锁 无状态化实现：在分布式登陆场景中，若将用户的登录信息放在某一个节点中，则下一次登录到其他节点就无法获取登录信息。可以将登录信息放在 Zookeeper 中，每个节点都到 Zookeeper 查询登录信息。这样对于每个节点而言就实现了无状态登录。 2、数据结构 Zookeeper 的数据结构类似于 Unix 文件系统，可以看作一棵树，每个节点称为一个 ZNode ，每个 ZNode 都可以通过其路径唯一标识。为了保证高吞吐和低延迟，znode只适合存储非常小的数据，不能超过1M。
+2.1、节点结构 每个 ZNode 包含四部分：
+data：保存数据 acl：权限。 c：创建权限；w：更新权限；r：读权限；d：删除权限；a：管理员权限，允许设置该节点的权限。 stat：元数据 child：子节点 2.2、节点类型 临时节点实现原理：
+客户端与服务端之间的连接是基于 TCP 长连接，client 端连接 server 端默认的 2181 端口，也就是 session 会话。
+客户端与服务端建立连接后，服务端会给客户端分配一个全局唯一的 session id。这个 session id 是有期限的，会话期间客户端会定时向服务端发送一个 ping 请求（心跳），服务端每次收到 ping 请求都会给 session id 续约。只要 session id 不过期，临时节点就一直存在。会话断开后，客户端便不再发送 ping 信号，session id 就会过期。服务端会定时查看 session id 是否过期，如果过期就将与之绑定的临时节点删除。
+...</p></div><footer class=entry-footer><span title='2022-05-08 17:42:15 +0000 UTC'>2022-05-08</span>&nbsp;·&nbsp;917 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to Zookeeper基础" href=https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zookeeper%E5%9F%BA%E7%A1%80/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>swap</h2></header><div class=entry-content><p>swap 分区又叫交换分区，这是一块特殊的硬盘空间，即当实际内存不够用的时候，操作系统会从内存中取出一部分暂时不用的数据，放在交换分区中，从而为当前运行的程序腾出足够的内存空间。
+操作系统为每个线程都在内存中分配一定的页框，当属于该进程的页框用完时，就会根据页面置换算法将一部分页面替换到交换分区中。
+磁盘被分为两部分，一部分是存储文件的文件分区，一部分是交换分区。文件分区散列存储，交换分区顺序存储，因此交换分区的读写速度快于文件分区。
+当文件第一次加载到内存时，从文件分区加载，之后置换到交换分区再次被加载时直接从交换分区加载。</p></div><footer class=entry-footer><span title='2022-05-07 10:42:15 +0000 UTC'>2022-05-07</span>&nbsp;·&nbsp;5 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to swap" href=https://ethereal-lu.github.io/posts/linux/swap/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>进程状态</h2></header><div class=entry-content><p>操作系统为每个线程都在内存中分配一定的页框
+1、可运行状态 处于运行状态或就绪状态
+2、可中断的阻塞状态 处于阻塞状态，等待条件满足即可唤醒。同时该状态的进程也会由于接收到信号而提前唤醒。
+3、不可中断的阻塞状态 处于阻塞状态，等待条件满足即可唤醒。但该状态的进程对于信号不做任何回应。
+4、暂停状态 进程暂时停止，来接收某种特殊处理。
+5、退出状态 进程退出时会释放掉所有资源，只保留一个task_struct结构，该结构中保存了进程的pid和退出码等信息供父进程调用。
+僵尸进程
+正常情况下，子进程退出后，父进程会通过调用 wait 或 waitpid 获取子进程的状态信息，并将子进程释放掉。但是如果父进程没有调用，则子进程的task_struct就会一直保留在系统中，并占用一个 pid，此时子进程就是一个僵尸进程。
+僵尸进程过多会导致系统中的 pid不够用，此时可以杀死父进程，使子进程过继给 init进程来释放子进程。
+孤儿进程
+父进程退出，但是子进程仍然运行，那么这些子进程就是孤儿进程，孤儿进程会被 init进程收养。
+init 进程
+pid为1的进程，又称init进程。 linux系统启动后，第一个被创建的用户态进程就是init进程。它有两项使命：
+执行系统初始化脚本，创建一系列的进程（它们都是init进程的子孙）； 在一个死循环中等待其子进程的退出事件，并调用waitid系统调用来完成“收尸”工作； init进程不会被暂停、也不会被杀死（这是由内核来保证的）。它在等待子进程退出的过程中处于TASK_INTERRUPTIBLE状态，“收尸”过程中则处于TASK_RUNNING状态。</p></div><footer class=entry-footer><span title='2022-05-07 10:42:15 +0000 UTC'>2022-05-07</span>&nbsp;·&nbsp;31 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to 进程状态" href=https://ethereal-lu.github.io/posts/linux/%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>分库分表</h2></header><div class=entry-content><p>当一张表的字段数过多或数据量过大时，即使添加从库、优化索引，做很多操作时性能仍下降严重。此时就要考虑对其进行切分了，切分的目的就在于减少数据库的负担，缩短查询时间。
+数据库分布式核心内容就是数据切分（Sharding），以及切分后对数据的定位、整合。数据切分就是将数据分散存储到多个数据库中，使得单一数据库中的数据量变小，通过扩充主机的数量缓解单一数据库的性能问题，从而达到提升数据库操作性能的目的。
+数据切分根据其切分类型，可以分为两种方式：垂直（纵向）切分和水平（横向）切分
+1、垂直分库 垂直分库就是根据业务耦合性，将关联度低的不同表存储在不同的数据库。减轻数据库的压力。
+2、垂直分表 垂直分表是基于数据库中的"列"进行，某个表字段较多，可以新建一张扩展表，将不经常用或字段长度较大的字段拆分出去到扩展表中。在字段很多的情况下（例如一个大表有100多个字段），通过"大表拆小表"，更便于开发与维护，也能避免跨页问题，MySQL底层是通过数据页存储的，一条记录占用空间过大会导致跨页，造成额外的性能开销。另外数据库以行为单位将数据加载到内存中，这样表中字段长度较短且访问频率较高，内存能加载更多的数据，命中率更高，减少了磁盘IO，从而提升了数据库性能。
+垂直分表虽然使表的复杂度降低了，但是数据量大的问题依然存在；另外，只有部分字段的表无法 join ，只能通过接口聚合方式解决，提升了开发的复杂度
+3、水平分表 将一个表中的数据按照一定的规则划分到同一个库中的不同表中，每张表存储一部分数据。库内分表只解决了单一表数据量过大的问题，但没有减轻MySQL数据库的压力，大家还是竞争同一个物理机的硬件资源。
+4、分库分表 将单张表的数据切分到多个服务器上去，每个服务器具有相应的库与表，只是表中数据集合不同。 水平分库分表能够有效的缓解单机和单库的性能瓶颈和压力，突破IO、连接数、硬件资源等的瓶颈。
+5、数据分片规则 数据分片规则指的是水平分表时的规则
+1、根据数值范围
+按照时间区间或ID区间来切分。例如：按日期将不同月甚至是日的数据分散到不同的库中；将userId为19999的记录分到第一个库，1000020000的分到第二个库，以此类推。某种意义上，某些系统中使用的"冷热数据分离"，将一些使用较少的历史数据迁移到其他库中，业务功能上只提供热点数据的查询，也是类似的实践。
+优点：1、易于扩展；2、若查询条件是时间或id则可以很快地知道在哪个表
+2、哈希
+将 id 或某个字段根据哈希函数划分数据
+3、使用单独的一个数据库来存储映射关系</p></div><footer class=entry-footer><span title='2022-05-06 17:39:41 +0000 UTC'>2022-05-06</span>&nbsp;·&nbsp;25 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to 分库分表" href=https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>MySQL数据类型</h2></header><div class=entry-content><p>1、整型 int(11)：括号中的 11 表示字符的显示宽度，它不影响存储，即它所能存储的数据还是在上图 int 的范围内。
+那它什么时候起作用：
+只有 int 字段类型设置为无符号且填充零（UNSIGNED ZEROFILL）时，当数值位数未达到设置的显示宽度时，会在数值前面补充零直到满足设定的显示宽度，为什么会有无符号的限制呢，是因为 ZEROFILL 属性会隐式地将数值转为无符号型，因此不能存储负的数值。
+详见https://www.cnblogs.com/chenmingjun/p/10556206.html
+2、浮点类型 MySQL中使用浮点数和定点数来表示小数。
+浮点类型有两种，分别是单精度浮点数（FLOAT）和双精度浮点数（DOUBLE）；定点类型只有一种，就是 DECIMAL。
+浮点类型和定点类型都可以用(M, D)来表示，其中M称为精度，表示总共的位数；D称为标度，表示小数的位数。
+CPU 原生支持浮点运算，但是不支持 DECIMAl 类型的计算，因此 DECIMAL 的计算比浮点类型需要更高的代价。
+3、字符串 主要有 CHAR 和 VARCHAR 两种类型，一种是定长的，一种是变长的。因此，当char类型的长度不够时，会以空格填充。当插入的字符串长度超过括号中设置的长度时报错。
+3.1、varchar(n) varchar是动态字符串（跟上面的int不一样）长度是在括号里面指定的，即只能存储小于等于指定长度的字符串，以 varchar(255)举例，该字段最多只能存储255个字符。
+3.2、varchar(255) 那为什么会经常性设置成varchar(255)呢？
+首先我们要知道一个概念：InnoDB存储引擎的表索引的前缀长度最长是767字节(bytes)，前缀长度意思就是索引中数据的长度，即若给一个varchar类型的字段建索引，则该varchar中最长的字符长度不能超过767字节。
+utf8编码时 255*3=765bytes ,恰恰是能建索引情况下的最大值。（255是字符的长度，3是utf8一个字符占用3个字节）
+如果使用的是utf8mb4编码，默认字符长度则应该是 767除以4向下取整，也就是191。
+3.3、字符集 varchar(n)占用几个字节跟字符集有关系：
+字符类型若为gbk，每个字符占用2个字节， 字符类型若为utf8，每个字符最多占用3个字节 字符类型若为utf8mb4，每个字符最多占用4个字节 3.4、前缀索引 如果要为三个 varchar 字段建立联合索引，但是三个字段的长度之和加起来超过了767字节，该怎么办？
+UNIQUE KEY `uniq_code` (`nick_name`(20),`account`(20),`city`(20)) 每个字段取前20字符建立索引，这样的话就是长度就不会超出，这个就是前缀索引
+3.5、varchar（20） 和varchar（255）的开销 如果要存储'hello12345'这个字符串，使用varchar(10)和varchar(100)存储，占用的磁盘空间是一样的，但是内存消耗不一样。
+MySQL建立索引时如果没有限制索引的大小，索引长度会默认采用的该字段的长度。因此，加载索引信息时用varchar(255)类型会占用更多的内存。 由于MySQL通常会分配固定大小的内存块来保存内部值，因此当使用临时表进行排序等操作时会消耗更多的内存。 3.6、varchar 与 char VARCHAR 会保留字符串末尾的空格，而 CHAR 会删除。即对于 “a ”，varchar 存储的是 “a ”，而char存储的是“a”
+...</p></div><footer class=entry-footer><span title='2022-05-04 12:39:41 +0000 UTC'>2022-05-04</span>&nbsp;·&nbsp;117 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to MySQL数据类型" href=https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>基础网络攻击</h2></header><div class=entry-content><p>1、SYN洪泛攻击 1.1、产生原理 服务器在收到连接请求报文段后，如同意建立连接，就向客户机发回确认，并在OS内核中为该TCP连接分配TCP缓存和变量。除此之外标识该tcp连接的tcb也会占用内存资源。
+1.2、防御手段 SYN cookie 方法
+在服务器收到客户端的第一次请求之后，不立马分配资源，而是将
+SYN报文的源和目的IP与端口号 仅仅有服务器知道的密钥 塞入一个哈希函数，生成一个认证码；这个认证码也叫cookie；将cookie作为初始序列号，发送给客户端。如果客户端真实存在，则客户端将会带着cookie+1作为ack响应。而服务器可以再次执行上述过程，比较与ack-1是否相同。如果相同，则建立连接。如果客户端不存在，则服务器没有为其消耗任何资源。
+1.3、TCP的相关细节 TCB：包含 socket 、指向收发缓冲区的指针、数据包序列号等。
+客户端的TCB在发起连接之前就创建并赋好值；服务端的TCB也在收到连接之前就创建好，但是由于不知道谁会连接自己，故将TCB都初始化为0，当接收到第一次握手的连接请求后，为该tcp分配缓存等资源，并赋值给TCB。因此，在第二次握手时，服务端已经为该tcp连接分配了一部分资源。
+若第三次握手的ack包丢失会怎样？
+或许由于第二次握手的包丢失，客户端不会发起第三次握手；或者客户端的第三次握手的包丢失。总之，服务端在接收不到第三次握手包时会执行如下操作：
+没有收到来自客户端的任何包：根据 TCP的超时重传机制，重新发送第二次握手包，若重发指定次数之后，仍然未收到响应，就会发送reset包，关闭连接，释放资源。 收到了后续的数据包：由于第三次握手的关键就是其ack，而数据包中也有ack，故连接正常建立并进行通信。如果第三次握手包中不包含数据则不消耗序号。 2、DNS 劫持 某些网络运营商为了某些目的，对DNS进行了某些操作，导致用户无法通过域名取得正确的IP地址。
+运营商会利用 DNS 劫持 投放小广告等。DNS污染则让域名直接无法访问了。
+遇到DNS污染只能更换域名服务器或使用第三方域名解析服务。
+3、中间人攻击 前置知识：机器对于 ARP 包是信任的，不做任何安全校验。此方式需要和受害人在同一局域网。
+当客户端发起连接请求时，攻击者向客户端发送大量 ARP 包谎称自己是网关，然后客户端就会将所有请求都发送给攻击者。攻击者收到请求后返回自己的数字证书，并向服务端发送真实的请求。如果客户端不对证书校验，则客户端就会向攻击者发送对称加密密钥并进行后续的加密通信，而攻击者和服务器建立的是正规的安全连接。如此，中间人攻击就成功了，后续攻击者可以对请求和响应进行转发，并动一些手脚。
+也可以利用DNS 劫持发起中间人攻击。
+使用 SSL 身份认证即可防御中间人攻击。
+4、缓冲区溢出攻击 通过往程序的缓冲区写超出其长度的内容，造成缓冲区的溢出，使程序转而执行其它指令，以达到攻击的目的。如strcpy()函数，不会对字符串边界进行检查就直接复制，当参数长度大于缓冲区长度时就会造成缓冲区溢出。
+可以通过制造缓冲区溢出使程序运行一个用户shell，再通过shell执行其它命令。如果该程序有root权限的话，攻击者就获得了一个有root权限的shell，可以对系统进行任意操作了。
+5、跨站请求伪造 CSRF 5.1、同源策略 源由[协议、域名、端口]三元组组成，三元组都一样时称为同源。
+同源策略限制了其他源的脚本对当前页面资源的读写。
+同源策略不会限制发起跨域请求，而是限制 Javascript 对于响应结果的读写。
+5.2、CSRF 原理 用户在登录网站 A 后，在本地浏览器中存储了网站 A 的 Cookie 。之后没有结束与 A 的会话就去访问恶意网站 B ，网站 B 可以通过 img 的 src 向网站 A 发起 GET 请求，或通过表单向网站 A 发起 POST请求。这些请求会自动携带上之前还没有删除的 Cookie ，网站 A 就会认为这是来自用户的一个合法请求并执行它。
+...</p></div><footer class=entry-footer><span title='2022-05-03 22:39:41 +0000 UTC'>2022-05-03</span>&nbsp;·&nbsp;219 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to 基础网络攻击" href=https://ethereal-lu.github.io/posts/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/%E5%9F%BA%E7%A1%80%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Redis集群</h2></header><div class=entry-content><p>主从复制和哨兵机制保障了高可用，就读写分离而言虽然slave节点扩展了主从的读并发能力，但是写能力和存储能力是无法进行扩展，就只能是master节点能够承载的上限。如果面对海量数据那么必然需要构建master之间的集群，同时必然需要吸收高可用（主从复制和哨兵机制）能力，即每个master分片节点还需要有slave节点。这就是为社么要使用Redis集群。
+1、概述 Redis集群可以理解为n个主从架构组合在一起对外服务。Redis Cluster要求至少需要3个master才能组成一个集群，同时每个master至少需要有一个slave节点。
+如此，Redis集群的写能力和存储能力就是所有master之和了。
+虽然每个master下都挂载了一个slave节点，但是在Redis Cluster中的读、写请求其实都是在master上完成的。slave节点只是充当了一个数据备份的角色，当master发生了宕机，就会将对应的slave节点提拔为master，来重新对外提供服务。
+2、 主要模块介绍 2.1、 哈希槽(Hash Slot) Redis-cluster没有使用一致性hash，而是引入了哈希槽的概念。Redis-cluster中有16384(即2的14次方）个哈希槽，每个key通过CRC16校验后对16383取模来决定放置哪个槽。Cluster中的每个节点负责一部分hash槽（hash slot）。
+一个键的对应的哈希槽通过计算键的CRC16 哈希值，然后对16384进行取模得到：HASH_SLOT=CRC16(key) modulo 16383。读写操作都是先计算出键的哈希槽，再在负责该哈希槽的 master 上进行相应操作。
+2.2、Cluster总线 每个Redis Cluster节点有一个额外的TCP端口用来接受其他节点的连接。这个端口为普通 client 端口 + 10000。如普通 client 端口为6379，则总线端口为 16379。节点到节点的通讯只使用集群总线。
+2.3、集群拓扑 Redis Cluster是一张全网拓扑，节点与其他每个节点之间都保持着TCP连接。
+2.4、节点握手 节点认定其他节点是当前集群的一部分有两种方式：
+如果一个节点出现在了一条MEET消息中。meet消息会强制接收者接受一个节点作为集群的一部分。
+从某个已信任的节点处获知某节点是集群的一部分，则当前节点也会将该节点当成集群的一部分。
+3、状态检测及维护 在集群模式下，所有的publish命令都会向所有节点（包括从节点）进行广播，加重了带宽负担，对于在有大量节点的集群中频繁使用pub，会严重消耗带宽，不建议使用。
+3.1、Gossip协议 gossip 协议是基于流行病传播方式的节点或者进程之间信息交换的协议。Gossip协议的最大的好处是，即使集群节点的数量增加，每个节点的负载也不会增加很多，几乎是恒定的。
+Gossip的特点：在一个有界网络中，每个节点都随机地与其他节点通信，经过一番杂乱无章的通信，最终所有节点的状态都会达成一致。每个节点可能知道所有其他节点，也可能仅知道几个邻居节点，只要这些节可以通过网络连通，最终他们的状态都是一致的。即Gossip协议是最终一致性，不是强一致性。
+3.2、基于Gossip协议的故障检测 集群中的每个节点都会不定时地向集群中的其他节点发送PING消息，以此交换各个节点状态信息。
+当节点 1 向节点 3 发送PING消息后未在规定时间内收到节点 3 的PONG响应，则节点 1 认为节点 3 PFAIL（主观下线）。当节点1标记节点3为PFAIL后，节点1会通过Gossip消息把这个信息发送给其他节点，接收到信息的节点会进行节点3客观下线状态判定。当节点2接收到来自节点1关于节点3的状态判定信息之后，节点2首先会把节点1加入到节点3的下线报告列表(Fail Report)中。每个节点都会维护一个下线报告列表，主要维护一个节点被哪些节点报告处于下线状态。
+只有同样认为节点3处于PFAIL状态的节点才会去做客观下线状态判定，即只有节点2也曾向节点3发送ping且没有得到响应，节点2才会去做客观下线状态判定：如果自己维护的节点3的下线报告列表中包含一半以上的主节点（即超过半数的主节点认为节点3主观下线），则认为节点3 FAIL（客观下线）。
+一旦节点2认为节点3客观下线，就向集群广播节点3的FAIL消息，所有收到FAIL消息的节点都会立即将节点3的状态标记为已下线。
+疑问：节点2是否可以是从节点？即从节点是否参与故障检测，是否拥有下线报告列表，是否做客观下线判断，是否能发广播？
+4、 故障恢复（Failover） 当slave发现自己的master变为FAIL状态时，便尝试进行Failover，以期成为新的master。由于挂掉的master可能会有多个slave。Failover的过程需要经过类Raft协议的过程在整个集群内达到一致， 其过程如下：
+slave发现自己的master变为FAIL 长时间不与主节点通信的从节点不具备竞选资格 所有竞选者随即休眠，唤醒后立即通过广播向所有节点拉票 其他节点收到拉票请求，只有master响应，若本轮竞选中自己没投过票就投，否则不投票，即每个主节点只有一次投票机会 从节点发现超过半数的主节点为自己投票就变成新Master：接替旧master 的slot，并让旧master与其他从节点成为自己的从节点 广播Pong通知其他集群节点自己成为新的主节点 易知，休眠时间最短的节点容易获得大部分投票。
+...</p></div><footer class=entry-footer><span title='2022-05-02 21:39:41 +0000 UTC'>2022-05-02</span>&nbsp;·&nbsp;88 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to Redis集群" href=https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E9%9B%86%E7%BE%A4/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Redis主从复制</h2></header><div class=entry-content><p>1、概述 主从复制，是指将一台Redis服务器的数据，复制到其他的Redis服务器。前者称为主节点(master)，后者称为从节点(slave)；数据的复制是单向的，只能由主节点到从节点。主从节点建立连接后会保持心跳检测。
+主从复制的作用主要包括：
+数据冗余：主从复制实现了数据的热备份，是持久化之外的一种数据冗余方式。 故障恢复：当主节点出现问题时，可以由从节点提供服务，实现快速的故障恢复；实际上是一种服务的冗余。 负载均衡：在主从复制的基础上，配合读写分离，可以由主节点提供写服务，由从节点提供读服务。尤其是在写少读多的场景下，通过多个从节点分担读负载，可以大大提高Redis服务器的并发量。 高可用基石：除了上述作用以外，主从复制还是哨兵和集群能够实施的基础，因此说主从复制是Redis高可用的基础。 主从库之间采用的是读写分离的方式。
+读操作：主库、从库都可以接收； 写操作：首先到主库执行，然后，主库将写操作同步给从库。 由于 Redis 的主从复制是通过异步实现的，在主从复制期间任然可以对外提供服务，因此属于 AP 模型，实现的是最终一致性。
+2、原理 全量（同步）复制：主库的全部数据同步给从库 增量（同步）复制：只会把主从库网络断连期间主库收到的命令，同步给从库 2.1、全量复制 当我们启动多个 Redis 实例的时候，它们相互之间就可以通过 replicaof（Redis 5.0 之前使用 slaveof）命令形成主库和从库的关系。
+replicaof 172.16.19.3 6379 // 当前实例作为 172.16.19.3 6379 的从库 全量复制的三个阶段
+第一阶段是主从库间建立连接、协商同步的过程：
+// 从库发出如下命令请求数据同步 psync ？ -1 // 第一个参数为 runID ,唯一标识一个实例。由于第一次请求不知道主库的 runID ，故使用 ？ // 第二个参数为数据同步的偏移量 offset ，-1 表示从头开始同步。 主库收到请求后返回自己的 runID 和当前同步进度 offset，从库记录下来用于后续同步操作。
+第二阶段，主库将所有数据同步给从库：主库执行 bgsave 命令，生成 RDB 文件，接着将文件发给从库。从库接收到 RDB 文件后，会先清空当前数据库，然后加载 RDB 文件。数据同步的过程中主库新接收的写操作记录在 replication buffer 中。
+第三个阶段，主库会把第二阶段执行过程中新收到的写命令，再发送给从库：主库完成 RDB 文件发送后，就会把此时 replication buffer 中的修改操作发给从库，从库再重新执行这些操作。
+...</p></div><footer class=entry-footer><span title='2022-05-02 15:39:41 +0000 UTC'>2022-05-02</span>&nbsp;·&nbsp;144 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to Redis主从复制" href=https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Redis哨兵机制</h2></header><div class=entry-content><p>由于主从模式是读写分离的，如果主节点故障，那么将没有主节点来执行写操作，也没有主节点给从节点进行数据同步了。若是每次主节点故障都需要人工切换主从节点太繁琐，于是哨兵机制出现了。哨兵的核心功能是主节点的自动故障转移。
+1、哨兵集群的组建 哨兵实例之间可以相互发现，要归功于 Redis 提供的发布 / 订阅机制。
+首先主节点的信息配置在哨兵(Sentinel)的配置文件中 哨兵节点会和配置的主节点建立起连接 哨兵每10秒会向主节点发送info命令，主节点会返回自己的run_id和自己的从节点信息。 哨兵会对这些从节点也建立连接。之后每10秒会向主节点和从节点都发送info命令以获取最新的拓扑结构。 每个哨兵都订阅主节点的_sentinel:hello频道，且每2秒向该频道发布自己的信息，各哨兵由此与其他哨兵建立连接。 每隔1秒每个哨兵会向主节点、从节点、其他哨兵发送ping命令，做心跳检测。 上述 6 点中，加粗部分为每个哨兵的三个定时任务。
+2、主库下线的判定 主观下线：哨兵节点每隔1秒向各节点发送PING命令，如果在规定时间内没有收到有效响应，哨兵就会将该节点标记为主观下线。 客观下线：当某个哨兵判断主库主观下线后，就会给其他哨兵发起询问，其他哨兵会根据自己和主库的连接情况，做出赞成或反对的响应。如果赞成票数大于等于哨兵配置文件中的配置项 quorum 的值, 则判定主库客观下线。quorum 的值一般为哨兵个数 / 2 + 1。 3、新主库选取 根据以下规则选取新主库：
+过滤掉网络状态不好的：redis 有一个参数用于表示主从节点的通信超时时间，如果从节点的超时次数超过10次，说明这个从节点的网络状况不好，不适合作为新主节点。 选择从节点优先级最高的（redis.conf 中有一个配置项salve-priority表示从节点优先级） 优先级相同时选择复制偏移量最大的 若优先级和偏移量都相同，则选择 id 号小的 4、选举Leader哨兵 新主库选取选举之后需要进行故障转移，但是哨兵节点有多个，需要选举一个 leader 哨兵来负责进行主从切换。
+选举算法Raft选举算法：哪个哨兵节点判断主节点为「客观下线」，这个哨兵节点就是候选者。候选者会向其他哨兵发送命令，表明希望成为 Leader 来执行主从切换，并让所有其他哨兵对它进行投票。每个哨兵只有一次投票机会，如果用完后就不能参与投票了，可以投给自己或投给别人，但是只有候选者才能把票投给自己。若只有一个候选者，则其他哨兵会将票投给它，若有多个候选者，即多个哨兵同时判断主节点为「客观下线」，此时其他非候选者哨兵会对它收到的第一个拉票候选者投票，对后续收到的其他拉票请求给予拒绝。
+一个候选者若能成为 Leader ，那它获得的赞成票必须既大于哨兵节点的一半又大于quorum的值。如果所有候选者都不满足，则发起下一轮选举。
+若有超过一半的哨兵宕机，则无法完成Leader哨兵的选举。
+5、故障转移 通过 slave of no one 命令将 4 中选举的从节点变为主节点。 通过replicaof命令将其他从节点和旧的主节点都成为新主节点的从节点。</p></div><footer class=entry-footer><span title='2022-05-02 15:39:41 +0000 UTC'>2022-05-02</span>&nbsp;·&nbsp;58 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to Redis哨兵机制" href=https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/></a></article><footer class=page-footer><nav class=pagination><a class=prev href=https://ethereal-lu.github.io/page/2/>«&nbsp;Prev&nbsp;
+</a><a class=next href=https://ethereal-lu.github.io/page/4/>Next&nbsp;&nbsp;»</a></nav></footer></main><footer class=footer><span>&copy; 2025 <a href=https://ethereal-lu.github.io/>lu</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script></body></html>

@@ -1,0 +1,174 @@
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>HTTP | lu</title>
+<meta name=keywords content><meta name=description content="1、HTTP请求方法
+
+  
+      
+          index
+          method
+          description
+      
+  
+  
+      
+          1
+          GET
+          请求指定页面信息，并返回实体主体
+      
+      
+          2
+          HEAD
+          类似于GET请求，只不过返回的响应中没有具体的内容，用于获取报头
+      
+      
+          3
+          POST
+          向指定资源提交数据进行处理请求（例如提交表单或者上传文件）。数据被包含在请求体中。POST请求可能会导致新的资源的建立和/或已有资源的修改。
+      
+      
+          4
+          PUT
+          从客户端向服务器传送的数据取代指定的文档的内容。（全部取代）
+      
+      
+          5
+          PATCH
+          从客户端向服务器传送的数据取代指定的文档的内容。（部分取代）
+      
+      
+          6
+          DELETE
+          请求服务器删除指定的页面。
+      
+      
+          7
+          CONNECT
+          HTTP/1.1协议中预留给能够将连接改为管道方式的代理服务器。
+      
+      
+          8
+          OPTIONS
+          允许客户端查看服务器的性能。
+      
+      
+          9
+          TRACE
+          回显服务器收到的请求，主要用于测试或诊断。
+      
+  
+
+2、HTTP队头阻塞
+在HTTP1.0中不使用TCP长连接，每次收到响应后才能发起下一个请求。每个请求都需要 3 + 4.
+在HTTP1.1中使用TCP长连接，一个TCP连接中可以处理多个请求，但是如果前面的请求没有收到响应就会阻塞后续的请求。因此引入管道来提高效率。但是管道的引入带来了对头阻塞，管道特性允许客户端在已发送的请求收到服务端的响应之前发送下一个请求，但是由于HTTP请求和响应并没有序号标识，无法将乱序的响应与请求关联起来，因此响应顺序必须与请求顺序一致。如果某个响应由于一些原因延迟了，那么后面的响应就都会被阻塞，这就是队头阻塞。
+由于队头阻塞和幂等性问题，现代浏览器默认都关闭了管道化，并且大部分服务器也是默认不支持管道化的。
+解决队头阻塞问题可以采用并发TCP连接，即每个浏览器可以对同一个域名发起多个TCP连接，如谷歌浏览器默认最大可以同时发起6个TCP连接，此时不同TCP连接中的请求便不存在队头阻塞问题。但是连接数量有限且需要额外的资源，因此只能做有效缓解。
+3、HTTP幂等性
+当客户端在支持管道化时需要保持未收到响应的请求，当连接意外中断时，需要重新发送这部分请求。因此客户端在使用管道化的时候请求方式必须是幂等请求。
+HTTP方法的幂等性是指一次和多次请求某一个资源应该具有同样的副作用。这里的副作用是指对于资源造成的改变，而不是响应结果必须一样。
+
+GET 操作是幂等的，原因是 GET 操作根本不会对服务器产生任何修改。
+PUT 方法通常是对已经存在的资源进行修改，也是幂等的。如将数字 1 改为 2，执行一次成功后，后续的操作都应该找不到数字 1
+DELETE 方法也是幂等的，例如我们连续发起多个对 A 的删除请求，如果第一个成功的话，后面的请求都应返回资源找不到的错误
+POST 一般是指新增资源，不是幂等的。如果连续发起三个 A 资源的增加，最终的结果会是三个 A 资源，而不是一个
+
+因此，POST方法不能使用 Pipeline。
+4、http2 和http1.1 区别
+
+新的二进制格式（Binary  Format），http1.1和2.0 最大的区别是二进制框架层。与 http1.1把所有请求和响应作为纯文本不同，http2 使用二进制框架层把所有消息封装成二进制。二进制协议解析起来更高效且错误更少。
+多路复用（MultiPlexing），客户端与服务端只建立一个TCP连接，所有的请求都共享这个连接。一个request对应一个id，再将一个请求切割成多个帧，同一个请求的多个帧都携带同一个请求id，这样一个连接上可以有多个request，每个请求的帧可以随机的混杂在一起，接收方可以根据request的 id将request再归属到各自不同的服务端请求里面。
+header压缩，HTTP报文的header带有大量信息，而且每次都要重复发送，HTTP2.0使用encoder来减少需要传输的header大小，通讯双方各自cache一份header fields表，既避免了重复header的传输，又减小了需要传输的大小。
+服务端推送（server push），实现复杂。
+
+5、TSL
+TLS（传输层安全）是更为安全的升级版 SSL。该协议由两层组成： TLS 记录协议和 TLS 握手协议。记录协议主要负责使用对称密码对消息进行加密。握手协议负责在客户端和服务器端商定密码算法和共享密钥，以及证书认证。"><meta name=author content="lu"><link rel=canonical href=https://ethereal-lu.github.io/posts/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/http/><link crossorigin=anonymous href=/assets/css/stylesheet.d72444526d7ecbdb0015438a7fa89054a658bf759d0542e2e5df81ce94b493ee.css integrity="sha256-1yREUm1+y9sAFUOKf6iQVKZYv3WdBULi5d+BzpS0k+4=" rel="preload stylesheet" as=style><link rel=icon href=https://ethereal-lu.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://ethereal-lu.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://ethereal-lu.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://ethereal-lu.github.io/apple-touch-icon.png><link rel=mask-icon href=https://ethereal-lu.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://ethereal-lu.github.io/posts/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/http/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51)}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style></noscript><meta property="og:url" content="https://ethereal-lu.github.io/posts/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/http/"><meta property="og:site_name" content="lu"><meta property="og:title" content="HTTP"><meta property="og:description" content="1、HTTP请求方法 index method description 1 GET 请求指定页面信息，并返回实体主体 2 HEAD 类似于GET请求，只不过返回的响应中没有具体的内容，用于获取报头 3 POST 向指定资源提交数据进行处理请求（例如提交表单或者上传文件）。数据被包含在请求体中。POST请求可能会导致新的资源的建立和/或已有资源的修改。 4 PUT 从客户端向服务器传送的数据取代指定的文档的内容。（全部取代） 5 PATCH 从客户端向服务器传送的数据取代指定的文档的内容。（部分取代） 6 DELETE 请求服务器删除指定的页面。 7 CONNECT HTTP/1.1协议中预留给能够将连接改为管道方式的代理服务器。 8 OPTIONS 允许客户端查看服务器的性能。 9 TRACE 回显服务器收到的请求，主要用于测试或诊断。 2、HTTP队头阻塞 在HTTP1.0中不使用TCP长连接，每次收到响应后才能发起下一个请求。每个请求都需要 3 + 4.
+在HTTP1.1中使用TCP长连接，一个TCP连接中可以处理多个请求，但是如果前面的请求没有收到响应就会阻塞后续的请求。因此引入管道来提高效率。但是管道的引入带来了对头阻塞，管道特性允许客户端在已发送的请求收到服务端的响应之前发送下一个请求，但是由于HTTP请求和响应并没有序号标识，无法将乱序的响应与请求关联起来，因此响应顺序必须与请求顺序一致。如果某个响应由于一些原因延迟了，那么后面的响应就都会被阻塞，这就是队头阻塞。
+由于队头阻塞和幂等性问题，现代浏览器默认都关闭了管道化，并且大部分服务器也是默认不支持管道化的。
+解决队头阻塞问题可以采用并发TCP连接，即每个浏览器可以对同一个域名发起多个TCP连接，如谷歌浏览器默认最大可以同时发起6个TCP连接，此时不同TCP连接中的请求便不存在队头阻塞问题。但是连接数量有限且需要额外的资源，因此只能做有效缓解。
+3、HTTP幂等性 当客户端在支持管道化时需要保持未收到响应的请求，当连接意外中断时，需要重新发送这部分请求。因此客户端在使用管道化的时候请求方式必须是幂等请求。
+HTTP方法的幂等性是指一次和多次请求某一个资源应该具有同样的副作用。这里的副作用是指对于资源造成的改变，而不是响应结果必须一样。
+GET 操作是幂等的，原因是 GET 操作根本不会对服务器产生任何修改。 PUT 方法通常是对已经存在的资源进行修改，也是幂等的。如将数字 1 改为 2，执行一次成功后，后续的操作都应该找不到数字 1 DELETE 方法也是幂等的，例如我们连续发起多个对 A 的删除请求，如果第一个成功的话，后面的请求都应返回资源找不到的错误 POST 一般是指新增资源，不是幂等的。如果连续发起三个 A 资源的增加，最终的结果会是三个 A 资源，而不是一个 因此，POST方法不能使用 Pipeline。
+4、http2 和http1.1 区别 新的二进制格式（Binary Format），http1.1和2.0 最大的区别是二进制框架层。与 http1.1把所有请求和响应作为纯文本不同，http2 使用二进制框架层把所有消息封装成二进制。二进制协议解析起来更高效且错误更少。 多路复用（MultiPlexing），客户端与服务端只建立一个TCP连接，所有的请求都共享这个连接。一个request对应一个id，再将一个请求切割成多个帧，同一个请求的多个帧都携带同一个请求id，这样一个连接上可以有多个request，每个请求的帧可以随机的混杂在一起，接收方可以根据request的 id将request再归属到各自不同的服务端请求里面。 header压缩，HTTP报文的header带有大量信息，而且每次都要重复发送，HTTP2.0使用encoder来减少需要传输的header大小，通讯双方各自cache一份header fields表，既避免了重复header的传输，又减小了需要传输的大小。 服务端推送（server push），实现复杂。 5、TSL TLS（传输层安全）是更为安全的升级版 SSL。该协议由两层组成： TLS 记录协议和 TLS 握手协议。记录协议主要负责使用对称密码对消息进行加密。握手协议负责在客户端和服务器端商定密码算法和共享密钥，以及证书认证。"><meta property="og:locale" content="zh-CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2022-06-01T12:39:41+00:00"><meta property="article:modified_time" content="2022-06-01T12:39:41+00:00"><meta name=twitter:card content="summary"><meta name=twitter:title content="HTTP"><meta name=twitter:description content="1、HTTP请求方法
+
+  
+      
+          index
+          method
+          description
+      
+  
+  
+      
+          1
+          GET
+          请求指定页面信息，并返回实体主体
+      
+      
+          2
+          HEAD
+          类似于GET请求，只不过返回的响应中没有具体的内容，用于获取报头
+      
+      
+          3
+          POST
+          向指定资源提交数据进行处理请求（例如提交表单或者上传文件）。数据被包含在请求体中。POST请求可能会导致新的资源的建立和/或已有资源的修改。
+      
+      
+          4
+          PUT
+          从客户端向服务器传送的数据取代指定的文档的内容。（全部取代）
+      
+      
+          5
+          PATCH
+          从客户端向服务器传送的数据取代指定的文档的内容。（部分取代）
+      
+      
+          6
+          DELETE
+          请求服务器删除指定的页面。
+      
+      
+          7
+          CONNECT
+          HTTP/1.1协议中预留给能够将连接改为管道方式的代理服务器。
+      
+      
+          8
+          OPTIONS
+          允许客户端查看服务器的性能。
+      
+      
+          9
+          TRACE
+          回显服务器收到的请求，主要用于测试或诊断。
+      
+  
+
+2、HTTP队头阻塞
+在HTTP1.0中不使用TCP长连接，每次收到响应后才能发起下一个请求。每个请求都需要 3 + 4.
+在HTTP1.1中使用TCP长连接，一个TCP连接中可以处理多个请求，但是如果前面的请求没有收到响应就会阻塞后续的请求。因此引入管道来提高效率。但是管道的引入带来了对头阻塞，管道特性允许客户端在已发送的请求收到服务端的响应之前发送下一个请求，但是由于HTTP请求和响应并没有序号标识，无法将乱序的响应与请求关联起来，因此响应顺序必须与请求顺序一致。如果某个响应由于一些原因延迟了，那么后面的响应就都会被阻塞，这就是队头阻塞。
+由于队头阻塞和幂等性问题，现代浏览器默认都关闭了管道化，并且大部分服务器也是默认不支持管道化的。
+解决队头阻塞问题可以采用并发TCP连接，即每个浏览器可以对同一个域名发起多个TCP连接，如谷歌浏览器默认最大可以同时发起6个TCP连接，此时不同TCP连接中的请求便不存在队头阻塞问题。但是连接数量有限且需要额外的资源，因此只能做有效缓解。
+3、HTTP幂等性
+当客户端在支持管道化时需要保持未收到响应的请求，当连接意外中断时，需要重新发送这部分请求。因此客户端在使用管道化的时候请求方式必须是幂等请求。
+HTTP方法的幂等性是指一次和多次请求某一个资源应该具有同样的副作用。这里的副作用是指对于资源造成的改变，而不是响应结果必须一样。
+
+GET 操作是幂等的，原因是 GET 操作根本不会对服务器产生任何修改。
+PUT 方法通常是对已经存在的资源进行修改，也是幂等的。如将数字 1 改为 2，执行一次成功后，后续的操作都应该找不到数字 1
+DELETE 方法也是幂等的，例如我们连续发起多个对 A 的删除请求，如果第一个成功的话，后面的请求都应返回资源找不到的错误
+POST 一般是指新增资源，不是幂等的。如果连续发起三个 A 资源的增加，最终的结果会是三个 A 资源，而不是一个
+
+因此，POST方法不能使用 Pipeline。
+4、http2 和http1.1 区别
+
+新的二进制格式（Binary  Format），http1.1和2.0 最大的区别是二进制框架层。与 http1.1把所有请求和响应作为纯文本不同，http2 使用二进制框架层把所有消息封装成二进制。二进制协议解析起来更高效且错误更少。
+多路复用（MultiPlexing），客户端与服务端只建立一个TCP连接，所有的请求都共享这个连接。一个request对应一个id，再将一个请求切割成多个帧，同一个请求的多个帧都携带同一个请求id，这样一个连接上可以有多个request，每个请求的帧可以随机的混杂在一起，接收方可以根据request的 id将request再归属到各自不同的服务端请求里面。
+header压缩，HTTP报文的header带有大量信息，而且每次都要重复发送，HTTP2.0使用encoder来减少需要传输的header大小，通讯双方各自cache一份header fields表，既避免了重复header的传输，又减小了需要传输的大小。
+服务端推送（server push），实现复杂。
+
+5、TSL
+TLS（传输层安全）是更为安全的升级版 SSL。该协议由两层组成： TLS 记录协议和 TLS 握手协议。记录协议主要负责使用对称密码对消息进行加密。握手协议负责在客户端和服务器端商定密码算法和共享密钥，以及证书认证。"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Posts","item":"https://ethereal-lu.github.io/posts/"},{"@type":"ListItem","position":2,"name":"HTTP","item":"https://ethereal-lu.github.io/posts/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/http/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"HTTP","name":"HTTP","description":"1、HTTP请求方法 index method description 1 GET 请求指定页面信息，并返回实体主体 2 HEAD 类似于GET请求，只不过返回的响应中没有具体的内容，用于获取报头 3 POST 向指定资源提交数据进行处理请求（例如提交表单或者上传文件）。数据被包含在请求体中。POST请求可能会导致新的资源的建立和/或已有资源的修改。 4 PUT 从客户端向服务器传送的数据取代指定的文档的内容。（全部取代） 5 PATCH 从客户端向服务器传送的数据取代指定的文档的内容。（部分取代） 6 DELETE 请求服务器删除指定的页面。 7 CONNECT HTTP/1.1协议中预留给能够将连接改为管道方式的代理服务器。 8 OPTIONS 允许客户端查看服务器的性能。 9 TRACE 回显服务器收到的请求，主要用于测试或诊断。 2、HTTP队头阻塞 在HTTP1.0中不使用TCP长连接，每次收到响应后才能发起下一个请求。每个请求都需要 3 + 4.\n在HTTP1.1中使用TCP长连接，一个TCP连接中可以处理多个请求，但是如果前面的请求没有收到响应就会阻塞后续的请求。因此引入管道来提高效率。但是管道的引入带来了对头阻塞，管道特性允许客户端在已发送的请求收到服务端的响应之前发送下一个请求，但是由于HTTP请求和响应并没有序号标识，无法将乱序的响应与请求关联起来，因此响应顺序必须与请求顺序一致。如果某个响应由于一些原因延迟了，那么后面的响应就都会被阻塞，这就是队头阻塞。\n由于队头阻塞和幂等性问题，现代浏览器默认都关闭了管道化，并且大部分服务器也是默认不支持管道化的。\n解决队头阻塞问题可以采用并发TCP连接，即每个浏览器可以对同一个域名发起多个TCP连接，如谷歌浏览器默认最大可以同时发起6个TCP连接，此时不同TCP连接中的请求便不存在队头阻塞问题。但是连接数量有限且需要额外的资源，因此只能做有效缓解。\n3、HTTP幂等性 当客户端在支持管道化时需要保持未收到响应的请求，当连接意外中断时，需要重新发送这部分请求。因此客户端在使用管道化的时候请求方式必须是幂等请求。\nHTTP方法的幂等性是指一次和多次请求某一个资源应该具有同样的副作用。这里的副作用是指对于资源造成的改变，而不是响应结果必须一样。\nGET 操作是幂等的，原因是 GET 操作根本不会对服务器产生任何修改。 PUT 方法通常是对已经存在的资源进行修改，也是幂等的。如将数字 1 改为 2，执行一次成功后，后续的操作都应该找不到数字 1 DELETE 方法也是幂等的，例如我们连续发起多个对 A 的删除请求，如果第一个成功的话，后面的请求都应返回资源找不到的错误 POST 一般是指新增资源，不是幂等的。如果连续发起三个 A 资源的增加，最终的结果会是三个 A 资源，而不是一个 因此，POST方法不能使用 Pipeline。\n4、http2 和http1.1 区别 新的二进制格式（Binary Format），http1.1和2.0 最大的区别是二进制框架层。与 http1.1把所有请求和响应作为纯文本不同，http2 使用二进制框架层把所有消息封装成二进制。二进制协议解析起来更高效且错误更少。 多路复用（MultiPlexing），客户端与服务端只建立一个TCP连接，所有的请求都共享这个连接。一个request对应一个id，再将一个请求切割成多个帧，同一个请求的多个帧都携带同一个请求id，这样一个连接上可以有多个request，每个请求的帧可以随机的混杂在一起，接收方可以根据request的 id将request再归属到各自不同的服务端请求里面。 header压缩，HTTP报文的header带有大量信息，而且每次都要重复发送，HTTP2.0使用encoder来减少需要传输的header大小，通讯双方各自cache一份header fields表，既避免了重复header的传输，又减小了需要传输的大小。 服务端推送（server push），实现复杂。 5、TSL TLS（传输层安全）是更为安全的升级版 SSL。该协议由两层组成： TLS 记录协议和 TLS 握手协议。记录协议主要负责使用对称密码对消息进行加密。握手协议负责在客户端和服务器端商定密码算法和共享密钥，以及证书认证。\n","keywords":[],"articleBody":"1、HTTP请求方法 index method description 1 GET 请求指定页面信息，并返回实体主体 2 HEAD 类似于GET请求，只不过返回的响应中没有具体的内容，用于获取报头 3 POST 向指定资源提交数据进行处理请求（例如提交表单或者上传文件）。数据被包含在请求体中。POST请求可能会导致新的资源的建立和/或已有资源的修改。 4 PUT 从客户端向服务器传送的数据取代指定的文档的内容。（全部取代） 5 PATCH 从客户端向服务器传送的数据取代指定的文档的内容。（部分取代） 6 DELETE 请求服务器删除指定的页面。 7 CONNECT HTTP/1.1协议中预留给能够将连接改为管道方式的代理服务器。 8 OPTIONS 允许客户端查看服务器的性能。 9 TRACE 回显服务器收到的请求，主要用于测试或诊断。 2、HTTP队头阻塞 在HTTP1.0中不使用TCP长连接，每次收到响应后才能发起下一个请求。每个请求都需要 3 + 4.\n在HTTP1.1中使用TCP长连接，一个TCP连接中可以处理多个请求，但是如果前面的请求没有收到响应就会阻塞后续的请求。因此引入管道来提高效率。但是管道的引入带来了对头阻塞，管道特性允许客户端在已发送的请求收到服务端的响应之前发送下一个请求，但是由于HTTP请求和响应并没有序号标识，无法将乱序的响应与请求关联起来，因此响应顺序必须与请求顺序一致。如果某个响应由于一些原因延迟了，那么后面的响应就都会被阻塞，这就是队头阻塞。\n由于队头阻塞和幂等性问题，现代浏览器默认都关闭了管道化，并且大部分服务器也是默认不支持管道化的。\n解决队头阻塞问题可以采用并发TCP连接，即每个浏览器可以对同一个域名发起多个TCP连接，如谷歌浏览器默认最大可以同时发起6个TCP连接，此时不同TCP连接中的请求便不存在队头阻塞问题。但是连接数量有限且需要额外的资源，因此只能做有效缓解。\n3、HTTP幂等性 当客户端在支持管道化时需要保持未收到响应的请求，当连接意外中断时，需要重新发送这部分请求。因此客户端在使用管道化的时候请求方式必须是幂等请求。\nHTTP方法的幂等性是指一次和多次请求某一个资源应该具有同样的副作用。这里的副作用是指对于资源造成的改变，而不是响应结果必须一样。\nGET 操作是幂等的，原因是 GET 操作根本不会对服务器产生任何修改。 PUT 方法通常是对已经存在的资源进行修改，也是幂等的。如将数字 1 改为 2，执行一次成功后，后续的操作都应该找不到数字 1 DELETE 方法也是幂等的，例如我们连续发起多个对 A 的删除请求，如果第一个成功的话，后面的请求都应返回资源找不到的错误 POST 一般是指新增资源，不是幂等的。如果连续发起三个 A 资源的增加，最终的结果会是三个 A 资源，而不是一个 因此，POST方法不能使用 Pipeline。\n4、http2 和http1.1 区别 新的二进制格式（Binary Format），http1.1和2.0 最大的区别是二进制框架层。与 http1.1把所有请求和响应作为纯文本不同，http2 使用二进制框架层把所有消息封装成二进制。二进制协议解析起来更高效且错误更少。 多路复用（MultiPlexing），客户端与服务端只建立一个TCP连接，所有的请求都共享这个连接。一个request对应一个id，再将一个请求切割成多个帧，同一个请求的多个帧都携带同一个请求id，这样一个连接上可以有多个request，每个请求的帧可以随机的混杂在一起，接收方可以根据request的 id将request再归属到各自不同的服务端请求里面。 header压缩，HTTP报文的header带有大量信息，而且每次都要重复发送，HTTP2.0使用encoder来减少需要传输的header大小，通讯双方各自cache一份header fields表，既避免了重复header的传输，又减小了需要传输的大小。 服务端推送（server push），实现复杂。 5、TSL TLS（传输层安全）是更为安全的升级版 SSL。该协议由两层组成： TLS 记录协议和 TLS 握手协议。记录协议主要负责使用对称密码对消息进行加密。握手协议负责在客户端和服务器端商定密码算法和共享密钥，以及证书认证。\nTLS 四次握手是在 TCP 建立连接之后进行的。四次握手流程如下：\n浏览器向服务器发送随机数，TLS 版本和支持的加密套件列表。 服务器确认好双方都支持的加密套件，然后返回改加密套件、随机数和数字证书 (证书中附带公钥)。 浏览器接收，先验证数字证书。若通过，接着将前两步中客户端和服务端生成的随机数通过加密套件的算法生成另一个随机数，并且用证书里的公钥加密，传给服务器。 服务器用私钥解密这个被加密后的随机数，后续就以该随机数作为对称加密的密钥就行加密通信。 6、Post 和 Get 的区别 Post 比 Get 安全：Get 请求参数在地址栏可见，而 Post 隐藏在请求体中。但其实 HTTP 是以明文传输，只要使用抓包工具都可以获取到完整数据，防止泄密的唯一手段就是使用HTTPS。 GET请求的url长度有限制：浏览器要对url进行解析，需要分配内存，而url必须当作一个整体看待，于是处理一个请求时必须分配一整块足够大的内存。如果url太长，而并发又很高，就容易挤爆服务器的内存。 GET请求不能携带 body：其实这是浏览器对GET的限制，HTTP 协议本身并没有限制 POST请求分两次发送：其实这只是一种优化手段，当请求体太大时，可以先发送请求头，如果服务端校验失败，则请求结束，否则再发送请求体，这样可以避免浪费带宽。但是请求体不大时完全不需要分两次发送 综上：Post 和 Get 的区别仅仅在于HTTP请求头的格式，一个是 POST，一个是 GET\n","wordCount":"119","inLanguage":"en","datePublished":"2022-06-01T12:39:41Z","dateModified":"2022-06-01T12:39:41Z","author":{"@type":"Person","name":"lu"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://ethereal-lu.github.io/posts/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/http/"},"publisher":{"@type":"Organization","name":"lu","logo":{"@type":"ImageObject","url":"https://ethereal-lu.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"?document.body.classList.add("dark"):localStorage.getItem("pref-theme")==="light"?document.body.classList.remove("dark"):window.matchMedia("(prefers-color-scheme: dark)").matches&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://ethereal-lu.github.io/ accesskey=h title="Home (Alt + H)"><img src=https://ethereal-lu.github.io/apple-touch-icon.png alt aria-label=logo height=35>Home</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://ethereal-lu.github.io/categories/ title=categories><span>categories</span></a></li><li><a href=https://ethereal-lu.github.io/search/ title="search (Alt + /)" accesskey=/><span>search</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://ethereal-lu.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://ethereal-lu.github.io/posts/>Posts</a></div><h1 class="post-title entry-hint-parent">HTTP</h1><div class=post-meta><span title='2022-06-01 12:39:41 +0000 UTC'>2022-06-01</span>&nbsp;·&nbsp;119 words&nbsp;·&nbsp;lu</div></header><div class=toc><details><summary accesskey=c title="(Alt + C)"><span class=details>Table of Contents</span></summary><div class=inner><nav id=TableOfContents><ul><li><a href=#1http请求方法>1、HTTP请求方法</a></li><li><a href=#2http队头阻塞>2、HTTP队头阻塞</a></li><li><a href=#3http幂等性>3、HTTP幂等性</a></li><li><a href=#4http2-和http11-区别>4、http2 和http1.1 区别</a></li><li><a href=#5tsl>5、TSL</a></li><li><a href=#6post-和-get-的区别>6、Post 和 Get 的区别</a></li></ul></nav></div></details></div><div class=post-content><h2 id=1http请求方法>1、HTTP请求方法<a hidden class=anchor aria-hidden=true href=#1http请求方法>#</a></h2><table><thead><tr><th style=text-align:center>index</th><th style=text-align:center>method</th><th style=text-align:center>description</th></tr></thead><tbody><tr><td style=text-align:center>1</td><td style=text-align:center>GET</td><td style=text-align:center>请求指定页面信息，并返回实体主体</td></tr><tr><td style=text-align:center>2</td><td style=text-align:center>HEAD</td><td style=text-align:center>类似于GET请求，只不过返回的响应中没有具体的内容，用于获取报头</td></tr><tr><td style=text-align:center>3</td><td style=text-align:center>POST</td><td style=text-align:center>向指定资源提交数据进行处理请求（例如提交表单或者上传文件）。数据被包含在请求体中。POST请求可能会导致新的资源的建立和/或已有资源的修改。</td></tr><tr><td style=text-align:center>4</td><td style=text-align:center>PUT</td><td style=text-align:center>从客户端向服务器传送的数据取代指定的文档的内容。（全部取代）</td></tr><tr><td style=text-align:center>5</td><td style=text-align:center>PATCH</td><td style=text-align:center>从客户端向服务器传送的数据取代指定的文档的内容。（部分取代）</td></tr><tr><td style=text-align:center>6</td><td style=text-align:center>DELETE</td><td style=text-align:center>请求服务器删除指定的页面。</td></tr><tr><td style=text-align:center>7</td><td style=text-align:center>CONNECT</td><td style=text-align:center>HTTP/1.1协议中预留给能够将连接改为管道方式的代理服务器。</td></tr><tr><td style=text-align:center>8</td><td style=text-align:center>OPTIONS</td><td style=text-align:center>允许客户端查看服务器的性能。</td></tr><tr><td style=text-align:center>9</td><td style=text-align:center>TRACE</td><td style=text-align:center>回显服务器收到的请求，主要用于测试或诊断。</td></tr></tbody></table><h2 id=2http队头阻塞>2、HTTP队头阻塞<a hidden class=anchor aria-hidden=true href=#2http队头阻塞>#</a></h2><p>在HTTP1.0中不使用TCP长连接，每次收到响应后才能发起下一个请求。每个请求都需要 3 + 4.</p><p>在HTTP1.1中使用TCP长连接，一个TCP连接中可以处理多个请求，但是如果前面的请求没有收到响应就会阻塞后续的请求。因此引入管道来提高效率。但是管道的引入带来了对头阻塞，管道特性允许客户端在已发送的请求收到服务端的响应之前发送下一个请求，但是由于HTTP请求和响应并没有序号标识，无法将乱序的响应与请求关联起来，因此响应顺序必须与请求顺序一致。如果某个响应由于一些原因延迟了，那么后面的响应就都会被阻塞，这就是队头阻塞。</p><p>由于队头阻塞和幂等性问题，现代浏览器默认都关闭了管道化，并且大部分服务器也是默认不支持管道化的。</p><p>解决队头阻塞问题可以采用并发TCP连接，即每个浏览器可以对同一个域名发起多个TCP连接，如谷歌浏览器默认最大可以同时发起6个TCP连接，此时不同TCP连接中的请求便不存在队头阻塞问题。但是连接数量有限且需要额外的资源，因此只能做有效缓解。</p><h2 id=3http幂等性>3、HTTP幂等性<a hidden class=anchor aria-hidden=true href=#3http幂等性>#</a></h2><p>当客户端在支持管道化时需要保持未收到响应的请求，当连接意外中断时，需要重新发送这部分请求。因此客户端在使用管道化的时候请求方式必须是幂等请求。</p><p>HTTP方法的幂等性是指一次和多次请求某一个资源应该具有同样的副作用。这里的副作用是指对于资源造成的改变，而不是响应结果必须一样。</p><ul><li><strong>GET</strong> 操作是幂等的，原因是 GET 操作根本不会对服务器产生任何修改。</li><li><strong>PUT</strong> 方法通常是对已经存在的资源进行修改，也是幂等的。如将数字 1 改为 2，执行一次成功后，后续的操作都应该找不到数字 1</li><li><strong>DELETE</strong> 方法也是幂等的，例如我们连续发起多个对 A 的删除请求，如果第一个成功的话，后面的请求都应返回资源找不到的错误</li><li><strong>POST</strong> 一般是指新增资源，不是幂等的。如果连续发起三个 A 资源的增加，最终的结果会是三个 A 资源，而不是一个</li></ul><p>因此，POST方法不能使用 Pipeline。</p><h2 id=4http2-和http11-区别>4、http2 和http1.1 区别<a hidden class=anchor aria-hidden=true href=#4http2-和http11-区别>#</a></h2><ul><li><strong>新的二进制格式</strong>（Binary Format），http1.1和2.0 最大的区别是二进制框架层。与 http1.1把所有请求和响应作为纯文本不同，http2 使用二进制框架层把所有消息封装成二进制。二进制协议解析起来更高效且错误更少。</li><li><strong>多路复用</strong>（MultiPlexing），客户端与服务端只建立一个TCP连接，所有的请求都共享这个连接。一个request对应一个id，再将一个请求切割成多个帧，同一个请求的多个帧都携带同一个请求id，这样一个连接上可以有多个request，每个请求的帧可以随机的混杂在一起，接收方可以根据request的 id将request再归属到各自不同的服务端请求里面。</li><li><strong>header压缩</strong>，HTTP报文的header带有大量信息，而且每次都要重复发送，HTTP2.0使用encoder来减少需要传输的header大小，通讯双方各自cache一份header fields表，既避免了重复header的传输，又减小了需要传输的大小。</li><li><strong>服务端推送</strong>（server push），实现复杂。</li></ul><h2 id=5tsl>5、TSL<a hidden class=anchor aria-hidden=true href=#5tsl>#</a></h2><p>TLS（传输层安全）是更为安全的升级版 SSL。该协议由两层组成： TLS 记录协议和 TLS 握手协议。记录协议主要负责使用对称密码对消息进行加密。握手协议负责在客户端和服务器端商定密码算法和共享密钥，以及证书认证。</p><p>TLS 四次握手是在 TCP 建立连接之后进行的。四次握手流程如下：</p><ol><li>浏览器向服务器发送随机数，TLS 版本和支持的加密套件列表。</li><li>服务器确认好双方都支持的加密套件，然后返回改加密套件、随机数和数字证书 (证书中附带公钥)。</li><li>浏览器接收，先验证数字证书。若通过，接着将前两步中客户端和服务端生成的随机数通过加密套件的算法生成另一个随机数，并且用证书里的公钥加密，传给服务器。</li><li>服务器用私钥解密这个被加密后的随机数，后续就以该随机数作为对称加密的密钥就行加密通信。</li></ol><h2 id=6post-和-get-的区别>6、Post 和 Get 的区别<a hidden class=anchor aria-hidden=true href=#6post-和-get-的区别>#</a></h2><ol><li>Post 比 Get 安全：Get 请求参数在地址栏可见，而 Post 隐藏在请求体中。但其实 HTTP 是以明文传输，只要使用抓包工具都可以获取到完整数据，防止泄密的唯一手段就是使用HTTPS。</li><li><code>GET</code>请求的<code>url</code>长度有限制：浏览器要对<code>url</code>进行解析，需要分配内存，而<code>url</code>必须当作一个整体看待，于是处理一个请求时必须分配一整块足够大的内存。如果<code>url</code>太长，而并发又很高，就容易挤爆服务器的内存。</li><li><code>GET</code>请求不能携带 body：其实这是浏览器对<code>GET</code>的限制，HTTP 协议本身并没有限制</li><li><code>POST</code>请求分两次发送：其实这只是一种优化手段，当请求体太大时，可以先发送请求头，如果服务端校验失败，则请求结束，否则再发送请求体，这样可以避免浪费带宽。但是请求体不大时完全不需要分两次发送</li></ol><p>综上：Post 和 Get 的区别仅仅在于HTTP请求头的格式，一个是 POST，一个是 GET</p></div><footer class=post-footer><ul class=post-tags></ul><nav class=paginav><a class=prev href=https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F%E5%9F%BA%E7%A1%80/><span class=title>« Prev</span><br><span>分布式基础</span>
+</a><a class=next href=https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/nginx/nginx%E5%9F%BA%E7%A1%80/><span class=title>Next »</span><br><span>Nginx基础</span></a></nav></footer></article></main><footer class=footer><span>&copy; 2025 <a href=https://ethereal-lu.github.io/>lu</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>

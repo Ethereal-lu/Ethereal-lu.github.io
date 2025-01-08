@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>RabbitMQ on lu</title>
+    <link>https://ethereal-lu.github.io/categories/rabbitmq/</link>
+    <description>Recent content in RabbitMQ on lu</description>
+    <generator>Hugo -- 0.140.1</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Thu, 07 Apr 2022 14:42:15 +0000</lastBuildDate>
+    <atom:link href="https://ethereal-lu.github.io/categories/rabbitmq/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>RabbitMQ基础</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/rabbitmq/rabbitmq/</link>
+      <pubDate>Thu, 07 Apr 2022 14:42:15 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/rabbitmq/rabbitmq/</guid>
+      <description>&lt;h2 id=&#34;一概述&#34;&gt;一、概述&lt;/h2&gt;
+&lt;h3 id=&#34;11什么是消息队列&#34;&gt;1.1、什么是消息队列&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;消息&lt;/strong&gt;：指的是两个应用间传递的数据。数据的类型有很多种形式，可能只包含文本字符串，也可能包含嵌入对象。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;消息协议&lt;/strong&gt;：为了让消息发送者和消息接收者都能够明白消息所承载的信息，它们就需要按照一种统一的格式描述消息。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;消息队列&lt;/strong&gt;：（Message Queue，简称MQ），从字面意思上看，本质是个队列，FIFO先入先出，只不过队列中存放的内容是message。&lt;/p&gt;
+&lt;p&gt;消息从发送者到接收者的方式也有两种。
+一种为即时消息通讯，也就是说消息从一端发出后（消息发送者）立即就可以达到另一端（消息接收者），这种方式的具体实现就是RPC（当然单纯的http通讯也满足这个定义）；
+另一种为延迟消息通讯，即消息从某一端发出后，首先进入一个容器进行临时存储，当达到某种条件后，再由这个容器发送给另一端。 这个容器的一种具体实现就是消息队列，如RabbitMQ。&lt;/p&gt;
+&lt;h3 id=&#34;12为什么使用消息队列&#34;&gt;1.2、为什么使用消息队列&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;应用解耦：不同进程（process）之间传递消息时，两个进程之间耦合程度过高，改动一个进程，引发必须修改另一个进程，为了隔离这两个进程，在两进程间抽离出一层（一个模块），所有两进程之间传递的消息，都必须通过消息队列来传递，单独修改某一个进程，不会影响另一个；&lt;/li&gt;
+&lt;li&gt;流量削峰：如数据库只能同时处理一万条请求，如果来了两万条请求就执行一万条，将剩余一万条放在消息队列顺序执行。&lt;/li&gt;
+&lt;li&gt;异步处理：A 调用 B 处理数据，但 B 处理时间很长；A可以不用等，当B执行完将结果放在消息队列，再由消息队列将结果给A，这样就不用轮询或提供回调函数了。&lt;/li&gt;
+&lt;li&gt;广播&lt;/li&gt;
+&lt;li&gt;最终一致性&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;13mqtt-与-mq-的区别&#34;&gt;1.3、mqtt 与 MQ 的区别&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;mqtt&lt;/strong&gt;：一种通信协议，类似人类交谈中的汉语、英语、俄语中的一种语言规范
+&lt;strong&gt;MQ&lt;/strong&gt;：一种通信通道，也叫消息队列，类似人类交谈中的用电话、email、微信的一种通信方式
+&lt;strong&gt;json&lt;/strong&gt;：一种内容格式，类似人类交谈中的排比句等方式&lt;/p&gt;
+&lt;h3 id=&#34;14rpc-执行流程&#34;&gt;1.4、RPC 执行流程&lt;/h3&gt;
+&lt;p&gt;RPC（Remote Procedure Call）远程过程调用协议，一种通过网络从远程计算机上请求服务，而不需要了解底层网络技术的协议。其主要目的是做到不同服务间调用方法像同一服务间调用本地方法一样。&lt;/p&gt;
+&lt;p&gt;当业务需要强一致性，关注业务逻辑的处理结果，则 RPC 比消息队列更合适。&lt;/p&gt;
+&lt;p&gt;强一致性指不论在任何时候读取的都是最新的数据，最终一致性是允许可以在一段时间内每个结点的数据不一致，但是经过一段时间每个结点的数据必须一致，它强调的是最终数据的一致性。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;客户端处理过程中调用client sub，就像调用本地方法一样，传入参数&lt;/li&gt;
+&lt;li&gt;client sub将参数编组为消息，然后通过系统调用向服务端发送消息&lt;/li&gt;
+&lt;li&gt;服务端将接收到的数据包传递给server sub&lt;/li&gt;
+&lt;li&gt;server sub将接收到的数据解组为参数&lt;/li&gt;
+&lt;li&gt;server sub再调用服务端的过程，过程执行的结果以反方向的相同步骤响应给客户端&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;以 Google 的 grpc 为例：先在 proto 文件中声明接口，包括方法名、参数和返回值，然后使用工具生成 go 可以用的库；服务端创建 grpc 服务实例并将本地实现的服务注册进该实例中，然后监听本地端口，收到请求后就执行本地方法并将结果返回；客户端创建 grpc 客户端实例，然后调用 proto 中声明的方法即可获得结果。&lt;/p&gt;
+&lt;h3 id=&#34;15mq-分类&#34;&gt;1.5、MQ 分类&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;ActiveMQ：老、较少使用&lt;/li&gt;
+&lt;li&gt;Kafka：大数据实时计算和日志采集方面卓越&lt;/li&gt;
+&lt;li&gt;RocketMQ：阿里开源产品&lt;/li&gt;
+&lt;li&gt;RabbitMQ：主流&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;二rabbitmq介绍&#34;&gt;二、RabbitMQ介绍&lt;/h2&gt;
+&lt;h3 id=&#34;21rabbitmq-简介&#34;&gt;2.1、RabbitMQ 简介&lt;/h3&gt;
+&lt;p&gt;RabbitMQ是一个在AMQP（Advanced Message Queuing Protocol ）基础上实现的，可复用的企业消息系统。它可以用于大型软件系统各个模块之间的高效通信，支持高并发，支持可扩展。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

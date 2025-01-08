@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Zookeeper on lu</title>
+    <link>https://ethereal-lu.github.io/categories/zookeeper/</link>
+    <description>Recent content in Zookeeper on lu</description>
+    <generator>Hugo -- 0.140.1</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Sun, 08 May 2022 19:42:15 +0000</lastBuildDate>
+    <atom:link href="https://ethereal-lu.github.io/categories/zookeeper/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>ZAB协议</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zab%E5%8D%8F%E8%AE%AE/</link>
+      <pubDate>Sun, 08 May 2022 19:42:15 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zab%E5%8D%8F%E8%AE%AE/</guid>
+      <description>&lt;h1 id=&#34;1zab协议介绍&#34;&gt;1、ZAB协议介绍&lt;/h1&gt;
+&lt;p&gt;Zookeeper Atomic Broadcast，是 Zookeeper 专门设计的一种支持崩溃恢复的原子广播协议。用来实现分布式数据一致性。包含两种基本模式，分别是 崩溃恢复、原子广播。&lt;/p&gt;
+&lt;p&gt;当整个集群在启动时，或当leader 节点崩溃时，ZAB协议就会进入恢复模式并选举产生新的leader，当leader选举出来后，并且集群中有过半机器和该leader节点完成数据同步后，ZAB协议就会退出恢复模式进入消息广播模式。&lt;/p&gt;
+&lt;h1 id=&#34;2崩溃恢复&#34;&gt;2、崩溃恢复&lt;/h1&gt;
+&lt;p&gt;崩溃恢复阶段的任务主要为 Leader 选举和数据同步。&lt;/p&gt;
+&lt;h2 id=&#34;1选举基本原则&#34;&gt;1、选举基本原则&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;选举投票必须在同一轮次中进行&lt;/li&gt;
+&lt;li&gt;事务ID 大的节点优先成为 Leader&lt;/li&gt;
+&lt;li&gt;服务器ID大的节点优先成为 Leader&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;2相关参数&#34;&gt;2、相关参数&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;SID：服务器ID&lt;/li&gt;
+&lt;li&gt;ZXID：事务ID。在集群范围内全局唯一单调递增，是一个64位的数字，高 32 位是Epoch，低 32 位是单调递增的计数器。每次选举会使 Epoch 加 1，每个写操作会使计数器加1，由于写操作全部由Leader执行，故Leader 节点总是保持着最大的事务 ID，然后根据一致性协议向 Flower 同步数据。由于各 Flower 与 Leader 通信的时差，可能某些 Flower 中保存的数据不是最新的，即各 Flower 的事务 ID 可能不同。事务ID越大说明其保存的数据越新。&lt;/li&gt;
+&lt;li&gt;Epoch：选举轮次。每个服务器都会维护一个名为&lt;code&gt;logicClock&lt;/code&gt;的变量，用于标识当前选举的轮次。每开始一次Leader选举，服务器都会将自己存储的&lt;code&gt;logicClock&lt;/code&gt;执行加一操作，并且投票时会附带上这个&lt;code&gt;logicClock&lt;/code&gt;。如果其他服务器收到了一个带有旧的&lt;code&gt;logicClock&lt;/code&gt;的投票，则会直接忽略这个投票。若一个节点中途宕机之后又连接上，由于其保存的是旧的&lt;code&gt;logicClock&lt;/code&gt;，则其不能参与本次选举。&lt;strong&gt;&lt;code&gt;logicClock&lt;/code&gt;变量只在一次Leader选举开始时执行一次递增操作，一次选举中的多轮投票并不会改变&lt;code&gt;logicClock&lt;/code&gt;变量的值。&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3节点状态&#34;&gt;3、节点状态&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;LOOKING：正在选举。在选举阶段集群不能对外提供服务。&lt;/li&gt;
+&lt;li&gt;FOLLOWING：跟随者状态。&lt;/li&gt;
+&lt;li&gt;LEADING：领导者状态。&lt;/li&gt;
+&lt;li&gt;OBSERVING：观察者状态。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;4选举流程&#34;&gt;4、选举流程&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;自增选举轮次：每开始一次新的选举，节点先将自己的&lt;code&gt;logicClock&lt;/code&gt;加 1，并且投票时会附带上这个&lt;code&gt;logicClock&lt;/code&gt;。&lt;/li&gt;
+&lt;li&gt;初始化选票：每个服务器在广播自己的选票前，会将自己的投票箱清空。投票箱记录了所收到的选票。票箱中只会记录每一个投票者的最新的选票。实际上投票箱是一个 Map，节点 id 为键，选票为值，如果收到某个节点的新选票，更新该 Map 即可。&lt;/li&gt;
+&lt;li&gt;发送选票：节点给自己投票，将投给自己的选票放入投票箱，然后广播该选票，用于与其它节点交换选票信息。&lt;/li&gt;
+&lt;li&gt;接收其他节点广播的选票：对于接收到的其他节点的选票进行&lt;code&gt;logicClock&lt;/code&gt;的校验
+&lt;ul&gt;
+&lt;li&gt;如果收到的选票中的&lt;code&gt;logicClock&lt;/code&gt;大于自己的&lt;code&gt;logicClock&lt;/code&gt;，则清空自己的投票箱，并更新自己的&lt;code&gt;logicClock&lt;/code&gt;，然后进行步骤5&lt;/li&gt;
+&lt;li&gt;如果收到的选票中的&lt;code&gt;logicClock&lt;/code&gt;小于自己的&lt;code&gt;logicClock&lt;/code&gt;，直接丢弃&lt;/li&gt;
+&lt;li&gt;如果收到的选票中的&lt;code&gt;logicClock&lt;/code&gt;等于自己的&lt;code&gt;logicClock&lt;/code&gt;，进行步骤5&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;选票比较：首先比较 ZXID，如果收到的选票中的 ZXID 较大，则更新自己的选票。如果 ZXID 一致，则比较 SID，如果收到的选票中的 SID较大，则更新自己的选票。将收到的选票存入投票箱。&lt;/li&gt;
+&lt;li&gt;再次发送选票：进过步骤 5 的选票比较，如果自己的选票需要改变，则修改自己的选票并更新到投票箱，然后再次广播出去。&lt;/li&gt;
+&lt;li&gt;统计选票：统计自己的投票箱，如果超过半数的节点投票一致，则终止投票。否则继续接收其他节点的投票。&lt;/li&gt;
+&lt;li&gt;更新节点状态：若过半的票投给了自己，则将自己的服务器状态更新为LEADING，否则将自己的状态更新为FOLLOWING。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;6选举时机&#34;&gt;6、选举时机&lt;/h2&gt;
+&lt;p&gt;当集群第一次启动时会发起一次选举；当 Leader 崩溃后会发起一次选举。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Zookeeper基础</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zookeeper%E5%9F%BA%E7%A1%80/</link>
+      <pubDate>Sun, 08 May 2022 17:42:15 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zookeeper%E5%9F%BA%E7%A1%80/</guid>
+      <description>&lt;h2 id=&#34;1概述&#34;&gt;1、概述&lt;/h2&gt;
+&lt;p&gt;Zookeeper 是一个分布式程序协调服务，提供的主要功能包括：配置管理、名字服务、分布式锁、集群管理。 由 java 编写。&lt;/p&gt;
+&lt;h3 id=&#34;11特点&#34;&gt;1.1、特点&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;一主多从：一个 Leader 负责写数据，多个 Follower 负责读数据。&lt;/li&gt;
+&lt;li&gt;集群中只要有半数&lt;strong&gt;以上&lt;/strong&gt;节点存活，Zookeeper 集群就能正常服务，因此 Zookeeper 适合安装奇数台服务器。&lt;/li&gt;
+&lt;li&gt;所有节点数据一致&lt;/li&gt;
+&lt;li&gt;来自同一个客户端的多个请求按顺序执行&lt;/li&gt;
+&lt;li&gt;每个写操作都是事务，具有原子性。&lt;/li&gt;
+&lt;li&gt;在一定时间范围内，Client 能读到最新的数据。最终一致性。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;12应用场景&#34;&gt;1.2、应用场景&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;分布式协调：客户端先后对不同节点的同一个变量设置不同的值，此时数据不一致。通过 Zookeeper 监听该变量，当变量改变时通知其他节点修改该值。&lt;/li&gt;
+&lt;li&gt;分布式锁&lt;/li&gt;
+&lt;li&gt;无状态化实现：在分布式登陆场景中，若将用户的登录信息放在某一个节点中，则下一次登录到其他节点就无法获取登录信息。可以将登录信息放在 Zookeeper 中，每个节点都到 Zookeeper 查询登录信息。这样对于每个节点而言就实现了无状态登录。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2数据结构&#34;&gt;2、数据结构&lt;/h2&gt;
+&lt;p&gt;Zookeeper 的数据结构类似于 Unix 文件系统，可以看作一棵树，每个节点称为一个 ZNode ，每个 ZNode 都可以通过其路径唯一标识。为了保证高吞吐和低延迟，znode只适合存储非常小的数据，不能超过1M。&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;数据结构&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zookeeper%E5%9F%BA%E7%A1%80/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84.png&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;21节点结构&#34;&gt;2.1、节点结构&lt;/h3&gt;
+&lt;p&gt;每个 ZNode 包含四部分：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;data：保存数据&lt;/li&gt;
+&lt;li&gt;acl：权限。 c：创建权限；w：更新权限；r：读权限；d：删除权限；a：管理员权限，允许设置该节点的权限。&lt;/li&gt;
+&lt;li&gt;stat：元数据&lt;/li&gt;
+&lt;li&gt;child：子节点&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;22节点类型&#34;&gt;2.2、节点类型&lt;/h3&gt;
+&lt;p&gt;&lt;img alt=&#34;节点类型&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/zookeeper/zookeeper%E5%9F%BA%E7%A1%80/%E8%8A%82%E7%82%B9%E7%B1%BB%E5%9E%8B.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;临时节点&lt;strong&gt;实现原理&lt;/strong&gt;：&lt;/p&gt;
+&lt;p&gt;客户端与服务端之间的连接是基于 TCP 长连接，client 端连接 server 端默认的 2181 端口，也就是 session 会话。&lt;/p&gt;
+&lt;p&gt;客户端与服务端建立连接后，服务端会给客户端分配一个全局唯一的  session id。这个  session id 是有期限的，会话期间客户端会定时向服务端发送一个 ping 请求（心跳），服务端每次收到 ping 请求都会给  session id 续约。只要  session id 不过期，临时节点就一直存在。会话断开后，客户端便不再发送 ping 信号，session id 就会过期。服务端会定时查看 session id 是否过期，如果过期就将与之绑定的临时节点删除。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

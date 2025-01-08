@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>MySQL on lu</title>
+    <link>https://ethereal-lu.github.io/categories/mysql/</link>
+    <description>Recent content in MySQL on lu</description>
+    <generator>Hugo -- 0.140.1</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Sat, 24 Sep 2022 23:39:41 +0000</lastBuildDate>
+    <atom:link href="https://ethereal-lu.github.io/categories/mysql/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>慢查询优化</title>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E6%85%A2%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96/</link>
+      <pubDate>Sat, 24 Sep 2022 23:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E6%85%A2%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96/</guid>
+      <description>&lt;h2 id=&#34;1开启慢查询&#34;&gt;1、开启慢查询&lt;/h2&gt;
+&lt;p&gt;慢查询的时间定义：可设置为超过 1 秒就是慢查询（MySql 默认是 10 秒）&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mysql&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;show&lt;/span&gt; variables &lt;span style=&#34;color:#66d9ef&#34;&gt;like&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;long_query_time&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;设置方法一：全局变量设置&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mysql&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;set&lt;/span&gt; global slow_query_log&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ON&amp;#39;&lt;/span&gt;; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mysql&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;set&lt;/span&gt; global slow_query_log_file&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/usr/local/mysql/data/slow.log&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mysql&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;set&lt;/span&gt; global long_query_time&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;设置方法二：配置文件设置&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-properties&#34; data-lang=&#34;properties&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;slow_query_log&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;ON&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;slow_query_log_file&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/usr/local/mysql/data/slow.log&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;long_query_time&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2分析慢查询日志&#34;&gt;2、分析慢查询日志&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;explain&lt;/code&gt; 关键字可以模拟优化器执行SQL查询语句，来分析sql慢查询语句&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;EXPLAIN&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;table&lt;/th&gt;
+          &lt;th&gt;type&lt;/th&gt;
+          &lt;th&gt;possible_keys&lt;/th&gt;
+          &lt;th&gt;key&lt;/th&gt;
+          &lt;th&gt;key_len&lt;/th&gt;
+          &lt;th&gt;ref&lt;/th&gt;
+          &lt;th&gt;rows&lt;/th&gt;
+          &lt;th&gt;Extra&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;表名&lt;/td&gt;
+          &lt;td&gt;const、eq_reg、ref、range、index、all&lt;/td&gt;
+          &lt;td&gt;可选择的索引&lt;/td&gt;
+          &lt;td&gt;实际使用的索引&lt;/td&gt;
+          &lt;td&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;/td&gt;
+          &lt;td&gt;需要扫描的行数&lt;/td&gt;
+          &lt;td&gt;&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id=&#34;3常见的慢查询优化&#34;&gt;3、常见的慢查询优化&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;没建索引或索引没起作用
+&lt;ul&gt;
+&lt;li&gt;模糊查询以 % 开头&lt;/li&gt;
+&lt;li&gt;未遵守最左匹配&lt;/li&gt;
+&lt;li&gt;索引列进行计算&lt;/li&gt;
+&lt;li&gt;&amp;hellip;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;优化数据库结构
+&lt;ul&gt;
+&lt;li&gt;分库分表：字段很多时垂直分表；数据很多时水平分表&lt;/li&gt;
+&lt;li&gt;增加中间表： 对于需要经常联合查询的表，可将需要联合的字段合成一张中间表，这样每次只需要查询中间表一张表即可&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;分解复杂查询： 将一个大的查询分解为多个小查询，在应用层进行逻辑处理&lt;/li&gt;
+&lt;li&gt;优化LIMIT分页：&lt;code&gt;select id,title from collect limit 10000,20;&lt;/code&gt;这样的查询，需要查询10020条然后只返回最后20条。
+&lt;ul&gt;
+&lt;li&gt;为 &lt;code&gt;id,title&lt;/code&gt;建立组合索引，用于覆盖索引查询&lt;/li&gt;
+&lt;li&gt;用主键索引过滤掉前 10000 行无效的查询
+&lt;ul&gt;
+&lt;li&gt;子查询&lt;code&gt;select id,title from collect where id&amp;gt;=(select id from collect limit 10000,1) limit 10;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;关联查询&lt;code&gt;select id,title from collect inner join (select id from collect limit 10000,20) as midTable using(id);&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>MySQL默认数据库</title>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E9%BB%98%E8%AE%A4%E6%95%B0%E6%8D%AE%E5%BA%93/</link>
+      <pubDate>Tue, 17 May 2022 17:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E9%BB%98%E8%AE%A4%E6%95%B0%E6%8D%AE%E5%BA%93/</guid>
+      <description>&lt;h2 id=&#34;mysql系统默认数据库&#34;&gt;Mysql系统默认数据库&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;information_schema&lt;/li&gt;
+&lt;li&gt;performance_schema&lt;/li&gt;
+&lt;li&gt;mysql&lt;/li&gt;
+&lt;li&gt;sys&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;一information_schema信息概要&#34;&gt;一、information_schema（信息概要）&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;保存了MySQl服务所有数据库的信息。&lt;/li&gt;
+&lt;li&gt;具体MySQL服务有多少个数据库，各个数据库有哪些表，各个表中的字段是什么数据类型，各个表中有哪些索引，各个数据库要什么权限才能访问。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;二performance_schema性能概要&#34;&gt;二、performance_schema（性能概要）&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;主要用于收集数据库服务器性能参数。5.7后默认开启。&lt;/li&gt;
+&lt;li&gt;提供进程等待的详细信息，包括锁、互斥变量、文件信息；&lt;/li&gt;
+&lt;li&gt;保存历史的事件汇总信息，为提供MySQL服务器性能做出详细的判断；&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;三mysql核心数据库&#34;&gt;三、mysql（核心数据库）&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;保存MySQL的用户、权限设置、关键字等&lt;/li&gt;
+&lt;li&gt;如哪些user可以访问这个数据、DB参数、插件、主从&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;四sys系统表&#34;&gt;四、Sys（系统表）&lt;/h3&gt;
+&lt;p&gt;Sys库所有的数据源来自：performance_schema。目标是把performance_schema的把复杂度降低，让DBA能更好的阅读这个库里的内容。让DBA更快的了解DB的运行情况。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>分库分表</title>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/</link>
+      <pubDate>Fri, 06 May 2022 17:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/</guid>
+      <description>&lt;p&gt;当一张表的字段数过多或数据量过大时，即使添加从库、优化索引，做很多操作时性能仍下降严重。此时就要考虑对其进行切分了，切分的目的就在于减少数据库的负担，缩短查询时间。&lt;/p&gt;
+&lt;p&gt;数据库分布式核心内容就是数据切分（Sharding），以及切分后对数据的定位、整合。数据切分就是将数据分散存储到多个数据库中，使得单一数据库中的数据量变小，通过扩充主机的数量缓解单一数据库的性能问题，从而达到提升数据库操作性能的目的。&lt;/p&gt;
+&lt;p&gt;数据切分根据其切分类型，可以分为两种方式：垂直（纵向）切分和水平（横向）切分&lt;/p&gt;
+&lt;h2 id=&#34;1垂直分库&#34;&gt;1、垂直分库&lt;/h2&gt;
+&lt;p&gt;垂直分库就是根据业务耦合性，将关联度低的不同表存储在不同的数据库。减轻数据库的压力。&lt;/p&gt;
+&lt;h2 id=&#34;2垂直分表&#34;&gt;2、垂直分表&lt;/h2&gt;
+&lt;p&gt;垂直分表是基于数据库中的&amp;quot;列&amp;quot;进行，某个表字段较多，可以新建一张扩展表，将不经常用或字段长度较大的字段拆分出去到扩展表中。在字段很多的情况下（例如一个大表有100多个字段），通过&amp;quot;大表拆小表&amp;quot;，更便于开发与维护，也能避免跨页问题，&lt;a href=&#34;https://jhrtech.cn/sql/135779.html&#34;&gt;MySQL&lt;/a&gt;底层是通过数据页存储的，一条记录占用空间过大会导致跨页，造成额外的性能开销。另外数据库以行为单位将数据加载到内存中，这样表中字段长度较短且访问频率较高，内存能加载更多的数据，命中率更高，减少了磁盘IO，从而提升了数据库性能。&lt;/p&gt;
+&lt;p&gt;垂直分表虽然使表的复杂度降低了，但是数据量大的问题依然存在；另外，只有部分字段的表无法 join ，只能通过接口聚合方式解决，提升了开发的复杂度&lt;/p&gt;
+&lt;h2 id=&#34;3水平分表&#34;&gt;3、水平分表&lt;/h2&gt;
+&lt;p&gt;将一个表中的数据按照一定的规则划分到同一个库中的不同表中，每张表存储一部分数据。库内分表只解决了单一表数据量过大的问题，但没有减轻MySQL数据库的压力，大家还是竞争同一个物理机的硬件资源。&lt;/p&gt;
+&lt;h2 id=&#34;4分库分表&#34;&gt;4、分库分表&lt;/h2&gt;
+&lt;p&gt;将单张表的数据切分到多个服务器上去，每个服务器具有相应的库与表，只是表中数据集合不同。 水平分库分表能够有效的缓解单机和单库的性能瓶颈和压力，突破IO、连接数、硬件资源等的瓶颈。&lt;/p&gt;
+&lt;h2 id=&#34;5数据分片规则&#34;&gt;5、数据分片规则&lt;/h2&gt;
+&lt;p&gt;数据分片规则指的是水平分表时的规则&lt;/p&gt;
+&lt;p&gt;1、&lt;strong&gt;根据数值范围&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;按照时间区间或ID区间来切分。例如：按日期将不同月甚至是日的数据分散到不同的库中；将userId为1&lt;del&gt;9999的记录分到第一个库，10000&lt;/del&gt;20000的分到第二个库，以此类推。某种意义上，某些系统中使用的&amp;quot;冷热数据分离&amp;quot;，将一些使用较少的历史数据迁移到其他库中，业务功能上只提供热点数据的查询，也是类似的实践。&lt;/p&gt;
+&lt;p&gt;优点：1、易于扩展；2、若查询条件是时间或id则可以很快地知道在哪个表&lt;/p&gt;
+&lt;p&gt;2、&lt;strong&gt;哈希&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;将 id 或某个字段根据哈希函数划分数据&lt;/p&gt;
+&lt;p&gt;3、&lt;strong&gt;使用单独的一个数据库来存储映射关系&lt;/strong&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>MySQL数据类型</title>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/</link>
+      <pubDate>Wed, 04 May 2022 12:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/</guid>
+      <description>&lt;h3 id=&#34;1整型&#34;&gt;1、整型&lt;/h3&gt;
+&lt;p&gt;&lt;img alt=&#34;int类型&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/int%E7%B1%BB%E5%9E%8B.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;int(11)&lt;/strong&gt;：括号中的 11 表示&lt;em&gt;字符的显示宽度&lt;/em&gt;，它不影响存储，即它所能存储的数据还是在上图 int 的范围内。&lt;/p&gt;
+&lt;p&gt;那它什么时候起作用：&lt;/p&gt;
+&lt;p&gt;只有 int 字段类型设置为无符号且填充零（UNSIGNED  ZEROFILL）时，当数值位数未达到设置的显示宽度时，会在数值前面补充零直到满足设定的显示宽度，为什么会有无符号的限制呢，是因为  ZEROFILL 属性会隐式地将数值转为无符号型，因此不能存储负的数值。&lt;/p&gt;
+&lt;p&gt;详见https://www.cnblogs.com/chenmingjun/p/10556206.html&lt;/p&gt;
+&lt;h3 id=&#34;2浮点类型&#34;&gt;2、浮点类型&lt;/h3&gt;
+&lt;p&gt;MySQL中使用浮点数和定点数来表示小数。&lt;/p&gt;
+&lt;p&gt;浮点类型有两种，分别是单精度浮点数（&lt;strong&gt;FLOAT&lt;/strong&gt;）和双精度浮点数（&lt;strong&gt;DOUBLE&lt;/strong&gt;）；定点类型只有一种，就是 &lt;strong&gt;DECIMAL&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;浮点类型和定点类型都可以用&lt;code&gt;(M, D)&lt;/code&gt;来表示，其中&lt;code&gt;M&lt;/code&gt;称为精度，表示总共的位数；&lt;code&gt;D&lt;/code&gt;称为标度，表示小数的位数。&lt;/p&gt;
+&lt;p&gt;CPU 原生支持浮点运算，但是不支持 DECIMAl 类型的计算，因此 DECIMAL 的计算比浮点类型需要更高的代价。&lt;/p&gt;
+&lt;h3 id=&#34;3字符串&#34;&gt;3、字符串&lt;/h3&gt;
+&lt;p&gt;主要有 CHAR 和 VARCHAR 两种类型，一种是定长的，一种是变长的。因此，当char类型的长度不够时，会以空格填充。当插入的字符串长度超过括号中设置的长度时报错。&lt;/p&gt;
+&lt;h4 id=&#34;31varcharn&#34;&gt;3.1、varchar(n)&lt;/h4&gt;
+&lt;p&gt;varchar是动态字符串（跟上面的int不一样）长度是在括号里面指定的，即只能存储小于等于指定长度的字符串，以 varchar(255)举例，该字段最多只能存储255个字符。&lt;/p&gt;
+&lt;h4 id=&#34;32varchar255&#34;&gt;3.2、varchar(255)&lt;/h4&gt;
+&lt;p&gt;那为什么会经常性设置成varchar(255)呢？&lt;/p&gt;
+&lt;p&gt;首先我们要知道一个概念：InnoDB存储引擎的表索引的前缀长度最长是767字节(bytes)，前缀长度意思就是索引中数据的长度，即若给一个varchar类型的字段建索引，则该varchar中最长的字符长度不能超过767字节。&lt;/p&gt;
+&lt;p&gt;utf8编码时 255*3=765bytes ,恰恰是能建索引情况下的最大值。（255是字符的长度，3是utf8一个字符占用3个字节）&lt;/p&gt;
+&lt;p&gt;如果使用的是utf8mb4编码，默认字符长度则应该是 767除以4向下取整，也就是191。&lt;/p&gt;
+&lt;h4 id=&#34;33字符集&#34;&gt;3.3、字符集&lt;/h4&gt;
+&lt;p&gt;varchar(n)占用几个字节跟字符集有关系：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;字符类型若为gbk，每个字符占用2个字节，&lt;/li&gt;
+&lt;li&gt;字符类型若为utf8，每个字符最多占用3个字节&lt;/li&gt;
+&lt;li&gt;字符类型若为utf8mb4，每个字符最多占用4个字节&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;34前缀索引&#34;&gt;3.4、前缀索引&lt;/h4&gt;
+&lt;p&gt;如果要为三个 varchar 字段建立联合索引，但是三个字段的长度之和加起来超过了767字节，该怎么办？&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;uniq_code&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;nick_name&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;),&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;account&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;),&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;city&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;))
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;每个字段取前20字符建立索引，这样的话就是长度就不会超出，这个就是&lt;code&gt;前缀索引&lt;/code&gt;&lt;/p&gt;
+&lt;h4 id=&#34;35varchar20-和varchar255的开销&#34;&gt;3.5、varchar（20） 和varchar（255）的开销&lt;/h4&gt;
+&lt;p&gt;如果要存储&lt;code&gt;&#39;hello12345&#39;&lt;/code&gt;这个字符串，使用&lt;code&gt;varchar(10)&lt;/code&gt;和&lt;code&gt;varchar(100)&lt;/code&gt;存储，占用的磁盘空间是一样的，但是内存消耗不一样。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;MySQL建立索引时如果没有限制索引的大小，索引长度会默认采用的该字段的长度。因此，加载索引信息时用varchar(255)类型会占用更多的内存。&lt;/li&gt;
+&lt;li&gt;由于MySQL通常会分配固定大小的内存块来保存内部值，因此当使用临时表进行排序等操作时会消耗更多的内存。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;36varchar-与-char&#34;&gt;3.6、varchar 与 char&lt;/h4&gt;
+&lt;p&gt;VARCHAR 会保留字符串末尾的空格，而 CHAR 会删除。即对于 &lt;code&gt;“a    ”&lt;/code&gt;，varchar 存储的是 &lt;code&gt;“a    ”&lt;/code&gt;，而char存储的是&lt;code&gt;“a”&lt;/code&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>MySQL主从复制</title>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</link>
+      <pubDate>Sun, 27 Mar 2022 21:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</guid>
+      <description>&lt;h3 id=&#34;复制原理&#34;&gt;复制原理&lt;/h3&gt;
+&lt;p&gt;主从复制的原理其实就是把主服务器上的 binlog 日志复制到从服务器上执行一遍，这样从服务器上的数据就和主服务器上的数据相同了。&lt;/p&gt;
+&lt;h3 id=&#34;复制过程&#34;&gt;复制过程&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;主节点开启bin-log功能，记录任何修改了数据库数据的事件。&lt;/li&gt;
+&lt;li&gt;从节点每隔一定时间探测 master 的 binlog 是否发生改变，如果发生改变，则开启一个线程（I/O Thread)把自己扮演成 mysql 的客户端，请求主节点的binlog，请求时携带参数 position 表示请求该位置之后的内容；如果不携带表示从头开始复制（用于首次复制）。&lt;/li&gt;
+&lt;li&gt;主节点启动一个线程（dump Thread）与从节点的 I/O Thread建立连接，将 binlog 中 position 之后的内容返回给从节点 IO 线程。&lt;/li&gt;
+&lt;li&gt;从节点接收到主节点发送过来的数据把它放置到中继日志（Relay log）文件中。&lt;/li&gt;
+&lt;li&gt;从节点启动另外一个线程（sql Thread ），把 Relay log 中的事件读取出来，并在本地再执行一次。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;复制策略&#34;&gt;复制策略&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;「同步策略」&lt;/strong&gt;：Master会等待所有的Slave都回应后才会提交，用于强一致性场景但会严重影响性能&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;「半同步策略」&lt;/strong&gt;：Master至少会等待一个Slave回应后提交。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;「异步策略」&lt;/strong&gt;：Master不用等待Slave回应就可以提交。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;「延迟策略」&lt;/strong&gt;：Slave要落后于Master指定的时间。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;binlog-格式&#34;&gt;Binlog 格式&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;statement：记录的是修改SQL语句&lt;/li&gt;
+&lt;li&gt;row：记录的是每行实际数据的变更&lt;/li&gt;
+&lt;li&gt;mixed：statement和row模式的混合&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;面试题&#34;&gt;面试题&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;主从复制功能&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;负载均衡、读写分离&lt;/li&gt;
+&lt;li&gt;备份容灾&lt;/li&gt;
+&lt;li&gt;高可用和故障切换&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;主从复制，达到了写性能的瓶颈如何解决&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;分库分表&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;主从复制的过程有数据延迟怎么办&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;数据延迟会导致Slave被读取到的数据并不是最新数据。&lt;/p&gt;
+&lt;p&gt;如果业务场景需要强一致性，使用复制策略中的同步策略。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>InnoDB锁</title>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/innodb%E9%94%81/</link>
+      <pubDate>Sun, 27 Mar 2022 17:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/innodb%E9%94%81/</guid>
+      <description>&lt;p&gt;锁机制用于管理对共享资源的并发访问。&lt;/p&gt;
+&lt;h2 id=&#34;1锁粒度&#34;&gt;1、锁粒度&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;表锁&lt;/strong&gt;是MySQL中最大粒度的锁定机制，会锁定整张表，可以很好的避免死锁，是 MySQL 中最大颗粒度的锁定机制。表锁由 MySQL Server 实现，一般在执行 DDL 语句时会对整个表进行加锁，比如说&lt;code&gt;ALTER TABLE&lt;/code&gt;等操作。在执行 DML 语句时，也可以通过&lt;code&gt;LOCK TABLES&lt;/code&gt;显式指定对某个表进行加锁。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;页级锁&lt;/strong&gt;锁定一页，主要应用于 BDB 存储引擎。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;行级锁&lt;/strong&gt;的锁定颗粒度在 MySQL 中是最小的，只针对操作的当前行进行加锁，所以行级锁发生锁定资源争用的概率也最小。只有通过索引进行检索的时候才会使用行级锁，否则会使用表级锁。InnoDB 默认使用行级锁。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2行锁详解&#34;&gt;2、行锁详解&lt;/h2&gt;
+&lt;p&gt;InnoDB默认使用行锁，实现了两种标准的行锁——共享锁与排他锁；&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;共享锁与排他锁&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/innodb%E9%94%81/%E5%85%B1%E4%BA%AB%E9%94%81%E4%B8%8E%E6%8E%92%E4%BB%96%E9%94%81.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;1、除了显式加锁的情况，其他情况下的加锁与解锁都无需人工干预。
+2、InnoDB所有的行锁算法都是基于索引实现的，锁定的也都是索引或索引区间&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;lock in share mode&lt;/strong&gt;与&lt;strong&gt;for update&lt;/strong&gt;的区别：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;lock in share mode 是共享锁；for update 是排他锁&lt;/li&gt;
+&lt;li&gt;没有覆盖索引时，两种锁都需要即锁辅助索引又锁主键索引；当有覆盖索引时，lock in share mode 只锁辅助索引，而 for update 即锁辅助索引又锁主键索引。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;3当前读与快照读&#34;&gt;3、当前读与快照读&lt;/h2&gt;
+&lt;p&gt;**1、当前读：**即加锁读，读取记录的最新版本，会加锁保证其他并发事务不能修改当前记录，直至获取锁的事务释放锁；使用当前读的操作主要包括：显式加锁的读操作与插入/更新/删除等写操作。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;2、快照读&lt;/strong&gt;：即不加锁读，读取记录的快照版本而非最新版本，通过MVCC实现；&lt;/p&gt;
+&lt;p&gt;InnoDB默认的RR事务隔离级别下，不显式加『lock in share mode』与『for update』的『select』操作都属于快照读，保证事务执行过程中只有第一次读之前提交的修改和自己的修改可见，其他的均不可见；&lt;/p&gt;
+&lt;h2 id=&#34;4mvcc&#34;&gt;4、MVCC&lt;/h2&gt;
+&lt;p&gt;MVCC『多版本并发控制』，与之对应的是『基于锁的并发控制』；&lt;/p&gt;
+&lt;p&gt;MVCC的最大好处：读不加任何锁，读写不冲突，对于读操作多于写操作的应用，极大的增加了系统的并发性能；&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;mvcc&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/innodb%E9%94%81/mvcc.png&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;5锁算法&#34;&gt;5、锁算法&lt;/h2&gt;
+&lt;p&gt;InnoDB主要实现了三种行锁算法：&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;三种行锁算法&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/innodb%E9%94%81/%E4%B8%89%E7%A7%8D%E8%A1%8C%E9%94%81%E7%AE%97%E6%B3%95.png&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;51记录锁&#34;&gt;5.1、记录锁&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;记录锁(Record Locks)&lt;/code&gt;也称为行锁，顾名思义，表示对某一行记录加锁。&lt;/p&gt;
+&lt;h3 id=&#34;52间隙锁&#34;&gt;5.2、间隙锁&lt;/h3&gt;
+&lt;p&gt;Gap锁，锁定的是索引记录之间的间隙，是防止幻读的关键；并发事务插入新数据前会先检测间隙中是否已被加锁，防止幻读的出现；间隙锁与间隙锁不互斥。&lt;/p&gt;
+&lt;p&gt;注意！间隙锁锁住的是一个区间，而不仅仅是这个区间中目前仅存在的数据行。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;插入意向锁&lt;/code&gt;名字里虽然有意向锁这三个字，但是它并不是意向锁，它属于行级锁，是一种特殊的间隙锁，该锁只用于并发插入操作。是在插入一条记录行前，由 &lt;code&gt;INSERT&lt;/code&gt; 操作产生的一种&lt;code&gt;间隙锁&lt;/code&gt;。该锁用以表示插入意向，由于插入意向锁只是锁住一个点，当多个事务在同一区间插入位置不同的多条数据时，事务之间不需要互相等待。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;间隙锁的意义只在于阻止区间被插入&lt;/strong&gt;，因此是可以共存的。&lt;strong&gt;一个事务获取的间隙锁不会阻止另一个事务获取同一个间隙范围的间隙锁&lt;/strong&gt;，共享和排他的间隙锁是没有区别的，他们相互不冲突，且功能相同。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>MySQL小知识</title>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E5%B0%8F%E7%9F%A5%E8%AF%86/</link>
+      <pubDate>Sun, 27 Mar 2022 17:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E5%B0%8F%E7%9F%A5%E8%AF%86/</guid>
+      <description>&lt;h3 id=&#34;1or和union的区别&#34;&gt;1、or和union的区别&lt;/h3&gt;
+&lt;p&gt;对于单列来说，用or是没有任何问题的，但是or涉及到多个列的时候，每次select只能选取一个index，另一列需要进行table-scan，即全部扫描一遍，但是使用union就可以解决这个问题，分别使用各自列的index进行查询。 但是这里还会有一个问题就是，UNION会对结果进行排序去重，可能会降低一些performance。&lt;/p&gt;
+&lt;h3 id=&#34;2having和where的区别&#34;&gt;2、having和where的区别&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;where是在分组前对数据进行过滤；where后面不可以使用聚合函数&lt;/li&gt;
+&lt;li&gt;having是在分组后对数据进行过滤；having后面可以使用聚合函数&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;having 的作用就是弥补 where 的粗粒度，实现在组内更细粒度的筛选。&lt;/p&gt;
+&lt;p&gt;在查询过程中执行顺序：from&amp;gt;where&amp;gt;group（含聚合）&amp;gt;having&amp;gt;order&amp;gt;select。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>MySQL索引</title>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E7%B4%A2%E5%BC%95/</link>
+      <pubDate>Sun, 27 Mar 2022 17:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E7%B4%A2%E5%BC%95/</guid>
+      <description>&lt;p&gt;索引对于InnoDB（对索引支持行级锁）非常重要，因为它可以让查询锁更少的元组。&lt;/p&gt;
+&lt;h2 id=&#34;1索引类型&#34;&gt;1、索引类型&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;普通索引：最基本的索引，可以在任意一列或多列的组合上加普通索引。允许存在重复值以及空值。&lt;/li&gt;
+&lt;li&gt;唯一索引：与普通索引不同的是，索引列的值必须唯一，但允许有空值。如果是组合索引，则列值的组合必须唯一。&lt;/li&gt;
+&lt;li&gt;主键索引：与唯一索引不同的是，不允许有空值。&lt;/li&gt;
+&lt;li&gt;组合索引：组合索引与单列索引相对应，只包含一个字段的索引叫做单列索引，包含两个或以上字段的索引叫做复合索引（或组合索引）。上述三种索引既可以是单列索引也可以是组合索引。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2聚集索引&#34;&gt;2、聚集索引&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;聚簇索引&lt;/strong&gt;的叶子节点就是数据节点，而&lt;strong&gt;非聚簇索引&lt;/strong&gt;的叶子节点仍然是索引节点，只不过有指向对应数据块的指针。&lt;/p&gt;
+&lt;p&gt;怎么理解呢？&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;聚簇索引的顺序，就是数据在硬盘上的物理顺序。一般情况下主键就是默认的聚簇索引。&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;一张表&lt;strong&gt;只允许存在一个&lt;/strong&gt;聚簇索引，因为真实数据的物理顺序只能有一种。如果一张表上还没有聚簇索引，为它新创建聚簇索引时，就需要对已有数据重新进行排序，所以对表进行修改速度较慢是聚簇索引的缺点，对于&lt;strong&gt;经常更新的列不宜建立聚簇索引&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;聚簇索引性能最好，因为一旦具有第一个索引值的记录被找到，具有连续索引值的记录也一定物理地紧跟其后。一张表只能有一个聚簇索引，所以非常珍贵，必须慎重设置，一般要根据这个表最常用的SQL查询方式选择某个（或多个）字段作为聚簇索引（&lt;strong&gt;或复合聚簇索引&lt;/strong&gt;）。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;InnoDB对主键建立聚簇索引。&lt;/li&gt;
+&lt;li&gt;如果你不指定主键，InnoDB会用一个具有唯一且非空值的索引来代替。&lt;/li&gt;
+&lt;li&gt;如果不存在这样的索引，InnoDB会定义一个隐藏的主键，然后对其建立聚簇索引。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;3索引的最左匹配&#34;&gt;3、索引的最左匹配&lt;/h2&gt;
+&lt;p&gt;最左前缀匹配原则，非常重要的原则，建立一个索引，对于索引中的字段，mysql会一直向右匹配直到遇到范围查询(&amp;gt;、&amp;lt;、between、like)就停止匹配，比如a = 1 and b = 2 and c &amp;gt; 3 and d = 4 如果建立(a,b,c,d)顺序的索引，d是用不到索引的，如果建立(a,b,d,c)的索引则都可以用到，a,b,d的顺序可以任意调整。
+=和in可以乱序，比如a = 1 and b = 2 and c = 3 建立(a,b,c)索引可以任意顺序，mysql的查询优化器会帮你优化成索引可以识别的形式。&lt;/p&gt;
+&lt;p&gt;mysql创建复合索引的规则是首先会对复合索引的最左边的，也就是第一个name字段的数据进行排序，在第一个字段的排序基础上，然后再对后面第二个的cid字段进行排序。其实就相当于实现了类似 order by name cid这样一种排序规则。
+所以：第一个name字段是绝对有序的，而第二字段就是无序的了。所以通常情况下，直接使用第二个cid字段进行条件判断是用不到索引的。&lt;/p&gt;
+&lt;p&gt;在第一个值等值匹配的前提下，第二个值是有序的，因此mysql索引规则中要求复合索引要想使用第二个索引，必须先使用第一个索引的原因。（而且第一个索引必须是&lt;strong&gt;等值匹配&lt;/strong&gt;）。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;order by&lt;/code&gt;也会用到索引，但前提是 &lt;code&gt;where&lt;/code&gt;子句必须用到索引；如果 &lt;code&gt;where&lt;/code&gt;子句的字段没有索引，即使&lt;code&gt;order by&lt;/code&gt;的字段有索引也不会用到。&lt;code&gt;where&lt;/code&gt;和&lt;code&gt;order by&lt;/code&gt;使用的索引可以是同一个组合索引，同样符合最左匹配原则，比如 &lt;code&gt;select * from tb_user where name = &amp;quot;lu&amp;quot; and age &amp;lt; 21 order by score&lt;/code&gt;，如果有 &lt;code&gt;(name, age, score)&lt;/code&gt; 的组合索引，由于 &lt;code&gt;age&lt;/code&gt; 使用了范围搜索，&lt;code&gt;score&lt;/code&gt; 索引就会失效。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>事务实现原理</title>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
+      <pubDate>Sun, 27 Mar 2022 17:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid>
+      <description>&lt;p&gt;MySQL 默认开启事务自动提交模式，即除非显式的开启事务（BEGIN 或 START TRANSACTION），否则每条 SOL 语句都会被当做一个单独的事务自动执行。&lt;/p&gt;
+&lt;p&gt;在 MySQL 中，可以使用 SET autocommit 语句设置事务的自动提交模式，语法格式如下：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; autocommit &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;OFF&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;对取值的说明：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;值为 0 和值为 OFF：关闭事务自动提交。如果关闭自动提交，用户将会一直处于某个事务中，只有提交或回滚后才会结束当前事务，重新开始一个新事务。&lt;/li&gt;
+&lt;li&gt;值为 1 和值为 ON：开启事务自动提交。如果开启自动提交，则每执行一条 SQL 语句，事务都会提交一次。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;事务想要做到可靠性以及并发处理。&lt;/p&gt;
+&lt;h2 id=&#34;1redo-log-与-undo-log&#34;&gt;1、redo log 与 undo log&lt;/h2&gt;
+&lt;h3 id=&#34;11redo-log&#34;&gt;1.1、redo log&lt;/h3&gt;
+&lt;p&gt;mysql 为了提升性能不会把每次的修改都实时同步到磁盘，而是会先存到Boffer Pool(缓冲池)里头，把这个当作缓存来用。然后使用后台线程去做&lt;strong&gt;缓冲池和磁盘之间的同步&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;那么问题来了，如果还没来的同步的时候宕机或断电了怎么办？还没来得及执行上面图中红色的操作。这样会导致丢部分已提交事务的修改信息！&lt;/p&gt;
+&lt;p&gt;所以引入了redo log来记录已成功提交事务的修改信息，并且会把redo log持久化到磁盘，系统重启之后在读取redo log恢复最新数据。&lt;/p&gt;
+&lt;p&gt;redo log在事务提交时就写入磁盘，不会等待后台程序执行。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;总结：&lt;/strong&gt; redo log是用来恢复数据的 用于保障，已提交事务的持久化特性。&lt;/p&gt;
+&lt;p&gt;既然redo log也需要存储，也涉及磁盘IO为啥还用它？&lt;/p&gt;
+&lt;p&gt;（1）redo log 的存储是顺序存储，而缓存同步是随机操作。&lt;/p&gt;
+&lt;p&gt;（2）缓存同步是以数据页为单位的，每次传输的数据大小大于redo log。&lt;/p&gt;
+&lt;h3 id=&#34;12undo-log&#34;&gt;1.2、undo log&lt;/h3&gt;
+&lt;p&gt;undo log 叫做回滚日志，用于记录数据&lt;strong&gt;被修改前&lt;/strong&gt;的信息。会记录执行的操作以及修改前的信息，这样根据操作记录做相反的操作即可恢复到事务执行前的状态。&lt;/p&gt;
+&lt;p&gt;undo log 记录事务修改之前版本的数据信息，因此假如由于系统错误或者rollback操作而回滚的话可以根据undo log的信息来进行回滚到没被修改前的状态。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;总结：&lt;/strong&gt; undo log是用来回滚数据的用于保障 未提交事务的原子性&lt;/p&gt;
+&lt;h2 id=&#34;2事务的实现&#34;&gt;2、事务的实现&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;事务的原子性是通过 undo log 来实现的&lt;/li&gt;
+&lt;li&gt;事务的持久性性是通过 redo log 来实现的&lt;/li&gt;
+&lt;li&gt;事务的隔离性是通过 (读写锁+MVCC)来实现的&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;一致性&lt;/strong&gt;是通过原子性，持久性，隔离性来实现的！！&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;21原子性的实现&#34;&gt;2.1、原子性的实现&lt;/h3&gt;
+&lt;p&gt;一个事务必须被视为不可分割的最小工作单位，一个事务中的所有操作要么全部成功提交，要么全部失败回滚，对于一个事务来说不可能只执行其中的部分操作，这就是事务的原子性。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>MyISAM与InnoDB 的区别</title>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/myisam%E4%B8%8Einnodb%E7%9A%84%E5%8C%BA%E5%88%AB/</link>
+      <pubDate>Sat, 22 May 2021 17:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/myisam%E4%B8%8Einnodb%E7%9A%84%E5%8C%BA%E5%88%AB/</guid>
+      <description>&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;InnoDB支持事务，MyISAM不支持，对于InnoDB每一条SQL语言都默认封装成事务&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;InnoDB支持外键，而MyISAM不支持。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;InnoDB是聚集索引，InnoDB的B+树主键索引的叶子节点就是数据文件，辅助索引的叶子节点是主键的值；而MyISAM的B+树主键索引和辅助索引的叶子节点都是数据文件的地址指针。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img alt=&#34;MyISAM与InnoDB的索引&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/myisam%E4%B8%8Einnodb%E7%9A%84%E5%8C%BA%E5%88%AB/MyISAM%E4%B8%8EInnoDB%E7%9A%84%E7%B4%A2%E5%BC%95.jpg&#34;&gt;&lt;/p&gt;
+&lt;ol start=&#34;4&#34;&gt;
+&lt;li&gt;
+&lt;p&gt;InnoDB不保存表的具体行数，而MyISAM用一个变量保存了整个表的行数。（因为事务）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;InnoDB支持行级锁，MyISAM不支持。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;InnoDB表必须有主键索引（用户没有指定的话会自己找/生产一个隐藏列Row_id来充当默认主键），而Myisam可以没有。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;</description>
+    </item>
+    <item>
+      <title>MySQL概述</title>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E7%AC%94%E8%AE%B0/</link>
+      <pubDate>Sat, 22 May 2021 17:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E7%AC%94%E8%AE%B0/</guid>
+      <description>&lt;h3 id=&#34;基本命令&#34;&gt;基本命令&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;show columns from user&lt;/code&gt; == &lt;code&gt;describe user&lt;/code&gt; == &lt;code&gt;desc user&lt;/code&gt;查询user表的结构&lt;/li&gt;
+&lt;li&gt;sql的注释为两个杠 &lt;code&gt;--&lt;/code&gt;，多行注释为/*  */&lt;/li&gt;
+&lt;li&gt;创建表：&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 表明和字段名用反引号引起来是为了防止与sql的关键字相同，更规范
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;IF&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;EXISTS&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; (   &lt;span style=&#34;color:#75715e&#34;&gt;-- IF NOT EXISTS 为可选
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;-- COMMENT 为注释，在表中看不到，但是调出创建表的命令时，可以直观看到字段的含义
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; int &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; AUTO_INCREMENT &lt;span style=&#34;color:#66d9ef&#34;&gt;COMMENT&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;学号&amp;#39;&lt;/span&gt;,   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;name&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;30&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;COMMENT&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;名字&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;birthday&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; DATETIME &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;COMMENT&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;出生日期&amp;#39;&lt;/span&gt;, 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;passwd&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;30&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;COMMENT&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;密码&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;perms&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;normal&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;COMMENT&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;权限&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) ENGINE&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;InnoDB &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; CHARSET&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;utf8  &lt;span style=&#34;color:#75715e&#34;&gt;-- 显示声明引擎和默认字符集（可在my.ini中修改）
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 真实开发中还需要有，version（乐观锁）、deleted（逻辑删除）、gmt_create（创建时间）、
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;					&lt;span style=&#34;color:#75715e&#34;&gt;-- gmt_modified（修改时间）
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;修改表&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;ALTER&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; teacher &lt;span style=&#34;color:#66d9ef&#34;&gt;RENAME&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AS&lt;/span&gt; teacher1    &lt;span style=&#34;color:#75715e&#34;&gt;-- 修改表名
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;ALTER&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; teacher &lt;span style=&#34;color:#66d9ef&#34;&gt;ADD&lt;/span&gt; age INT           &lt;span style=&#34;color:#75715e&#34;&gt;-- 添加字段
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;ALTER&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; teacher &lt;span style=&#34;color:#66d9ef&#34;&gt;MODIFY&lt;/span&gt; age VARCHAR(&lt;span style=&#34;color:#ae81ff&#34;&gt;11&lt;/span&gt;)    &lt;span style=&#34;color:#75715e&#34;&gt;-- 修改字段的约束
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;ALTER&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; teacher CHANGE &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;旧名&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;新名&lt;/span&gt; INT   &lt;span style=&#34;color:#75715e&#34;&gt;-- 修改字段名（可以同时修改约束）
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;ALTER&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; teacher &lt;span style=&#34;color:#66d9ef&#34;&gt;DROP&lt;/span&gt; age              &lt;span style=&#34;color:#75715e&#34;&gt;-- 删除字段
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;删除表&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;DROP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;IF&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;EXISTS&lt;/span&gt; teacher              &lt;span style=&#34;color:#75715e&#34;&gt;-- 加上判断的删除
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;查看相关历史命令语句&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SHOW&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DATABASE&lt;/span&gt; mybatis &lt;span style=&#34;color:#75715e&#34;&gt;-- 查看创建数据库的语句
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SHOW&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;-- 查看创建数据表的语句
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;hr&gt;
+&lt;h3 id=&#34;数据表类型引擎&#34;&gt;数据表类型（引擎）&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;MYISAM   早期使用          InnoDB 默认使用&lt;/li&gt;
+&lt;/ul&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;&lt;/th&gt;
+          &lt;th&gt;MYISAM&lt;/th&gt;
+          &lt;th&gt;InnoDB&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;事务支持&lt;/td&gt;
+          &lt;td&gt;不支持&lt;/td&gt;
+          &lt;td&gt;支持&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;数据行锁定&lt;/td&gt;
+          &lt;td&gt;不支持&lt;/td&gt;
+          &lt;td&gt;支持&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;外键约束&lt;/td&gt;
+          &lt;td&gt;不支持&lt;/td&gt;
+          &lt;td&gt;支持&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;全文检索&lt;/td&gt;
+          &lt;td&gt;支持&lt;/td&gt;
+          &lt;td&gt;现在支持&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;表空间大小&lt;/td&gt;
+          &lt;td&gt;较小&lt;/td&gt;
+          &lt;td&gt;较大，约两倍&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;ul&gt;
+&lt;li&gt;主要区别
+&lt;ul&gt;
+&lt;li&gt;MYISAM   节约空间，速度较快&lt;/li&gt;
+&lt;li&gt;InnoDB     安全性高，支持事务，多表多用户操作&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h3 id=&#34;数据管理&#34;&gt;数据管理&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;DDL&lt;/strong&gt;，Data Definition Language，数据库定义语言
+用于定义和管理数据库所有对象的语言，包括：CREATE，ALERT，DROP，TRUNCATE&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;DML&lt;/strong&gt;，Data Manipulation Language，数据库操作语言
+SQL中处理数据等操作，包括：SELECT，INSERT，UPDATE，DELETE，CALL，EXPLAIN PLAN，LOCK&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;DCL&lt;/strong&gt;，Data Control Language，数据库控制语言
+用来授予或回收访问数据库和某种特权并控制数据库操纵事务发生的时间及效果，对数据库实行监控，包括：COMMIT，SAVEPOINT，ROLLBACK，SET TRANSACTION&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h3 id=&#34;delete和truncate的区别&#34;&gt;delete和truncate的区别&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;TRUNCATE student&lt;/code&gt; == &lt;code&gt;DELETE FROM student&lt;/code&gt; 清空表内容&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

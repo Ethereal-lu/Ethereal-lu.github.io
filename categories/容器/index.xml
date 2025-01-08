@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>容器 on lu</title>
+    <link>https://ethereal-lu.github.io/categories/%E5%AE%B9%E5%99%A8/</link>
+    <description>Recent content in 容器 on lu</description>
+    <generator>Hugo -- 0.140.1</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Mon, 06 Jun 2022 17:12:41 +0000</lastBuildDate>
+    <atom:link href="https://ethereal-lu.github.io/categories/%E5%AE%B9%E5%99%A8/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Kuberbetes基础</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/kuberbetes/kuberbetes%E5%9F%BA%E7%A1%80/</link>
+      <pubDate>Mon, 06 Jun 2022 17:12:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/kuberbetes/kuberbetes%E5%9F%BA%E7%A1%80/</guid>
+      <description>&lt;p&gt;Kubernetes 是 Google 开源的一个容器编排引擎，用于自动化容器化应用程序的部署和管理。&lt;/p&gt;
+&lt;h2 id=&#34;1kubernetes整体架构&#34;&gt;1、Kubernetes整体架构&lt;/h2&gt;
+&lt;p&gt;&lt;img alt=&#34;Kubernetes整体架构&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/kuberbetes/kuberbetes%E5%9F%BA%E7%A1%80/Kubernetes%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Master&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;k8s集群控制节点，对集群进行调度管理，接受集群外用户去集群操作请求；&lt;/p&gt;
+&lt;p&gt;Master Node 由 API Server、Scheduler、ClusterState Store（ETCD 数据库）和 Controller MangerServer 所组成；&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Nodes&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;集群工作节点，运行用户业务应用容器；&lt;/p&gt;
+&lt;p&gt;Nodes节点也叫Worker Node，包含kubelet、kube proxy 和 Pod（Container Runtime）；&lt;/p&gt;
+&lt;h2 id=&#34;2kubernetes环境搭建&#34;&gt;2、Kubernetes环境搭建&lt;/h2&gt;
+&lt;p&gt;kubeadm是官方社区推出的一个用于快速部署 kubernetes 集群的工具。两个指令即可完成集群搭建：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;创建一个Master节点：kubeadm init&lt;/li&gt;
+&lt;li&gt;将Node节点加入到Master集群中：kubeadm join &amp;lt;Master节点的IP和端口&amp;gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;21初始环境准备&#34;&gt;2.1、初始环境准备&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;硬件：内存2G+，CPU 2核+；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;关闭防火墙：&lt;code&gt;ufw disable&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;关闭selinux：&lt;code&gt;sed -i &#39;s/enforcing/disabled/&#39; /etc/selinux/config #永久&lt;/code&gt; ；&lt;code&gt;setenforce 0 #临时&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;关闭swap：&lt;code&gt;sed -ri &#39;s/.*swap.*/#&amp;amp;/&#39; /etc/fstab #永久&lt;/code&gt; ；&lt;code&gt;swapoff -a #临时&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;设置网桥参数&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;cat &amp;gt; /etc/sysctl.d/k8s.conf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;&amp;lt; EOF
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;net.bridge.bridge-nf-call-ip6tables = 1
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;net.bridge.bridge-nf-call-iptables = 1
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;EOF&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sysctl --system  &lt;span style=&#34;color:#75715e&#34;&gt;#生效&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;在master添加hosts&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
