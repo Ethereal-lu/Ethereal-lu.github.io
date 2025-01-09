@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>计算机网络 on lu</title>
+    <link>https://ethereal-lu.github.io/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/</link>
+    <description>Recent content in 计算机网络 on lu</description>
+    <generator>Hugo -- 0.140.1</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Wed, 01 Jun 2022 12:39:41 +0000</lastBuildDate>
+    <atom:link href="https://ethereal-lu.github.io/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>HTTP</title>
+      <link>https://ethereal-lu.github.io/posts/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/http/</link>
+      <pubDate>Wed, 01 Jun 2022 12:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/http/</guid>
+      <description>&lt;h2 id=&#34;1http请求方法&#34;&gt;1、HTTP请求方法&lt;/h2&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th style=&#34;text-align: center&#34;&gt;index&lt;/th&gt;
+          &lt;th style=&#34;text-align: center&#34;&gt;method&lt;/th&gt;
+          &lt;th style=&#34;text-align: center&#34;&gt;description&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;1&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;GET&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;请求指定页面信息，并返回实体主体&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;2&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;HEAD&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;类似于GET请求，只不过返回的响应中没有具体的内容，用于获取报头&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;3&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;POST&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;向指定资源提交数据进行处理请求（例如提交表单或者上传文件）。数据被包含在请求体中。POST请求可能会导致新的资源的建立和/或已有资源的修改。&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;4&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;PUT&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;从客户端向服务器传送的数据取代指定的文档的内容。（全部取代）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;5&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;PATCH&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;从客户端向服务器传送的数据取代指定的文档的内容。（部分取代）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;6&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;DELETE&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;请求服务器删除指定的页面。&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;7&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;CONNECT&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;HTTP/1.1协议中预留给能够将连接改为管道方式的代理服务器。&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;8&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;OPTIONS&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;允许客户端查看服务器的性能。&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;9&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;TRACE&lt;/td&gt;
+          &lt;td style=&#34;text-align: center&#34;&gt;回显服务器收到的请求，主要用于测试或诊断。&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id=&#34;2http队头阻塞&#34;&gt;2、HTTP队头阻塞&lt;/h2&gt;
+&lt;p&gt;在HTTP1.0中不使用TCP长连接，每次收到响应后才能发起下一个请求。每个请求都需要 3 + 4.&lt;/p&gt;
+&lt;p&gt;在HTTP1.1中使用TCP长连接，一个TCP连接中可以处理多个请求，但是如果前面的请求没有收到响应就会阻塞后续的请求。因此引入管道来提高效率。但是管道的引入带来了对头阻塞，管道特性允许客户端在已发送的请求收到服务端的响应之前发送下一个请求，但是由于HTTP请求和响应并没有序号标识，无法将乱序的响应与请求关联起来，因此响应顺序必须与请求顺序一致。如果某个响应由于一些原因延迟了，那么后面的响应就都会被阻塞，这就是队头阻塞。&lt;/p&gt;
+&lt;p&gt;由于队头阻塞和幂等性问题，现代浏览器默认都关闭了管道化，并且大部分服务器也是默认不支持管道化的。&lt;/p&gt;
+&lt;p&gt;解决队头阻塞问题可以采用并发TCP连接，即每个浏览器可以对同一个域名发起多个TCP连接，如谷歌浏览器默认最大可以同时发起6个TCP连接，此时不同TCP连接中的请求便不存在队头阻塞问题。但是连接数量有限且需要额外的资源，因此只能做有效缓解。&lt;/p&gt;
+&lt;h2 id=&#34;3http幂等性&#34;&gt;3、HTTP幂等性&lt;/h2&gt;
+&lt;p&gt;当客户端在支持管道化时需要保持未收到响应的请求，当连接意外中断时，需要重新发送这部分请求。因此客户端在使用管道化的时候请求方式必须是幂等请求。&lt;/p&gt;
+&lt;p&gt;HTTP方法的幂等性是指一次和多次请求某一个资源应该具有同样的副作用。这里的副作用是指对于资源造成的改变，而不是响应结果必须一样。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;GET&lt;/strong&gt; 操作是幂等的，原因是 GET 操作根本不会对服务器产生任何修改。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;PUT&lt;/strong&gt; 方法通常是对已经存在的资源进行修改，也是幂等的。如将数字 1 改为 2，执行一次成功后，后续的操作都应该找不到数字 1&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;DELETE&lt;/strong&gt; 方法也是幂等的，例如我们连续发起多个对 A 的删除请求，如果第一个成功的话，后面的请求都应返回资源找不到的错误&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;POST&lt;/strong&gt; 一般是指新增资源，不是幂等的。如果连续发起三个 A 资源的增加，最终的结果会是三个 A 资源，而不是一个&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;因此，POST方法不能使用 Pipeline。&lt;/p&gt;
+&lt;h2 id=&#34;4http2-和http11-区别&#34;&gt;4、http2 和http1.1 区别&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;新的二进制格式&lt;/strong&gt;（Binary  Format），http1.1和2.0 最大的区别是二进制框架层。与 http1.1把所有请求和响应作为纯文本不同，http2 使用二进制框架层把所有消息封装成二进制。二进制协议解析起来更高效且错误更少。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;多路复用&lt;/strong&gt;（MultiPlexing），客户端与服务端只建立一个TCP连接，所有的请求都共享这个连接。一个request对应一个id，再将一个请求切割成多个帧，同一个请求的多个帧都携带同一个请求id，这样一个连接上可以有多个request，每个请求的帧可以随机的混杂在一起，接收方可以根据request的 id将request再归属到各自不同的服务端请求里面。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;header压缩&lt;/strong&gt;，HTTP报文的header带有大量信息，而且每次都要重复发送，HTTP2.0使用encoder来减少需要传输的header大小，通讯双方各自cache一份header fields表，既避免了重复header的传输，又减小了需要传输的大小。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;服务端推送&lt;/strong&gt;（server push），实现复杂。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;5tsl&#34;&gt;5、TSL&lt;/h2&gt;
+&lt;p&gt;TLS（传输层安全）是更为安全的升级版 SSL。该协议由两层组成： TLS 记录协议和 TLS 握手协议。记录协议主要负责使用对称密码对消息进行加密。握手协议负责在客户端和服务器端商定密码算法和共享密钥，以及证书认证。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>基础网络攻击</title>
+      <link>https://ethereal-lu.github.io/posts/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/%E5%9F%BA%E7%A1%80%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB/</link>
+      <pubDate>Tue, 03 May 2022 22:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/%E5%9F%BA%E7%A1%80%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB/</guid>
+      <description>&lt;h2 id=&#34;1syn洪泛攻击&#34;&gt;1、SYN洪泛攻击&lt;/h2&gt;
+&lt;h3 id=&#34;11产生原理&#34;&gt;1.1、产生原理&lt;/h3&gt;
+&lt;p&gt;服务器在收到连接请求报文段后，如同意建立连接，就向客户机发回确认，并在OS内核中为该TCP连接分配TCP缓存和变量。除此之外标识该tcp连接的tcb也会占用内存资源。&lt;/p&gt;
+&lt;h3 id=&#34;12防御手段&#34;&gt;1.2、防御手段&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;SYN cookie 方法&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;在服务器收到客户端的第一次请求之后，不立马分配资源，而是将&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;SYN报文的源和目的IP与端口号&lt;/li&gt;
+&lt;li&gt;仅仅有服务器知道的密钥&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;塞入一个哈希函数，生成一个认证码；这个认证码也叫cookie；将cookie作为初始序列号，发送给客户端。如果客户端真实存在，则客户端将会带着cookie+1作为ack响应。而服务器可以再次执行上述过程，比较与ack-1是否相同。如果相同，则建立连接。如果客户端不存在，则服务器没有为其消耗任何资源。&lt;/p&gt;
+&lt;h3 id=&#34;13tcp的相关细节&#34;&gt;1.3、TCP的相关细节&lt;/h3&gt;
+&lt;p&gt;TCB：包含 socket 、指向收发缓冲区的指针、数据包序列号等。&lt;/p&gt;
+&lt;p&gt;客户端的TCB在发起连接之前就创建并赋好值；服务端的TCB也在收到连接之前就创建好，但是由于不知道谁会连接自己，故将TCB都初始化为0，当接收到第一次握手的连接请求后，为该tcp分配缓存等资源，并赋值给TCB。因此，在第二次握手时，服务端已经为该tcp连接分配了一部分资源。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;若第三次握手的ack包丢失会怎样？&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;或许由于第二次握手的包丢失，客户端不会发起第三次握手；或者客户端的第三次握手的包丢失。总之，服务端在接收不到第三次握手包时会执行如下操作：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;没有收到来自客户端的任何包：根据 TCP的超时重传机制，重新发送第二次握手包，若重发指定次数之后，仍然未收到响应，就会发送reset包，关闭连接，释放资源。&lt;/li&gt;
+&lt;li&gt;收到了后续的数据包：由于第三次握手的关键就是其ack，而数据包中也有ack，故连接正常建立并进行通信。如果第三次握手包中不包含数据则不消耗序号。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;2dns-劫持&#34;&gt;2、DNS 劫持&lt;/h2&gt;
+&lt;p&gt;某些网络运营商为了某些目的，对DNS进行了某些操作，导致用户无法通过域名取得正确的IP地址。&lt;/p&gt;
+&lt;p&gt;运营商会利用 DNS 劫持 投放小广告等。DNS污染则让域名直接无法访问了。&lt;/p&gt;
+&lt;p&gt;遇到DNS污染只能更换域名服务器或使用第三方域名解析服务。&lt;/p&gt;
+&lt;h2 id=&#34;3中间人攻击&#34;&gt;3、中间人攻击&lt;/h2&gt;
+&lt;p&gt;前置知识：机器对于 ARP 包是信任的，不做任何安全校验。此方式需要和受害人在同一局域网。&lt;/p&gt;
+&lt;p&gt;当客户端发起连接请求时，攻击者向客户端发送大量 ARP 包谎称自己是网关，然后客户端就会将所有请求都发送给攻击者。攻击者收到请求后返回自己的数字证书，并向服务端发送真实的请求。如果客户端不对证书校验，则客户端就会向攻击者发送对称加密密钥并进行后续的加密通信，而攻击者和服务器建立的是正规的安全连接。如此，中间人攻击就成功了，后续攻击者可以对请求和响应进行转发，并动一些手脚。&lt;/p&gt;
+&lt;p&gt;也可以利用DNS 劫持发起中间人攻击。&lt;/p&gt;
+&lt;p&gt;使用 SSL 身份认证即可防御中间人攻击。&lt;/p&gt;
+&lt;h2 id=&#34;4缓冲区溢出攻击&#34;&gt;4、缓冲区溢出攻击&lt;/h2&gt;
+&lt;p&gt;通过往程序的缓冲区写超出其长度的内容，造成缓冲区的溢出，使程序转而执行其它指令，以达到攻击的目的。如strcpy()函数，不会对字符串边界进行检查就直接复制，当参数长度大于缓冲区长度时就会造成缓冲区溢出。&lt;/p&gt;
+&lt;p&gt;可以通过制造缓冲区溢出使程序运行一个用户shell，再通过shell执行其它命令。如果该程序有root权限的话，攻击者就获得了一个有root权限的shell，可以对系统进行任意操作了。&lt;/p&gt;
+&lt;h2 id=&#34;5跨站请求伪造-csrf&#34;&gt;5、跨站请求伪造 CSRF&lt;/h2&gt;
+&lt;h3 id=&#34;51同源策略&#34;&gt;5.1、同源策略&lt;/h3&gt;
+&lt;p&gt;源由[协议、域名、端口]三元组组成，三元组都一样时称为同源。&lt;/p&gt;
+&lt;p&gt;同源策略限制了其他源的脚本对当前页面资源的读写。&lt;/p&gt;
+&lt;p&gt;同源策略不会限制发起跨域请求，而是限制 Javascript 对于响应结果的读写。&lt;/p&gt;
+&lt;h3 id=&#34;52csrf-原理&#34;&gt;5.2、CSRF 原理&lt;/h3&gt;
+&lt;p&gt;用户在登录网站 A 后，在本地浏览器中存储了网站 A 的 Cookie 。之后没有结束与 A 的会话就去访问恶意网站 B ，网站 B 可以通过 img 的 src 向网站 A 发起 GET 请求，或通过表单向网站 A 发起 POST请求。这些请求会自动携带上之前还没有删除的 Cookie ，网站 A 就会认为这是来自用户的一个合法请求并执行它。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

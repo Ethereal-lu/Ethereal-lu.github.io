@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Kafka on lu</title>
+    <link>https://ethereal-lu.github.io/categories/kafka/</link>
+    <description>Recent content in Kafka on lu</description>
+    <generator>Hugo -- 0.140.1</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Sun, 08 May 2022 17:42:15 +0000</lastBuildDate>
+    <atom:link href="https://ethereal-lu.github.io/categories/kafka/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Kafka基础</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/kafka/kafka%E5%9F%BA%E7%A1%80/</link>
+      <pubDate>Sun, 08 May 2022 17:42:15 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/kafka/kafka%E5%9F%BA%E7%A1%80/</guid>
+      <description>&lt;h2 id=&#34;1概述&#34;&gt;1、概述&lt;/h2&gt;
+&lt;p&gt;定义：Kafka 是分布式的基于发布订阅的消息队列，主要应用于大数据实时处理领域。&lt;/p&gt;
+&lt;p&gt;Kafka基础架构：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;为方便扩展，并提高吞吐量，一个topic分为多个partition&lt;/li&gt;
+&lt;li&gt;写数据通过分区提高效率，为不拖后腿，读数据也采用多个消费者合为一组并发读数据，每个分区只能被一个消费者消费。&lt;/li&gt;
+&lt;li&gt;为提高可用性，为每个分区增加副本，分为 leader 和 follower，读写只与 leader 有关，follower 仅仅用作备份与故障选举。&lt;/li&gt;
+&lt;li&gt;Kafka 需配合 Zookeeper 使用，Zookeeper 中存储了哪些分区已经上线，以及每个分区的 leader 是谁。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img alt=&#34;Kafka基础架构&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/kafka/kafka%E5%9F%BA%E7%A1%80/Kafka%E5%9F%BA%E7%A1%80%E6%9E%B6%E6%9E%84.png&#34;&gt;&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

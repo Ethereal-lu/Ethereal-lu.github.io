@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>ElasticSearch on lu</title>
+    <link>https://ethereal-lu.github.io/categories/elasticsearch/</link>
+    <description>Recent content in ElasticSearch on lu</description>
+    <generator>Hugo -- 0.140.1</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Mon, 22 Aug 2022 17:39:41 +0000</lastBuildDate>
+    <atom:link href="https://ethereal-lu.github.io/categories/elasticsearch/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Mysql同步ElasticSearch</title>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/mysql%E5%90%8C%E6%AD%A5elasticsearch/</link>
+      <pubDate>Mon, 22 Aug 2022 17:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/mysql%E5%90%8C%E6%AD%A5elasticsearch/</guid>
+      <description>&lt;p&gt;Mysql 同步 ElasticSearch 采用 Canal 监听 binlog，然后将数据发送到 MQ 的 topic 中，ElasticSearch 作为 MQ 的消费者进行处理。&lt;/p&gt;
+&lt;h2 id=&#34;1-canal&#34;&gt;1 Canal&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;Canal&lt;/code&gt;是阿里开源的一款基于Mysql数据库binlog的增量订阅和消费组件，通过它可以订阅数据库的binlog日志，然后进行一些数据消费，相对于消息队列，通过这种机制可以实现数据的有序化和一致性。&lt;/p&gt;
+&lt;p&gt;Canal 工作原理如下：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Canal模拟MySQL slave的交互协议，伪装自己为MySQL slave，向MySQL master发送dump请求&lt;/li&gt;
+&lt;li&gt;MySQL master收到dump请求，开始推送binary log给slave（也就是canal）&lt;/li&gt;
+&lt;li&gt;Canal解析binary log对象（原始为byte流）&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;简而言之，Canal是通过模拟成为MySQL的slave，监听MySQL的binlog日志来获取数据。当把MySQL的binlog设置为row模式以后，可以获取到执行的每一个Insert/Update/Delete的脚本，以及修改前和修改后的数据，基于这个特性，Canal就能高效的获取到MySQL数据的变更。&lt;/p&gt;
+&lt;p&gt;Canal 组件如下：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;canal-server：服务端，从mysql读取binlog日志获取增量日志，可以通过tcp、kafka、RocketMQ等方式与客户端通信；通过zookeeper搭建集群。&lt;/li&gt;
+&lt;li&gt;canal-adapter：客户端，根据canal-server获取的增量日志执行适配到其他诸如elasticsearch、redis、mysql等端，实现数据同步。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Canal 使用示例如下：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Mysql 开启 binlog，并设置为 row 模式，然后指定需要同步的数据库&lt;/li&gt;
+&lt;li&gt;新建一个用户供 Canal 连接 Mysql&lt;/li&gt;
+&lt;li&gt;在 Canal 服务端中配置 Mysql 的地址和用户名密码以及与客户端的通信方式&lt;/li&gt;
+&lt;li&gt;在 Canal 客户端中配置 ElasticSearch 的地址等信息以及索引库名称等信息&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;2-同步流程&#34;&gt;2 同步流程&lt;/h2&gt;
+&lt;p&gt;由 Canal 订阅 binlog，得到 Canal 解析的好 Json 字符串后进行一些业务逻辑处理，比如新增一条 order 数据时需要同时获取到相关的用户信息、申请审批信息等，将这些信息封装为一个文档，使用 binlog 主键作为文档 id，与封装好的文档一起发送到 MQ 中。由消费者组消费 MQ 中的消息，并根据相应操作写入到 ES 中。注：binlog 会记录当前事务的操作类型（Insert/Update/Delete），故 ES 也做相应操作即可。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>ElasticSearch集群</title>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E9%9B%86%E7%BE%A4/</link>
+      <pubDate>Wed, 10 Aug 2022 21:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E9%9B%86%E7%BE%A4/</guid>
+      <description>&lt;h2 id=&#34;1-节点自动发现&#34;&gt;1 节点自动发现&lt;/h2&gt;
+&lt;p&gt;Zen Discovery是Elasticsearch内置的默认发现模块，支持多播模式和单播模式。发现模块用于发现集群中的节点 及选举主节点。多播模式已经不被大多数操作系统所支持，Elasticsearch的发现机制默认为单播模式，以防止节点无意中加入集群。&lt;/p&gt;
+&lt;p&gt;在同一台机器上运行的Elasticsearch节点会自动组成集群，当集群的节点运行在不同的机器上时，需要在每个节点的配置文件&lt;code&gt;elasticsearch.yml&lt;/code&gt;中配置节点列表，即其他节点的IP和端口。集群建立后，每个节点都会每隔一定时间对节点列表中的所有节点发送心跳检测，心跳响应包中包含响应者所认可的master节点。&lt;/p&gt;
+&lt;h2 id=&#34;2-bully算法&#34;&gt;2 Bully算法&lt;/h2&gt;
+&lt;p&gt;选举原则：在所有活着的节点中，选取节点ID最大或者最小的节点为主节点。&lt;/p&gt;
+&lt;p&gt;节点角色：主节点和普通节点&lt;/p&gt;
+&lt;p&gt;消息类型：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Election 消息，向节点发起选举的消息&lt;/li&gt;
+&lt;li&gt;Alive 消息，节点对 Election 消息的应答&lt;/li&gt;
+&lt;li&gt;Victory 消息，竞选成功的主节点向普通节点发送竞选成功的消息&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;选举过程：&lt;/p&gt;
+&lt;p&gt;集群中每个活着的节点查找比自己ID大的节点，如果不存在则向其他节点发送Victory消息，表明自己为主节点。
+如果存在比自己ID大的节点，则向这些节点发送Election消息，并等待响应。
+若在给定的时间内没有收到这些节点回复的消息，则自己成为主节点，并向比自己ID小的节点发送Victory消息。
+节点收到比自己ID小的节点发送的Election消息，则回复Alive消息。&lt;/p&gt;
+&lt;p&gt;假设有三个节点，选举过程如下图：&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;Bully算法&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E9%9B%86%E7%BE%A4/Bully%E7%AE%97%E6%B3%95.png&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-选举流程&#34;&gt;3 选举流程&lt;/h2&gt;
+&lt;h3 id=&#34;31-选举时机&#34;&gt;3.1 选举时机&lt;/h3&gt;
+&lt;p&gt;当一个节点发现包括自己在内的多数派的master-eligible节点认为集群没有master时，就可以发起master选举。&lt;/p&gt;
+&lt;h3 id=&#34;32-选举流程&#34;&gt;3.2 选举流程&lt;/h3&gt;
+&lt;p&gt;&lt;img alt=&#34;选举流程&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E9%9B%86%E7%BE%A4/%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B.jpg&#34;&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Elasticsearch节点向节点列表中的所有节点发送ping消息&lt;/li&gt;
+&lt;li&gt;对收到的响应包进行过滤，筛选出activeMasters列表和masterCandidates列表。activeMasters列表是其它节点认为的当前集群的Master节点，masterCandidates列表是当前集群有资格成为Master的节点（即配置文件中 &lt;code&gt;node.master:true&lt;/code&gt;的节点）&lt;/li&gt;
+&lt;li&gt;如果activeMasters列表不为空，elasticsearch会优先从activeMasters列表中选举，选举的算法是Bully算法，选择ID最小的节点(理论上activeMaster中的节点一定有master资格)&lt;/li&gt;
+&lt;li&gt;如果activeMaster列表为空，那么会在masterCandidates中选举，选举同样涉及到优先级比较，首先会判断masterCandidates列表成员数目是否达到了最小数目（即超过半数）。如果达到的情况下先比较节点的集群状态版本编号，版本号越大优先级越高，然后再比较id，id越小优先级越高，这一流程的目的是让拥有最新集群状态的节点成为master&lt;/li&gt;
+&lt;li&gt;经过上述选举之后，会选举出一个临时master节点，  临时master节点会等待其它节点的投票，如果有&lt;code&gt;discovery.zen.minimum_master_nodes - 1&lt;/code&gt;个节点投票认为当前节点是master，那么选举就成功，临时master会等待一定时间，如果超时投票数仍不够，那么就失败，需要重新选举。临时master 收到投票会给 Follwer 一个响应，表明 Follwer 已经加入自己的集群。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;注意：上述的2、3、4步都是单个节点内部的操作，所选出的临时master节点是当前节点自己认为的master，即每个节点所选出的临时master可能不同，所以才需要在第5步对临时master进行投票，超过一半票数的临时master才会成为真正master。&lt;/p&gt;
+&lt;p&gt;Master节点会开启错误检测机制，它会定期扫描集群所有的成员，将失活的成员移除集群，同时将最新的集群状态发布到集群中，集群成员收到最新的集群状态后会进行相应的调整，比如重新选择主分片，进行数据复制等操作。&lt;/p&gt;
+&lt;h2 id=&#34;4-脑裂问题&#34;&gt;4 脑裂问题&lt;/h2&gt;
+&lt;p&gt;ElasticSearch 保证不脑裂的基本原则还是多数派的策略，如果必须得到多数派的认可才能成为Master。3.2 的流程在绝大部份场景下没问题，但还是有 bug，因为上述流程并没有限制在选举过程中，一个Node只能投一票。比如NodeB投NodeA一票，但是NodeA迟迟不成为Master，NodeB等不及了发起了下一轮选主，这时候发现集群里多了个Node0，Node0优先级比NodeA还高，那NodeB肯定就改投Node0了。假设Node0和NodeA都处在等选票的环节，那显然这时候NodeB其实发挥了两票的作用，而且投给了不同的人。如果最后NodeA和Node0都得到超过半数的投票，就会发生脑裂。Raft算法为了解决此问题引入了 term 的概念，即使产生双主也一定在不同的 term ，当 term 小的收到 term 大的节点消息时会自动变为 Follwer。ElasticSearch 没有 term 概念所以一个集群会有双主，但也不会产生问题，因为旧的master 很快会发现自己集群的节点数不过半而降级为 candidate。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>ElasticSearch基础</title>
+      <link>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E5%9F%BA%E7%A1%80/</link>
+      <pubDate>Sun, 24 Jul 2022 17:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E5%9F%BA%E7%A1%80/</guid>
+      <description>&lt;p&gt;Elasticsearch 是一个分布式、RESTful 风格的搜索和数据分析引擎&lt;/p&gt;
+&lt;h2 id=&#34;1-基础&#34;&gt;1 基础&lt;/h2&gt;
+&lt;p&gt;9300 端口为 Elasticsearch 集群间组件的通信端口， 9200 端口为浏览器访问的 http协议 RESTful端口。&lt;/p&gt;
+&lt;p&gt;ElasticSearch8.x版本默认开启密码验证功能，可在 &lt;code&gt;elasticsearch.yml&lt;/code&gt;末尾添加 &lt;code&gt;xpack.security.enabled: false&lt;/code&gt;取消密码验证&lt;/p&gt;
+&lt;h3 id=&#34;11-倒排索引&#34;&gt;1.1 倒排索引&lt;/h3&gt;
+&lt;p&gt;正排索引（传统）&lt;/p&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;id&lt;/th&gt;
+          &lt;th&gt;content&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;1001&lt;/td&gt;
+          &lt;td&gt;my name is zhang san&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;1002&lt;/td&gt;
+          &lt;td&gt;my name is li si&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;倒排索引&lt;/p&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;keyword&lt;/th&gt;
+          &lt;th&gt;id&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;name&lt;/td&gt;
+          &lt;td&gt;1001, 1002&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;zhang&lt;/td&gt;
+          &lt;td&gt;1001&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3 id=&#34;12-数据库结构&#34;&gt;1.2 数据库结构&lt;/h3&gt;
+&lt;p&gt;Elasticsearch 是面向文档型数据库，一条数据在这里就是一个文档。 Elasticsearch 里存储文档数据和关系型数据库 MySQL 存储数据的概念进行一个类比&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;数据库结构类比&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/elasticsearch/elasticsearch%E5%9F%BA%E7%A1%80/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%BB%93%E6%9E%84%E7%B1%BB%E6%AF%94.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;ES 里的 Index 可以看做一个库，而 Types 相当于表， Documents 则相当于表的行，Fields相当于表中的字段。这里 Types 的概念已经被逐渐弱化， Elasticsearch 6.X 中，一个 index 下已经只能包含一个type， Elasticsearch 7.X 中, Type 的概念已经被删除了。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

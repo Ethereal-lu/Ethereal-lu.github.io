@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>小碎片知识 on lu</title>
+    <link>https://ethereal-lu.github.io/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/</link>
+    <description>Recent content in 小碎片知识 on lu</description>
+    <generator>Hugo -- 0.140.1</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Fri, 08 Apr 2022 23:08:18 +0000</lastBuildDate>
+    <atom:link href="https://ethereal-lu.github.io/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>编码</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/</link>
+      <pubDate>Fri, 08 Apr 2022 23:08:18 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/</guid>
+      <description>&lt;h2 id=&#34;1为什么使用编码&#34;&gt;1、为什么使用编码&lt;/h2&gt;
+&lt;p&gt;人类的语言并不适合计算机使用，所以就需要发明一种适合计算机的语言，这就是二进制。电脑读不懂人类语言，所以需要将人类语言转换为二进制语言，这就是编码；人类读不懂电脑的二进制语言，所以需要转换为人类语言，这就是解码。&lt;/p&gt;
+&lt;h2 id=&#34;2为什么会乱码&#34;&gt;2、为什么会乱码&lt;/h2&gt;
+&lt;p&gt;编码与解码使用的规则不一样，就会乱码。即解码的时候，解码器不知道如何将当前的二进制转换为人类语言，就会乱码。&lt;/p&gt;
+&lt;h2 id=&#34;3字符集的历史&#34;&gt;3、字符集的历史&lt;/h2&gt;
+&lt;h3 id=&#34;31百花齐放&#34;&gt;3.1、百花齐放&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;ASCII&lt;/code&gt; 码占用了 0~127，即一个字节中的后 7 位。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;IOS-8859-n&lt;/code&gt; 编码家族占用了 128~255，即利用了 &lt;code&gt;ASCII&lt;/code&gt; 码未使用的第 1 位，因此&lt;code&gt;IOS-8859-n&lt;/code&gt; 编码家族兼容&lt;code&gt;ASCII&lt;/code&gt; 码。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;至此一个字节的 8 位已全部占用，后来的编码必须使用多个字节。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;code&gt;GB2312&lt;/code&gt;：&lt;code&gt;GB2312&lt;/code&gt; 并不兼容 &lt;code&gt;ISO-8859-n&lt;/code&gt; 编码集，但是兼容 &lt;code&gt;ASCII&lt;/code&gt; 编码。因为 &lt;code&gt;ASCII&lt;/code&gt; 编码中的单字节字符一定是小于 &lt;code&gt;128&lt;/code&gt; 的，所以最后我们就决定，中文的双字节字符都从 &lt;code&gt;128&lt;/code&gt; 之后开始，也就是当发现字符连续两位都大于 &lt;code&gt;128&lt;/code&gt; 时，就说明这是一个中文，指定了之后我们就把这种编码方式称之为 &lt;code&gt;GB2312&lt;/code&gt; 编码。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;GB2312&lt;/code&gt; 中收录的中文汉字都是简体字和常用字，对于一些生僻字以及繁体字没有收录，于是乎 &lt;code&gt;GBK&lt;/code&gt; 出现了。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;GBK&lt;/code&gt;： &lt;code&gt;GBK&lt;/code&gt; 只要求第一位是大于 &lt;code&gt;128&lt;/code&gt;，第二位可以小于 &lt;code&gt;128&lt;/code&gt;，只要发现一个字节大于 &lt;code&gt;128&lt;/code&gt;，那么紧随其后的一个字节就是和其作为一个整体作为中文字符。&lt;code&gt;GBK&lt;/code&gt;兼容&lt;code&gt;GB2312&lt;/code&gt;、&lt;code&gt;ASCII&lt;/code&gt;，不兼容&lt;code&gt;IOS-8859-n&lt;/code&gt; 。&lt;/p&gt;
+&lt;h3 id=&#34;32unicode&#34;&gt;3.2、Unicode&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;Unicode&lt;/code&gt; 不兼容以上任何编码。&lt;code&gt;Unicode&lt;/code&gt; 字符最开始采用的是 &lt;code&gt;UCS-2&lt;/code&gt; 标准，&lt;code&gt;UCS-2&lt;/code&gt; 标准规定一个字符至少使用 &lt;code&gt;2&lt;/code&gt; 个字节来表示。由于无法攘括全世界所有字符，后来又有了 &lt;code&gt;UCS-4&lt;/code&gt; 标准，可以用 &lt;code&gt;4&lt;/code&gt; 个字节来存储一个字符。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Unicode&lt;/code&gt; 编码只是定义了字符集，对于字符集具体应该如何存储并没有做要求。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;UTF&lt;/code&gt; 系列编码就是对 &lt;code&gt;Unicode&lt;/code&gt; 字符集的实现，只不过实现的方式有所区别，其中主要有：&lt;code&gt;UTF-8&lt;/code&gt;，&lt;code&gt;UTF-16&lt;/code&gt;，&lt;code&gt;UTF-32&lt;/code&gt; 等类型。&lt;/p&gt;
+&lt;h4 id=&#34;321utf-32-编码&#34;&gt;3.2.1、UTF-32 编码&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;UTF-32&lt;/code&gt; 编码基本按照 &lt;code&gt;Unicode&lt;/code&gt;字符集标准来实现，任何一个符号都占用 &lt;code&gt;4&lt;/code&gt; 个字节。浪费严重。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>C# 学习笔记</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/c%23-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</link>
+      <pubDate>Wed, 01 Dec 2021 21:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/c%23-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</guid>
+      <description>&lt;h2 id=&#34;1基础概念&#34;&gt;1、基础概念&lt;/h2&gt;
+&lt;h3 id=&#34;11net--概念&#34;&gt;1.1、.Net  概念&lt;/h3&gt;
+&lt;p&gt;通常所说的 .Net 包括 .Net 平台和 .Net FrameWork 框架。它们两者的关系即 jvm 和 jre 的关系。&lt;/p&gt;
+&lt;p&gt;.Net FrameWork 框架由两部分组成，分别是 .Net 类库和 CLR（公共语言运行时）。&lt;/p&gt;
+&lt;h3 id=&#34;12c-语言&#34;&gt;1.2、C# 语言&lt;/h3&gt;
+&lt;p&gt;C# 是一种编程语言，可以开发基于  .Net 平台 的应用。&lt;/p&gt;
+&lt;h3 id=&#34;13net-作用&#34;&gt;1.3、.Net 作用&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Winform 开发桌面应用程序&lt;/li&gt;
+&lt;li&gt;ASP.NET 开发 web 网站&lt;/li&gt;
+&lt;li&gt;Unity3D 开发游戏和虚拟现实&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;14net-两种交互模式&#34;&gt;1.4、.Net 两种交互模式&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;C/S：客户机（Client）/服务器模式。客户端需要安装专用的客户端软件，如 微信。&lt;/li&gt;
+&lt;li&gt;B/S：浏览器（Browser）/服务器模式。客户端只需要安装浏览器即可。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2语法规则&#34;&gt;2、语法规则&lt;/h2&gt;
+&lt;p&gt;C# 的基础语法规则几乎与 java 一样。&lt;/p&gt;
+&lt;h3 id=&#34;21基本类型&#34;&gt;2.1、基本类型&lt;/h3&gt;
+&lt;p&gt;与 java 一样，包括 byte、short、int、long、float、double、bool等，u开头表示无符号。&lt;/p&gt;
+&lt;p&gt;如果一个小数是浮点类型，则其后需加个 f ，否则默认为 double 型。&lt;/p&gt;
+&lt;h3 id=&#34;22字符串&#34;&gt;2.2、字符串&lt;/h3&gt;
+&lt;p&gt;类名为 string ，小写。它的使用和 java 几乎一样，注意方法名为大写开头。&lt;/p&gt;
+&lt;p&gt;字符串格式化：&lt;code&gt;string str = $&amp;quot;{name}的年龄为{age}&amp;quot;&lt;/code&gt;，其中name和age为之前声明的变量。&lt;/p&gt;
+&lt;h3 id=&#34;23函数&#34;&gt;2.3、函数&lt;/h3&gt;
+&lt;p&gt;C# 的函数名要大写开头。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>VMware &#43; Ubuntu18.04设置静态 IP</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%AE%BE%E7%BD%AE%E9%9D%99%E6%80%81-ip/</link>
+      <pubDate>Sun, 14 Nov 2021 22:08:18 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%AE%BE%E7%BD%AE%E9%9D%99%E6%80%81-ip/</guid>
+      <description>&lt;p&gt;进入VMware 的虚拟网络编辑器；&lt;/p&gt;
+&lt;p&gt;选择 VMnet8，点击 DHCP 设置，记住子网 IP，子网掩码和起始终止 IP，关闭。&lt;/p&gt;
+&lt;p&gt;点击右下方的更改设置，取消勾选 DHCP 分配 IP。再输入刚才记住的子网 IP 和子网掩码。&lt;/p&gt;
+&lt;p&gt;点击 NET 设置，记住网关并点击左下方的 DNS 设置，取消勾选自动检测并设置首选DNS为 8.8.8.8，备用为 114.114.114.114。确定、确定、应用。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;打开主机的网络适配器中的 VMnet8 ，进入它的 IPV4 设置，将 IP 设置为之前记住的起始终止 IP 之间的任意一个，子网掩码和 DNS 都与之前设置的VMware一致。&lt;/p&gt;
+&lt;p&gt;一路确定并禁用再启用 VMnet8。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;打开虚拟机，bash 输入 &lt;code&gt;vim /etc/network/interfaces&lt;/code&gt;，内容如下：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;source /etc/network/interfaces.d/*
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;auto lo
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iface lo inet loopback
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;auto ens32
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iface ens32 inet static          &lt;span style=&#34;color:#75715e&#34;&gt;# 下方设置与之前步骤设置的一致&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        address 192.168.40.130   &lt;span style=&#34;color:#75715e&#34;&gt;# 主机中设置的 IP，以后虚拟机 IP 固定为它&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        netmask 255.255.255.0    &lt;span style=&#34;color:#75715e&#34;&gt;# 子网掩码&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        gateway 192.168.40.2     &lt;span style=&#34;color:#75715e&#34;&gt;# 网关&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        dns-nameservers 8.8.8.8  &lt;span style=&#34;color:#75715e&#34;&gt;# dns&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;输入&lt;code&gt;vim /etc/systemd/resolved.conf&lt;/code&gt;，使其内容如下：&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>feign发起https请求</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/feign%E5%8F%91%E8%B5%B7https%E8%AF%B7%E6%B1%82/</link>
+      <pubDate>Tue, 02 Nov 2021 11:08:18 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/feign%E5%8F%91%E8%B5%B7https%E8%AF%B7%E6%B1%82/</guid>
+      <description>&lt;h3 id=&#34;1安装-openssl&#34;&gt;1、安装 openssl&lt;/h3&gt;
+&lt;p&gt;2、bash 进入任意目录执行以下命令&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mkdir certs                              &lt;span style=&#34;color:#75715e&#34;&gt;# 证书目录&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mkdir private                            &lt;span style=&#34;color:#75715e&#34;&gt;# 密钥目录&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;openssl rand -out private/.rand &lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;# 在构建根证书之前需要构建随机数文件(.rand)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;openssl genrsa -aes256 -out private/ca.key.pem &lt;span style=&#34;color:#ae81ff&#34;&gt;2048&lt;/span&gt;   &lt;span style=&#34;color:#75715e&#34;&gt;# 构建根证书私钥&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;openssl req -new -key private/ca.key.pem -out private/ca.csr -subj &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/C=CN/ST=BJ/L=BJ/O=FATE/OU=fate/CN=*.FATE.ORG&amp;#34;&lt;/span&gt;       &lt;span style=&#34;color:#75715e&#34;&gt;# 生成根证书签发申请&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;openssl x509 -req -days &lt;span style=&#34;color:#ae81ff&#34;&gt;10000&lt;/span&gt; -sha1 -extensions v3_ca -signkey private/ca.key.pem -in private/ca.csr -out certs/ca.cer         &lt;span style=&#34;color:#75715e&#34;&gt;# 签发根证书&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;openssl  pkcs12 -export -cacerts -inkey private/ca.key.pem -in certs/ca.cer -out certs/ca.p12  &lt;span style=&#34;color:#75715e&#34;&gt;# 根证书转换为PKCS12格式密钥库&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;openssl genrsa -aes256 -out private/server.key.pem &lt;span style=&#34;color:#ae81ff&#34;&gt;2048&lt;/span&gt;   &lt;span style=&#34;color:#75715e&#34;&gt;# 构建服务器证书私钥&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;openssl req -new -key private/server.key.pem -out private/server.csr -subj &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/C=CN/ST=BJ/L=BJ/0=fate/OU=fate/CN=www.fate.org&amp;#34;&lt;/span&gt;         &lt;span style=&#34;color:#75715e&#34;&gt;# 生成服务器证书签发申请&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;openssl x509 -req -days &lt;span style=&#34;color:#ae81ff&#34;&gt;3650&lt;/span&gt; -sha1 -extensions v3_req  -CA  certs/ca.cer -CAkey private/ca.key.pem  -CAserial ca.srl  -CAcreateserial -in private/server.csr -out certs/server.cer                         &lt;span style=&#34;color:#75715e&#34;&gt;# 签发服务器证书&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;openssl pkcs12 -export -clcerts -inkey private/server.key.pem  -in certs/server.cer -out certs/server.p12                         &lt;span style=&#34;color:#75715e&#34;&gt;# 服务器证书转换为PKCS12格式密钥库&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;3、将 server.p12 复制到微服务端的 resources 目录下&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>指令重排与内存屏障</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%8C%87%E4%BB%A4%E9%87%8D%E6%8E%92%E4%B8%8E%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C/</link>
+      <pubDate>Thu, 26 Aug 2021 23:08:18 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%8C%87%E4%BB%A4%E9%87%8D%E6%8E%92%E4%B8%8E%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C/</guid>
+      <description>&lt;h2 id=&#34;指令重排&#34;&gt;指令重排&lt;/h2&gt;
+&lt;p&gt;有两种发生指令重排的情况：一个是编译的时候，由编译原理的知识知道，编译器会对代码进行优化，这一步就涉及到指令重排，当然，编译完成之后的目标代码中指令的顺序就是确定的，不同线程执行该代码的顺序是一样的；另一个就是CPU在执行具体的指令的时候，也会因为计算机当前的状态（比如寄存器的占用情况、ALU的使用情况，cup缓存层的存在等原因）的不同导致指令最终的执行顺序发生变化(实际上，cpu本身并不会对指令进行重排，它本身是按照编译后的顺序来执行指令的，只是由于执行不同的指令需要的时间长短不同，以及缓存层的存在，再加上CPU执行指令的流水线并不是串行化等因素，那么就有可能出现排在靠前位置的指令还没执行完，而排在靠后的指令已经执行完了的情况，这一情况就是所谓的CPU执行指令的乱序）&lt;/p&gt;
+&lt;h4 id=&#34;编译器指令重排&#34;&gt;编译器指令重排&lt;/h4&gt;
+&lt;p&gt;如果两条有依赖关系 (像 a++; b=f(a); ) 的指令挨得很近，后一条指令必定会因为等待前一条执行的结果，而在流水线中阻塞很久(这个“很久”是对计算机而言哈)。而编译器的乱序，作为编译优化的一种手段，则试图通过指令重排，在这两条指令之间插入其他指令，将这两条指令拉开一定的距离，以保证后一条指令执行的时候前一条指令结果已经得到了，那么也就不需要阻塞等待了。所以相比于CPU的乱序，编译器的乱序才是真正对指令顺序做了调整，但是编译器所进行的调整也必须保证上下文的依赖逻辑，即存在依赖关系的指令顺序不能调整。&lt;/p&gt;
+&lt;h4 id=&#34;cpu-指令重排&#34;&gt;CPU 指令重排&lt;/h4&gt;
+&lt;p&gt;现在的CPU一般采用流水线来执行指令。一个指令的执行被分成：取址，译码，访存，执行，写回等若干个阶段。流水线中的多个指令是可以同时处于同一个阶段的，只要CPU内部相应的处理部件未被占满。这样一来，乱序就可能产生了。比如一条加法指令出现在一条除法指令的后面，但由于除法的执行时间很长，在它执行完之前，加法可能就先执行完了。再比如两条访存指令，可能由于第二条指令中了cache(或其它原因)而导致它先于第一条指令完成。指令流水线除了在资源不足的情况下会卡住之外(如一个加法器应付两条加法指令)，指令之间存在的相互依赖才是导致流水线阻塞的主要原因。当然，CPU的乱序执行并不是任意地乱序，而必须保证上下文依赖逻辑的正确性。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;内存屏障&#34;&gt;内存屏障&lt;/h2&gt;
+&lt;p&gt;不存在依赖关系的内存操作会被按随机顺序有效得到执行，但这在CPU与CPU(多核)交互时或CPU与IO设备交互(一般IO比较耗时)时，这可能成为问题。我们需要一些手段来干预编译器和CPU对指令顺序的影响，而内存屏障就是这样的干预手段。它们能保证处于屏障两边的内存操作满足部分有序(“部分有序”的意思是，内存屏障之前的操作必须都先于屏障之后的操作，但是如果几个操作出现在屏障的一边，则不保证它们有序)。这样的强制措施是非常重要的，因为系统中的CPU和其它设备可以使用各种各样的策略来提高性能，包括对内存操作的乱序、延迟和合并执行、预取、投机性的分支预测和各种缓存……内存屏障就是用于禁用或者抑制这些策略，使代码能够清楚地控制多个CPU和/或设备的交互。操心系统中存在各式各样的内存屏障，不同的内存屏障涉及到了各种复杂的实现，这里不过多地讲了，但关于内存屏障还要记住的一点就是：在内存屏障之前出现的内存访问不保证在内存屏障指令完成之前完成，内存屏障相当于在该CPU的访问队列中画了一条线，使得相关访存类型的请求不能相互跨越(用于实现内存屏障的指令，其本身并不作为参考对象，其两边的访存操作才被当作参考对象，所以屏障指令执行完成并不表示出现在屏障之前的所有访存操作都已经完成，但如果屏障之后的某一个访存操作已经完成，则屏障指令之前的所有访存操作必定都已经完成了)。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;要想并发程序正确地执行，必须要保证程序的原子性、可见性以及有序性。只要有一个没有被保证，就可能会导致程序运行不正确。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>lambda 表达式中使用的变量为什么必须是 final</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/lambda/</link>
+      <pubDate>Wed, 18 Aug 2021 23:08:18 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/lambda/</guid>
+      <description>&lt;p&gt;Java 规范中规定：Lambda 表达式中要用到的，但又未在 Lambda 表达式中声明的变量，必须声明为 final 或者是 effectively final，否则就会出现编译错误。&lt;/p&gt;
+&lt;p&gt;有效 final 即不用显示声明为 final，由 JVM 添加 final。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h4 id=&#34;个人理解&#34;&gt;个人理解&lt;/h4&gt;
+&lt;p&gt;由于 lambda 表达式相当于生成一个对象，存储在堆中（生命周期长），而方法的局部变量存储在栈中（生命周期短）。如果 lambda 表达式在使用了外部方法中的局部变量后，该局部变量又发生变化，且方法执行完毕内存被释放，此 lambda 表达式生成的对象可能依然存活（未被GC回收），但是却无法得知局部变量改变后的值，造成数据一致性破坏。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 报错&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Test&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;func&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; a &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 5;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        Runnable runnable &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; () &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            a&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;上方在方法中报错而下方在类中不报错，因此推断与栈和堆的生存周期有关系。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 不报错&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Test&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; a &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 3;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Runnable runnable &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; () &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        a&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;**存在问题：**作为方法中的内部类，既然方法被释放后，该类绝不可能再被使用，矛盾！&lt;/p&gt;
+&lt;hr&gt;
+&lt;h4 id=&#34;其他理解&#34;&gt;其他理解&lt;/h4&gt;
+&lt;p&gt;lambda是对接口中的方法的一种简写方式，当方法想要使用外部的变量的时候，需要把值给传过去，但是方法中无论怎么改变量的值，都不会改变这个变量在外部的值（值传递和引用传递的区别），所以加上final就是为了方便开发者，以免误以为可以更改这个变量的值。final的目的就是告诉开发人员不能改变外面的变量值。&lt;/p&gt;
+&lt;p&gt;**存在问题：**外部变量什么时候传递给 lambda 的。难道隐式的传了？&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;悬而未决，先睡觉&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>文件的 MD5 值</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%96%87%E4%BB%B6md5/</link>
+      <pubDate>Wed, 18 Aug 2021 23:08:18 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%96%87%E4%BB%B6md5/</guid>
+      <description>&lt;h3 id=&#34;是什么&#34;&gt;是什么&lt;/h3&gt;
+&lt;p&gt;文件的 MD5 值不是文件的属性也不是文件存储的内容，而是由分析程序根据文件的信息分析得到的一串独一无二的字符值。当两个文件的 MD5 值相同时说明这两个文件的内容完全一样。任何数据计算得到的 MD5 值长度都相等。&lt;/p&gt;
+&lt;h3 id=&#34;作用&#34;&gt;作用&lt;/h3&gt;
+&lt;p&gt;由于同一个分析程序对于内容一样的文件分析得到的 MD5 值始终是一样的，因此可以通过对传输前后的文件进行 MD5 值的对比来检验传输途中文件是否被他人篡改。&lt;/p&gt;
+&lt;h3 id=&#34;md5-值何时改变&#34;&gt;MD5 值何时改变&lt;/h3&gt;
+&lt;p&gt;1、不同的分析程序对同一份文件分析得到的 MD5 值可能不同。&lt;/p&gt;
+&lt;p&gt;2、对文件的内容进行增删改后，文件的 MD5 值会发生改变。&lt;/p&gt;
+&lt;p&gt;3、修改文件的名称和后缀都不会改变文件的 MD5 值。&lt;/p&gt;
+&lt;h3 id=&#34;查看文件-md5-值的方法&#34;&gt;查看文件 MD5 值的方法&lt;/h3&gt;
+&lt;p&gt;1、Windows&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;certutil -hashfile 文件路径 md5
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 示例&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;certutil -hashfile E:&lt;span style=&#34;color:#ae81ff&#34;&gt;\资&lt;/span&gt;料&lt;span style=&#34;color:#ae81ff&#34;&gt;\作&lt;/span&gt;业资料&lt;span style=&#34;color:#ae81ff&#34;&gt;\a&lt;/span&gt;bc.py md5
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;2、Linux&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;md5sum 文件路径
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description>
+    </item>
+    <item>
+      <title>Enum 向注解赋值问题</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/enum%E8%B5%8B%E5%80%BC/</link>
+      <pubDate>Wed, 11 Aug 2021 16:39:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/enum%E8%B5%8B%E5%80%BC/</guid>
+      <description>&lt;h3 id=&#34;问题&#34;&gt;问题&lt;/h3&gt;
+&lt;p&gt;Enum 如下&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Getter&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@AllArgsConstructor&lt;/span&gt;(access &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; AccessLevel.&lt;span style=&#34;color:#a6e22e&#34;&gt;PRIVATE&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;enum&lt;/span&gt; RoleEnum {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ADMIN       (0, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;admin&amp;#34;&lt;/span&gt;),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ANALYST     (1, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;analyst&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;final&lt;/span&gt; Integer intValue;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;final&lt;/span&gt; String strValue;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;将该 enum 对象的属性赋值给注解时报错：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@RequiresRoles&lt;/span&gt;(RoleEnum.&lt;span style=&#34;color:#a6e22e&#34;&gt;ADMIN&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;getStrValue&lt;/span&gt;())
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// error: &amp;#34;attribute value must be constant&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;报错显示注解所需值必须是常量&lt;/p&gt;
+&lt;p&gt;这是因为 ADMIN 作为 RoleEnum 的对象，只有当 RoleEnum 被类加载器所加载之后才会生成，而在编译期 strValue 属性还是变量，所以会报错。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h3 id=&#34;解决&#34;&gt;解决&lt;/h3&gt;
+&lt;p&gt;在 enum 中添加内部类存储常量&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Getter&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@AllArgsConstructor&lt;/span&gt;(access &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; AccessLevel.&lt;span style=&#34;color:#a6e22e&#34;&gt;PRIVATE&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;enum&lt;/span&gt; RoleEnum {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ADMIN       (0, Names.&lt;span style=&#34;color:#a6e22e&#34;&gt;ADMIN&lt;/span&gt;),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ANALYST     (1, Names.&lt;span style=&#34;color:#a6e22e&#34;&gt;ANALYST&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Names&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;final&lt;/span&gt; String ADMIN   &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;admin&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;final&lt;/span&gt; String ANALYST &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;analyst&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;final&lt;/span&gt; Integer intValue;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;final&lt;/span&gt; String strValue;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;向注解中赋值时使用内部类的常量&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>c语言数组赋值问题</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%95%B0%E7%BB%84%E8%B5%8B%E5%80%BC/</link>
+      <pubDate>Sun, 06 Jun 2021 20:57:45 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%95%B0%E7%BB%84%E8%B5%8B%E5%80%BC/</guid>
+      <description>&lt;p&gt;数组正常初始化是没问题的&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; ch[&lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Reindeer&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;但是分步赋值，或重新赋值就会报错&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 分步赋值
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; ch[&lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ch &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Reindeer&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 重新赋值
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; ch[&lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Reindeer&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ch &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Ethereal&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 报错  Array type &amp;#39;char [50]&amp;#39; is not assignable
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;原因&lt;/strong&gt;： ch 就是字符数组的首地址，是一个常量，不能作为左值。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;解决&lt;/strong&gt;：可以使用 strcpy 函数赋值&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; ch[&lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;strcpy&lt;/span&gt;(ch, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Ethereal&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description>
+    </item>
+    <item>
+      <title>javaScript学习笔记</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/javascript%E7%AC%94%E8%AE%B0/</link>
+      <pubDate>Mon, 31 May 2021 19:42:15 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/javascript%E7%AC%94%E8%AE%B0/</guid>
+      <description>&lt;p&gt;javaScript 也是万物皆对象。&lt;/p&gt;
+&lt;h2 id=&#34;数据类型&#34;&gt;数据类型&lt;/h2&gt;
+&lt;p&gt;ES6开始，所有的局部变量声明都用let，ES5及之前所有的变量声明都用var。&lt;/p&gt;
+&lt;p&gt;ES6开始支持 &amp;ldquo;use strict&amp;rdquo; 即严格检查模式，预防javaScript的随意性导致的一些问题，使用时必须写在javaScript的第一行&lt;/p&gt;
+&lt;h4 id=&#34;数值&#34;&gt;数值&lt;/h4&gt;
+&lt;p&gt;弱类型，无需指定具体类型，只看做变量即可。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;a&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;b&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1.2&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1e5&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;字符串&#34;&gt;字符串&lt;/h4&gt;
+&lt;p&gt;字符串是常量，不可变。&lt;/p&gt;
+&lt;p&gt;单引号或双引号都可以，还可以用反引号写多行文字。特殊字符用 \ 转义。\n   \r   等与其他语言一样。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;模板字符串&lt;/strong&gt;（和EL表达式一样） ES6才有&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Reindeer&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;greet&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello, ${name}&amp;#34;&lt;/span&gt;;    &lt;span style=&#34;color:#75715e&#34;&gt;// &amp;#34;Hello, Reindeer&amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;方法&lt;/strong&gt;：java中String的方法基本都有，且名字和作用都一样。在js中字符串可以使用下标，且length是属性不是方法。&lt;/p&gt;
+&lt;h4 id=&#34;数组&#34;&gt;数组&lt;/h4&gt;
+&lt;p&gt;js中数组的长度可变：通过给arr.length赋值，可改变数组长度。若变大，新扩展单元为undefined；若变小，则截取前半段&lt;/p&gt;
+&lt;p&gt;同一个数组中可以包含任意的数据类型，如下：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;arr&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;hello&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2.5&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;c&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;];
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;方法&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;arr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;;                        &lt;span style=&#34;color:#75715e&#34;&gt;// 数组长度
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;------------------------------------------------------------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;arr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;indexOf&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2.5&lt;/span&gt;);                  &lt;span style=&#34;color:#75715e&#34;&gt;// 通过元素索引下标
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;------------------------------------------------------------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 若数组中同时包含 数字1 和字符串&amp;#34;1&amp;#34; ，则他俩不一样
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;------------------------------------------------------------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;newArr&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;arr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;slice&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;)              &lt;span style=&#34;color:#75715e&#34;&gt;// 从下标2开始复制到末尾，返回新数组
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;newArr&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;arr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;slice&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;)           &lt;span style=&#34;color:#75715e&#34;&gt;// 从下标2开始复制下标4，返回新数组
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;------------------------------------------------------------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 作为栈使用
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;arr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;push&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Reindeer&amp;#34;&lt;/span&gt;);              &lt;span style=&#34;color:#75715e&#34;&gt;// 向数组尾部压入元素
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;arr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;pop&lt;/span&gt;();                         &lt;span style=&#34;color:#75715e&#34;&gt;// 从数组尾部弹出元素
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;arr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;unshift&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Reindeer&amp;#34;&lt;/span&gt;);           &lt;span style=&#34;color:#75715e&#34;&gt;// 向数组头部压入元素
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;arr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;shift&lt;/span&gt;();                       &lt;span style=&#34;color:#75715e&#34;&gt;// 从数组头部弹出元素
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 两者结合也可以用作队列
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;------------------------------------------------------------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 其他常用方法
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;arr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;sort&lt;/span&gt;();                        &lt;span style=&#34;color:#75715e&#34;&gt;// 排序  [1, 2.5, &amp;#34;c&amp;#34;, &amp;#34;hello&amp;#34;, true]
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;arr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;reverse&lt;/span&gt;();                     &lt;span style=&#34;color:#75715e&#34;&gt;// 反转  [true, &amp;#34;hello&amp;#34;, &amp;#34;c&amp;#34;, 2.5, 1]
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;arr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;concat&lt;/span&gt;([&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;]);             &lt;span style=&#34;color:#75715e&#34;&gt;// 拼接，返回新数组，不改变原数组。
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;arr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;join&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;--&amp;#39;&lt;/span&gt;)                     &lt;span style=&#34;color:#75715e&#34;&gt;// 连接为字符串，&amp;#34;1--2.5--c--hello--true&amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;arr&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;], [&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;],[&lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;]];  &lt;span style=&#34;color:#75715e&#34;&gt;// 多维数组
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;对象&#34;&gt;对象&lt;/h4&gt;
+&lt;p&gt;js 的对象长得和 python 的字典一样。键都为字符串，值任意&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>MarkDown无法显示本地图片</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/markdown/</link>
+      <pubDate>Wed, 21 Apr 2021 21:08:18 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/markdown/</guid>
+      <description>&lt;ol&gt;
+&lt;li&gt;访问控制的原因：在vscode中按ctrl+shift+p打开命令面板，输入更改预览安全设置，选中允许不安全的本地内容&lt;/li&gt;
+&lt;li&gt;本地图片不允许使用png格式（网络图片却可以），最好换为jpg格式（有可能只适用于本机）&lt;/li&gt;
+&lt;li&gt;本地图片路径不支持绝对路径，要通过../../&amp;hellip;改为相对路径&lt;/li&gt;
+&lt;/ol&gt;</description>
+    </item>
+    <item>
+      <title>hexo的常见问题</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/hexo/</link>
+      <pubDate>Tue, 20 Apr 2021 20:07:32 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/hexo/</guid>
+      <description>&lt;h3 id=&#34;hexo的分类问题&#34;&gt;hexo的分类问题&lt;/h3&gt;
+&lt;p&gt;在每个markdown文件的头部，date的下一行添加一行&lt;br&gt;
+&lt;u&gt;categories: 类别1&lt;/u&gt;
+即可将该文件归类为 “类别1” 这一类中&lt;/p&gt;
+&lt;hr&gt;
+&lt;h3 id=&#34;hexo无法显示图片问题&#34;&gt;hexo无法显示图片问题&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;确认根目录_config.yml中有:  &lt;code&gt;post_asset_folder: true&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;确保在md文件所在目录下创建和md文件同名的目录，在里面放该md需要的图片，然后在md中插入&lt;code&gt;![](文件名.jpg)&lt;/code&gt; &lt;strong&gt;只需写图片文件名，不用写目录名&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;如果还不行，在站点根目录下先执行&lt;code&gt;npm uninstall hexo-asset-image --save&lt;/code&gt;（如果之前下载过）。再执行&lt;code&gt;npm install hexo-asset-image --save&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Chrome浏览器图片显示正常，而Edge浏览器无法显示&lt;/strong&gt;，有可能是Egde不支持，故使用Chrome就可以了&lt;/li&gt;
+&lt;/ol&gt;</description>
+    </item>
+    <item>
+      <title>Tomcat启动一闪而过以及报java.lang.IllegalStateException: 无输出目录以及乱码</title>
+      <link>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/tomcat/</link>
+      <pubDate>Tue, 20 Apr 2021 17:20:53 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/tomcat/</guid>
+      <description>&lt;h4 id=&#34;黑屏一闪而过&#34;&gt;黑屏一闪而过&lt;/h4&gt;
+&lt;p&gt;&lt;strong&gt;问题&lt;/strong&gt;：环境变量中没有JAVA_HOME变量。&lt;br&gt;
+&lt;strong&gt;解决&lt;/strong&gt;：添加该变量，值为jdk的根目录，例如  D:\java\jdk&lt;/p&gt;
+&lt;hr&gt;
+&lt;h4 id=&#34;报javalangillegalstateexception-无输出目录&#34;&gt;报java.lang.IllegalStateException: 无输出目录&lt;/h4&gt;
+&lt;p&gt;&lt;strong&gt;问题&lt;/strong&gt;：Tomcat文件的权限不够，导致不能正常编译。&lt;br&gt;
+&lt;strong&gt;解决&lt;/strong&gt;：将Tomcat文件的权限提升为完全控制&lt;/p&gt;
+&lt;hr&gt;
+&lt;h4 id=&#34;乱码&#34;&gt;乱码&lt;/h4&gt;
+&lt;p&gt;&lt;strong&gt;问题&lt;/strong&gt;：编码格式的问题
+&lt;strong&gt;解决&lt;/strong&gt;：将tomcat下的conf\logging.properties中的java.util.logging.ConsoleHandler.encoding的值从UTF-8修改为GBK&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

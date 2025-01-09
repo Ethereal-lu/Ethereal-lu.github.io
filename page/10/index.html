@@ -1,0 +1,2379 @@
+<!doctype html><html lang=en dir=auto><head><meta name=generator content="Hugo 0.140.1"><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>lu</title>
+<meta name=description content><meta name=author content="lu"><link rel=canonical href=https://ethereal-lu.github.io/><link crossorigin=anonymous href=/assets/css/stylesheet.d6fcd20a4fb86efa4dfac8ec95da60244cc8871042183da1ef28e3a762ad79c8.css integrity="sha256-1vzSCk+4bvpN+sjsldpgJEzIhxBCGD2h7yjjp2Ktecg=" rel="preload stylesheet" as=style><link rel=icon href=https://ethereal-lu.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://ethereal-lu.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://ethereal-lu.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://ethereal-lu.github.io/apple-touch-icon.png><link rel=mask-icon href=https://ethereal-lu.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate type=application/rss+xml href=https://ethereal-lu.github.io/index.xml><link rel=alternate type=application/json href=https://ethereal-lu.github.io/index.json><link rel=alternate hreflang=en href=https://ethereal-lu.github.io/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51)}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style></noscript><meta property="og:url" content="https://ethereal-lu.github.io/"><meta property="og:site_name" content="lu"><meta property="og:title" content="lu"><meta property="og:locale" content="zh-CN"><meta property="og:type" content="website"><meta name=twitter:card content="summary"><meta name=twitter:title content="lu"><meta name=twitter:description content><script type=application/ld+json>{"@context":"https://schema.org","@type":"Organization","name":"lu","url":"https://ethereal-lu.github.io/","description":"","logo":"https://ethereal-lu.github.io/favicon.ico","sameAs":[]}</script></head><body class=list id=top><script>localStorage.getItem("pref-theme")==="dark"?document.body.classList.add("dark"):localStorage.getItem("pref-theme")==="light"?document.body.classList.remove("dark"):window.matchMedia("(prefers-color-scheme: dark)").matches&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://ethereal-lu.github.io/ accesskey=h title="lu (Alt + H)">lu</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://ethereal-lu.github.io/categories/ title=categories><span>categories</span></a></li><li><a href=https://ethereal-lu.github.io/search/ title="search (Alt + /)" accesskey=/><span>search</span></a></li></ul></nav></header><main class=main><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent></h2></header><div class=entry-content><p>&lt;!DOCTYPE html>
+numpy_QuickStart
+In [1]:
+import numpy as np
+In [2]:
+a = np.arange(15).reshape(3, 5)
+In [3]:
+# numpy 中的数组类为 ndarray 别名为 array。 下方是ndarray的一些属性
+a
+Out[3]:
+array([[ 0, 1, 2, 3, 4],
+[ 5, 6, 7, 8, 9],
+[10, 11, 12, 13, 14]])
+In [5]:
+a.shape
+Out[5]:
+(3, 5)
+In [6]:
+a.ndim
+Out[6]:
+2
+In [7]:
+a.dtype
+Out[7]:
+dtype('int32')
+In [8]:
+a.dtype.name
+Out[8]:
+'int32'
+In [10]:
+a.size
+Out[10]:
+15
+In [11]:
+# --------------------------------------------------------------------------------------------------
+# 创建数组的几种方法
+In [12]:
+a = np.array([1, 2, 3]) # 一维数组 该方法类似于 torch.tensor()
+a
+Out[12]:
+array([1, 2, 3])
+In [13]:
+b = np.array([[1, 1, 2, 3], [4, 5, 6, 7], [6, 7, 8, 9]]) # 多维数组
+b
+Out[13]:
+array([[1, 1, 2, 3],
+[4, 5, 6, 7],
+[6, 7, 8, 9]])
+In [15]:
+c = np.array([[1, 2], [3, 4]], dtype=complex) # 创建数组的同时设置类型
+c
+Out[15]:
+array([[1.+0.j, 2.+0.j],
+[3.+0.j, 4.+0.j]])
+In [16]:
+a = np.zeros( (3,4) )
+b = np.ones( (2,3,4), dtype=np.int16 )
+c = np.empty( (2,3) ) # 未初始化
+In [17]:
+np.arange( 10, 30, 5 ) # [start, end) 左闭右开，5 为步长不是个数
+Out[17]:
+array([10, 15, 20, 25])
+In [18]:
+np.linspace( 0, 2, 9 ) # [start, end] 左闭右闭， 9 为个数不是步长
+Out[18]:
+array([0. , 0.25, 0.5 , 0.75, 1. , 1.25, 1.5 , 1.75, 2. ])
+In [19]:
+# array， zeros， zeros_like， ones， ones_like， empty， empty_like， arange， linspace， # numpy.random.rand， numpy.random.randn 用法都和 torch 相同
+In [20]:
+# 强制打印所有数据，需进行以下设置
+# np.set_printoptions(threshold=sys.maxsize) # sys module should be imported
+In [21]:
+# -------------------------------------------------------------------------------------------------
+# 基本操作
+In [22]:
+a = np.array([20,30,40,50])
+a &lt; 35
+Out[22]:
+array([ True, True, False, False])
+In [23]:
+A = np.array( [[1,1], [0,1]] )
+B = np.array( [[2,0], [3,4]] )
+A * B # 对应元素相乘
+Out[23]:
+array([[2, 0],
+[0, 4]])
+In [24]:
+A @ B # 矩阵乘法 A.dot(B) 与其作用一样
+Out[24]:
+array([[5, 4],
+[3, 4]])
+In [25]:
+# 某些操作（例如+=和 *=）会更直接更改被操作的矩阵数组而不会创建新矩阵数组。
+In [26]:
+# bin.max() b.sum(axis=0) b.min(axis=1) 可指定轴运算
+In [27]:
+# 通函数
+# B = np.arange(3)
+# np.exp(B)
+# np.sqrt(B) 。。。
+In [28]:
+# all， any， apply_along_axis， argmax， argmin， argsort， average， bincount， ceil， clip， conj， corrcoef，
+# cov， cross， cumprod， cumsum， diff， dot， floor， inner， INV ， lexsort， max， maximum， mean， median， min，
+# minimum， nonzero， outer， prod， re， round， sort， std， sum， trace， transpose， var， vdot， vectorize， where
+In [29]:
+'''支持 切片索引
+当提供的索引少于轴的数量时，缺失的索引被认为是完整的切片
+三个点（ ... ）表示产生完整索引元组所需的冒号。例如，如果 x 是rank为5的数组（即，它具有5个轴），则：
+[1,2,...] 相当于 x[1,2,:,:,:]，
+x[...,3] 等效于 x[:,:,:,:,3]
+x[4,...,5,:] 等效于 x[4,:,:,5,:]。'''
+In [30]:
+a = np.arange(10)**3
+a
+Out[30]:
+array([ 0, 1, 8, 27, 64, 125, 216, 343, 512, 729], dtype=int32)
+In [31]:
+def foo(x,y):
+return 10 * x + y
+b = np.fromfunction(foo, (5, 4), dtype=int)
+b
+Out[31]:
+array([[ 0, 1, 2, 3],
+[10, 11, 12, 13],
+[20, 21, 22, 23],
+[30, 31, 32, 33],
+[40, 41, 42, 43]])
+In [32]:
+for row in b: # 对多维数组进行 迭代（Iterating） 是相对于第一个轴完成的
+print(row) [0 1 2 3]
+[10 11 12 13]
+[20 21 22 23]
+[30 31 32 33]
+[40 41 42 43]
+In [33]:
+for element in b.flat: # 如果想要对数组中的每个元素执行操作，可以使用flat属性，该属性是数组的所有元素的迭代器
+print(element)
+0
+1
+2
+3
+10
+11
+12
+13
+20
+21
+22
+23
+30
+31
+32
+33
+40
+41
+42
+43
+In [34]:
+# -------------------------------------------------------------------------------------------------------
+# 形状操作
+In [35]:
+a = np.floor(10*np.random.random((3,4))) # np.random.random 会从 0 到 1 随机取浮点数
+a
+Out[35]:
+array([[8., 1., 9., 4.],
+[4., 1., 3., 8.],
+[1., 7., 4., 0.]])
+In [36]:
+a.ravel() # 铺平 不改变原数组
+Out[36]:
+array([8., 1., 9., 4., 4., 1., 3., 8., 1., 7., 4., 0.])
+In [37]:
+a.reshape(6,2) # 重塑 不改变原数组
+Out[37]:
+array([[8., 1.],
+[9., 4.],
+[4., 1.],
+[3., 8.],
+[1., 7.],
+[4., 0.]])
+In [38]:
+a.T # 转置 不改变原数组
+Out[38]:
+array([[8., 4., 1.],
+[1., 1., 7.],
+[9., 3., 4.],
+[4., 8., 0.]])
+In [ ]:
+# -------------------------------------------------------------------------------------------------------
+# 将不同数组堆叠在一起
+In [39]:
+a = np.floor(10*np.random.random((2,2)))
+a
+Out[39]:
+array([[0., 7.],
+[6., 9.]])
+In [40]:
+b = np.floor(10*np.random.random((2,2)))
+b
+Out[40]:
+array([[5., 2.],
+[0., 5.]])
+In [41]:
+np.vstack((a,b))
+Out[41]:
+array([[0., 7.],
+[6., 9.],
+[5., 2.],
+[0., 5.]])
+In [42]:
+np.hstack((a,b))
+Out[42]:
+array([[0., 7., 5., 2.],
+[6., 9., 0., 5.]])
+In [43]:
+# -------------------------------------------------------------------------------------------------------
+# 拆分数组
+In [44]:
+a = np.floor(10*np.random.random((2,12)))
+a
+Out[44]:
+array([[8., 7., 7., 3., 9., 9., 0., 0., 1., 8., 9., 7.],
+[9., 0., 4., 3., 0., 3., 6., 0., 6., 7., 4., 4.]])
+In [45]:
+np.hsplit(a,3) # 沿水平轴切分为 3 份
+Out[45]:
+[array([[8., 7., 7., 3.],
+[9., 0., 4., 3.]]),
+array([[9., 9., 0., 0.],
+[0., 3., 6., 0.]]),
+array([[1., 8., 9., 7.],
+[6., 7., 4., 4.]])]
+In [46]:
+np.hsplit(a,(3,4)) # 沿水平轴切分为 [0, 3) [3, 4) [4, end]
+Out[46]:
+[array([[8., 7., 7.],
+[9., 0., 4.]]),
+array([[3.],
+[3.]]),
+array([[9., 9., 0., 0., 1., 8., 9., 7.],
+[0., 3., 6., 0., 6., 7., 4., 4.]])]
+In [47]:
+# -------------------------------------------------------------------------------------------------------
+# 拷贝和视图
+In [48]:
+a = np.arange(12)
+b = a # 不复制，a 和 b 指向同一个东西，是引用
+a is b
+Out[48]:
+True
+In [49]:
+id(a)
+Out[49]:
+2274070787152
+In [50]:
+id(b)
+Out[50]:
+2274070787152
+In [2]:
+import numpy as np
+In [3]:
+a = np.arange(12)
+c = a.view() # 不同的数组对象可以共享相同的数据。该view方法创建一个查看相同数据的新数组对象。
+c is a
+Out[3]:
+False
+In [4]:
+c.base is a
+Out[4]:
+True
+In [5]:
+# 切片数组会返回一个视图
+In [6]:
+d = a.copy() # copy方法生成数组及其数据的完整副本. 深拷贝
+d is a
+Out[6]:
+False
+In [7]:
+d.base is a
+Out[7]:
+False
+In [8]:
+# -------------------------------------------------------------------------------------------------------
+# 花式索引
+In [9]:
+a = np.arange(12) ** 2
+i = np.array([1, 1, 3, 8, 5])
+a
+Out[9]:
+array([ 0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121],
+dtype=int32)
+In [10]:
+a[i]
+Out[10]:
+array([ 1, 1, 9, 64, 25], dtype=int32)
+In [11]:
+# 当索引数组a是多维的时，单个索引数组指的是第一个维度a
+palette = np.array( [ [0,0,0], # black
+[255,0,0], # red
+[0,255,0], # green
+[0,0,255], # blue
+[255,255,255] ] ) # white
+image = np.array( [ [ 0, 1, 2, 0 ], # each value corresponds to a color in the palette
+[ 0, 3, 4, 0 ] ] )
+palette[image] # the (2,4,3) color image
+Out[11]:
+array([[[ 0, 0, 0],
+[255, 0, 0],
+[ 0, 255, 0],
+[ 0, 0, 0]],
+[[ 0, 0, 0],
+[ 0, 0, 255],
+[255, 255, 255],
+[ 0, 0, 0]]])
+In [ ]:</p></div><footer class=entry-footer>915 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to " href=https://ethereal-lu.github.io/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/numpy%E5%AD%A6%E4%B9%A0/numpy_quickstart/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent></h2></header><div class=entry-content><p>&lt;!DOCTYPE html>
+Pandas_quickStart
+In [1]:
+import torch
+In [1]:
+import numpy as np
+import pandas as pd
+In [2]:
+s = pd.Series([1, 2, 3, np.nan, 5, 8])
+In [3]:
+s
+Out[3]:
+0 1.0
+1 2.0
+2 3.0
+3 NaN
+4 5.0
+5 8.0
+dtype: float64
+In [4]:
+type(s)
+Out[4]:
+pandas.core.series.Series
+In [5]:
+dates = pd.date_range('20210619', periods=6)
+In [6]:
+dates
+Out[6]:
+DatetimeIndex(['2021-06-19', '2021-06-20', '2021-06-21', '2021-06-22',
+'2021-06-23', '2021-06-24'],
+dtype='datetime64[ns]', freq='D')
+In [7]:
+df = pd.DataFrame(np.random.randn(6, 4), index=dates, columns=list('ABCD'))
+In [8]:
+df
+Out[8]:
+A
+B
+C
+D
+2021-06-19
+0.386467
+0.946613
+0.141736
+-0.200258
+2021-06-20
+0.271687
+-1.356886
+0.817206
+0.405909
+2021-06-21
+1.059778
+-1.025067
+0.652449
+-0.078852
+2021-06-22
+-1.696832
+0.778534
+0.983199
+1.084013
+2021-06-23
+-1.337686
+-1.097497
+-1.486640
+1.038132
+2021-06-24
+-0.221562
+-1.272950
+-0.531797
+-0.275663
+In [10]:
+df2 = pd.DataFrame({'A': 1.,
+'B': pd.Timestamp('20210619'),
+'C': pd.Series(1, index=list(range(4)), dtype='float32'),
+'D': np.array([3] * 4, dtype='int32'),
+'E': pd.Categorical(["test", "train", "test", "train"]),
+'F': 'foo'})
+In [11]:
+df2
+Out[11]:
+A
+B
+C
+D
+E
+F
+0
+1.0
+2021-06-19
+1.0
+3
+test
+foo
+1
+1.0
+2021-06-19
+1.0
+3
+train
+foo
+2
+1.0
+2021-06-19
+1.0
+3
+test
+foo
+3
+1.0
+2021-06-19
+1.0
+3
+train
+foo
+In [12]:
+df2.dtypes
+Out[12]:
+A float64
+B datetime64[ns]
+C float32
+D int32
+E category
+F object
+dtype: object
+In [20]:
+df2.A
+Out[20]:
+0 1.0
+1 1.0
+2 1.0
+3 1.0
+Name: A, dtype: float64
+In [23]:
+df.head(2)
+Out[23]:
+A
+B
+C
+D
+2021-06-19
+0.386467
+0.946613
+0.141736
+-0.200258
+2021-06-20
+0.271687
+-1.356886
+0.817206
+0.405909
+In [24]:
+df.tail(3)
+Out[24]:
+A
+B
+C
+D
+2021-06-22
+-1.696832
+0.778534
+0.983199
+1.084013
+2021-06-23
+-1.337686
+-1.097497
+-1.486640
+1.038132
+2021-06-24
+-0.221562
+-1.272950
+-0.531797
+-0.275663
+In [25]:
+df.index
+Out[25]:
+DatetimeIndex(['2021-06-19', '2021-06-20', '2021-06-21', '2021-06-22',
+'2021-06-23', '2021-06-24'],
+dtype='datetime64[ns]', freq='D')
+In [26]:
+df.columns
+Out[26]:
+Index(['A', 'B', 'C', 'D'], dtype='object')
+In [28]:
+df.to_numpy()
+Out[28]:
+array([[ 0.38646654, 0.94661295, 0.14173562, -0.20025788],
+[ 0.27168667, -1.35688554, 0.81720576, 0.40590944],
+[ 1.05977787, -1.02506746, 0.65244942, -0.07885209],
+[-1.69683156, 0.77853378, 0.98319935, 1.0840126 ],
+[-1.33768634, -1.09749733, -1.48663953, 1.03813154],
+[-0.22156172, -1.27294978, -0.53179663, -0.2756628 ]])
+In [29]:
+df2.to_numpy()
+Out[29]:
+array([[1.0, Timestamp('2021-06-19 00:00:00'), 1.0, 3, 'test', 'foo'],
+[1.0, Timestamp('2021-06-19 00:00:00'), 1.0, 3, 'train', 'foo'],
+[1.0, Timestamp('2021-06-19 00:00:00'), 1.0, 3, 'test', 'foo'],
+[1.0, Timestamp('2021-06-19 00:00:00'), 1.0, 3, 'train', 'foo']],
+dtype=object)
+In [30]:
+df.describe()
+Out[30]:
+A
+B
+C
+D
+count
+6.000000
+6.000000
+6.000000
+6.000000
+mean
+-0.256358
+-0.504542
+0.096026
+0.328880
+std
+1.064868
+1.066922
+0.950565
+0.614964
+min
+-1.696832
+-1.356886
+-1.486640
+-0.275663
+25%
+-1.058655
+-1.229087
+-0.363414
+-0.169906
+50%
+0.025062
+-1.061282
+0.397093
+0.163529
+75%
+0.357772
+0.327633
+0.776017
+0.880076
+max
+1.059778
+0.946613
+0.983199
+1.084013
+In [31]:
+df
+Out[31]:
+A
+B
+C
+D
+2021-06-19
+0.386467
+0.946613
+0.141736
+-0.200258
+2021-06-20
+0.271687
+-1.356886
+0.817206
+0.405909
+2021-06-21
+1.059778
+-1.025067
+0.652449
+-0.078852
+2021-06-22
+-1.696832
+0.778534
+0.983199
+1.084013
+2021-06-23
+-1.337686
+-1.097497
+-1.486640
+1.038132
+2021-06-24
+-0.221562
+-1.272950
+-0.531797
+-0.275663
+In [32]:
+df.T
+Out[32]:
+2021-06-19
+2021-06-20
+2021-06-21
+2021-06-22
+2021-06-23
+2021-06-24
+A
+0.386467
+0.271687
+1.059778
+-1.696832
+-1.337686
+-0.221562
+B
+0.946613
+-1.356886
+-1.025067
+0.778534
+-1.097497
+-1.272950
+C
+0.141736
+0.817206
+0.652449
+0.983199
+-1.486640
+-0.531797
+D
+-0.200258
+0.405909
+-0.078852
+1.084013
+1.038132
+-0.275663
+In [36]:
+df.sort_index(axis=0, ascending=False)
+Out[36]:
+A
+B
+C
+D
+2021-06-24
+-0.221562
+-1.272950
+-0.531797
+-0.275663
+2021-06-23
+-1.337686
+-1.097497
+-1.486640
+1.038132
+2021-06-22
+-1.696832
+0.778534
+0.983199
+1.084013
+2021-06-21
+1.059778
+-1.025067
+0.652449
+-0.078852
+2021-06-20
+0.271687
+-1.356886
+0.817206
+0.405909
+2021-06-19
+0.386467
+0.946613
+0.141736
+-0.200258
+In [39]:
+df.sort_values(by='C', ascending=False)
+Out[39]:
+A
+B
+C
+D
+2021-06-22
+-1.696832
+0.778534
+0.983199
+1.084013
+2021-06-20
+0.271687
+-1.356886
+0.817206
+0.405909
+2021-06-21
+1.059778
+-1.025067
+0.652449
+-0.078852
+2021-06-19
+0.386467
+0.946613
+0.141736
+-0.200258
+2021-06-24
+-0.221562
+-1.272950
+-0.531797
+-0.275663
+2021-06-23
+-1.337686
+-1.097497
+-1.486640
+1.038132
+In [40]:
+df['A']
+Out[40]:
+2021-06-19 0.386467
+2021-06-20 0.271687
+2021-06-21 1.059778
+2021-06-22 -1.696832
+2021-06-23 -1.337686
+2021-06-24 -0.221562
+Freq: D, Name: A, dtype: float64
+In [41]:
+df[:3]
+Out[41]:
+A
+B
+C
+D
+2021-06-19
+0.386467
+0.946613
+0.141736
+-0.200258
+2021-06-20
+0.271687
+-1.356886
+0.817206
+0.405909
+2021-06-21
+1.059778
+-1.025067
+0.652449
+-0.078852
+In [49]:
+df.loc['20210619', :]
+Out[49]:
+A 0.386467
+B 0.946613
+C 0.141736
+D -0.200258
+Name: 2021-06-19 00:00:00, dtype: float64
+In [44]:
+df
+Out[44]:
+A
+B
+C
+D
+2021-06-19
+0.386467
+0.946613
+0.141736
+-0.200258
+2021-06-20
+0.271687
+-1.356886
+0.817206
+0.405909
+2021-06-21
+1.059778
+-1.025067
+0.652449
+-0.078852
+2021-06-22
+-1.696832
+0.778534
+0.983199
+1.084013
+2021-06-23
+-1.337686
+-1.097497
+-1.486640
+1.038132
+2021-06-24
+-0.221562
+-1.272950
+-0.531797
+-0.275663
+In [50]:
+df.iloc[3]
+Out[50]:
+A -1.696832
+B 0.778534
+C 0.983199
+D 1.084013
+Name: 2021-06-22 00:00:00, dtype: float64
+In [51]:
+df.iloc[[1, 2, 4], [1, 3]]
+Out[51]:
+B
+D
+2021-06-20
+-1.356886
+0.405909
+2021-06-21
+-1.025067
+-0.078852
+2021-06-23
+-1.097497
+1.038132
+In [56]:
+df[['A','B']]
+Out[56]:
+A
+B
+2021-06-19
+0.386467
+0.946613
+2021-06-20
+0.271687
+-1.356886
+2021-06-21
+1.059778
+-1.025067
+2021-06-22
+-1.696832
+0.778534
+2021-06-23
+-1.337686
+-1.097497
+2021-06-24
+-0.221562
+-1.272950
+In [57]:
+df[df.A > 0]
+Out[57]:
+A
+B
+C
+D
+2021-06-19
+0.386467
+0.946613
+0.141736
+-0.200258
+2021-06-20
+0.271687
+-1.356886
+0.817206
+0.405909
+2021-06-21
+1.059778
+-1.025067
+0.652449
+-0.078852
+In [58]:
+df[df > 0]
+Out[58]:
+A
+B
+C
+D
+2021-06-19
+0.386467
+0.946613
+0.141736
+NaN
+2021-06-20
+0.271687
+NaN
+0.817206
+0.405909
+2021-06-21
+1.059778
+NaN
+0.652449
+NaN
+2021-06-22
+NaN
+0.778534
+0.983199
+1.084013
+2021-06-23
+NaN
+NaN
+NaN
+1.038132
+2021-06-24
+NaN
+NaN
+NaN
+NaN
+In [59]:
+df2 = df.copy()
+df2['E'] = ['one', 'one', 'two', 'three', 'four', 'three']
+In [60]:
+df2
+Out[60]:
+A
+B
+C
+D
+E
+2021-06-19
+0.386467
+0.946613
+0.141736
+-0.200258
+one
+2021-06-20
+0.271687
+-1.356886
+0.817206
+0.405909
+one
+2021-06-21
+1.059778
+-1.025067
+0.652449
+-0.078852
+two
+2021-06-22
+-1.696832
+0.778534
+0.983199
+1.084013
+three
+2021-06-23
+-1.337686
+-1.097497
+-1.486640
+1.038132
+four
+2021-06-24
+-0.221562
+-1.272950
+-0.531797
+-0.275663
+three
+In [63]:
+df2[df2['E'].isin(['two', 'four'])]
+Out[63]:
+A
+B
+C
+D
+E
+2021-06-21
+1.059778
+-1.025067
+0.652449
+-0.078852
+two
+2021-06-23
+-1.337686
+-1.097497
+-1.486640
+1.038132
+four
+In [64]:
+s1 = pd.Series([1, 2, 3, 4, 5, 6], index=pd.date_range('20130102', periods=6))
+In [65]:
+s1
+Out[65]:
+2013-01-02 1
+2013-01-03 2
+2013-01-04 3
+2013-01-05 4
+2013-01-06 5
+2013-01-07 6
+Freq: D, dtype: int64
+In [66]:
+df.at[dates[0], 'A'] = 0
+In [67]:
+df
+Out[67]:
+A
+B
+C
+D
+2021-06-19
+0.000000
+0.946613
+0.141736
+-0.200258
+2021-06-20
+0.271687
+-1.356886
+0.817206
+0.405909
+2021-06-21
+1.059778
+-1.025067
+0.652449
+-0.078852
+2021-06-22
+-1.696832
+0.778534
+0.983199
+1.084013
+2021-06-23
+-1.337686
+-1.097497
+-1.486640
+1.038132
+2021-06-24
+-0.221562
+-1.272950
+-0.531797
+-0.275663
+In [68]:
+df.iat[0, 1] = 0
+In [69]:
+df
+Out[69]:
+A
+B
+C
+D
+2021-06-19
+0.000000
+0.000000
+0.141736
+-0.200258
+2021-06-20
+0.271687
+-1.356886
+0.817206
+0.405909
+2021-06-21
+1.059778
+-1.025067
+0.652449
+-0.078852
+2021-06-22
+-1.696832
+0.778534
+0.983199
+1.084013
+2021-06-23
+-1.337686
+-1.097497
+-1.486640
+1.038132
+2021-06-24
+-0.221562
+-1.272950
+-0.531797
+-0.275663
+In [75]:
+len(df)
+Out[75]:
+6
+In [73]:
+df.size
+Out[73]:
+24
+In [76]:
+df.D = np.array([5] * len(df))
+In [77]:
+df
+Out[77]:
+A
+B
+C
+D
+2021-06-19
+0.000000
+0.000000
+0.141736
+5
+2021-06-20
+0.271687
+-1.356886
+0.817206
+5
+2021-06-21
+1.059778
+-1.025067
+0.652449
+5
+2021-06-22
+-1.696832
+0.778534
+0.983199
+5
+2021-06-23
+-1.337686
+-1.097497
+-1.486640
+5
+2021-06-24
+-0.221562
+-1.272950
+-0.531797
+5
+In [78]:
+df2 = df.copy()
+In [79]:
+df2[df2 > 0] = -df2
+In [80]:
+df2
+Out[80]:
+A
+B
+C
+D
+2021-06-19
+0.000000
+0.000000
+-0.141736
+-5
+2021-06-20
+-0.271687
+-1.356886
+-0.817206
+-5
+2021-06-21
+-1.059778
+-1.025067
+-0.652449
+-5
+2021-06-22
+-1.696832
+-0.778534
+-0.983199
+-5
+2021-06-23
+-1.337686
+-1.097497
+-1.486640
+-5
+2021-06-24
+-0.221562
+-1.272950
+-0.531797
+-5
+In [89]:
+df1 = df.reindex(index=dates[0:4], columns=list(df.columns) + ['E', 'F'])
+In [90]:
+df1.iloc[:2, 4] = 1
+In [93]:
+df1.iloc[1:4, 5] = np.array([1, 2, 3])
+In [94]:
+df1
+Out[94]:
+A
+B
+C
+D
+E
+F
+2021-06-19
+0.000000
+0.000000
+0.141736
+5
+1.0
+NaN
+2021-06-20
+0.271687
+-1.356886
+0.817206
+5
+1.0
+1.0
+2021-06-21
+1.059778
+-1.025067
+0.652449
+5
+NaN
+2.0
+2021-06-22
+-1.696832
+0.778534
+0.983199
+5
+NaN
+3.0
+In [95]:
+df1.dropna(how='any')
+Out[95]:
+A
+B
+C
+D
+E
+F
+2021-06-20
+0.271687
+-1.356886
+0.817206
+5
+1.0
+1.0
+In [96]:
+df1.fillna(value=5)
+Out[96]:
+A
+B
+C
+D
+E
+F
+2021-06-19
+0.000000
+0.000000
+0.141736
+5
+1.0
+5.0
+2021-06-20
+0.271687
+-1.356886
+0.817206
+5
+1.0
+1.0
+2021-06-21
+1.059778
+-1.025067
+0.652449
+5
+5.0
+2.0
+2021-06-22
+-1.696832
+0.778534
+0.983199
+5
+5.0
+3.0
+In [97]:
+pd.isna(df1)
+Out[97]:
+A
+B
+C
+D
+E
+F
+2021-06-19
+False
+False
+False
+False
+False
+True
+2021-06-20
+False
+False
+False
+False
+False
+False
+2021-06-21
+False
+False
+False
+False
+True
+False
+2021-06-22
+False
+False
+False
+False
+True
+False
+In [98]:
+df
+Out[98]:
+A
+B
+C
+D
+2021-06-19
+0.000000
+0.000000
+0.141736
+5
+2021-06-20
+0.271687
+-1.356886
+0.817206
+5
+2021-06-21
+1.059778
+-1.025067
+0.652449
+5
+2021-06-22
+-1.696832
+0.778534
+0.983199
+5
+2021-06-23
+-1.337686
+-1.097497
+-1.486640
+5
+2021-06-24
+-0.221562
+-1.272950
+-0.531797
+5
+In [100]:
+df.mean()
+Out[100]:
+A -0.320769
+B -0.662311
+C 0.096026
+D 5.000000
+dtype: float64
+In [101]:
+df.mean(1)
+Out[101]:
+2021-06-19 1.285434
+2021-06-20 1.183002
+2021-06-21 1.421790
+2021-06-22 1.266225
+2021-06-23 0.269544
+2021-06-24 0.743423
+Freq: D, dtype: float64
+In [102]:
+s = pd.Series([1, 2, 4, np.nan, 6, 8], index=dates).shift(2)
+In [103]:
+s
+Out[103]:
+2021-06-19 NaN
+2021-06-20 NaN
+2021-06-21 1.0
+2021-06-22 2.0
+2021-06-23 4.0
+2021-06-24 NaN
+Freq: D, dtype: float64
+In [104]:
+df.sub(s, axis=0)
+Out[104]:
+A
+B
+C
+D
+2021-06-19
+NaN
+NaN
+NaN
+NaN
+2021-06-20
+NaN
+NaN
+NaN
+NaN
+2021-06-21
+0.059778
+-2.025067
+-0.347551
+4.0
+2021-06-22
+-3.696832
+-1.221466
+-1.016801
+3.0
+2021-06-23
+-5.337686
+-5.097497
+-5.486640
+1.0
+2021-06-24
+NaN
+NaN
+NaN
+NaN
+In [105]:
+pd.Series([1, 2, 4, np.nan, 6, 8], index=dates)
+Out[105]:
+2021-06-19 1.0
+2021-06-20 2.0
+2021-06-21 4.0
+2021-06-22 NaN
+2021-06-23 6.0
+2021-06-24 8.0
+Freq: D, dtype: float64
+In [106]:
+df
+Out[106]:
+A
+B
+C
+D
+2021-06-19
+0.000000
+0.000000
+0.141736
+5
+2021-06-20
+0.271687
+-1.356886
+0.817206
+5
+2021-06-21
+1.059778
+-1.025067
+0.652449
+5
+2021-06-22
+-1.696832
+0.778534
+0.983199
+5
+2021-06-23
+-1.337686
+-1.097497
+-1.486640
+5
+2021-06-24
+-0.221562
+-1.272950
+-0.531797
+5
+In [109]:
+a = pd.Series([1, 4, 6, np.nan, 9])
+b = pd.Series([0, 3, np.nan,5, 7])
+In [110]:
+a - b
+Out[110]:
+0 1.0
+1 1.0
+2 NaN
+3 NaN
+4 2.0
+dtype: float64
+In [111]:
+df.apply(np.cumsum)
+Out[111]:
+A
+B
+C
+D
+2021-06-19
+0.000000
+0.000000
+0.141736
+5
+2021-06-20
+0.271687
+-1.356886
+0.958941
+10
+2021-06-21
+1.331465
+-2.381953
+1.611391
+15
+2021-06-22
+-0.365367
+-1.603419
+2.594590
+20
+2021-06-23
+-1.703053
+-2.700917
+1.107951
+25
+2021-06-24
+-1.924615
+-3.973866
+0.576154
+30
+In [112]:
+np.cumsum
+Out[112]:
+&lt;function numpy.cumsum(a, axis=None, dtype=None, out=None)>
+In [113]:
+s = pd.Series(np.random.randint(0, 7, size = 10))
+In [114]:
+s
+Out[114]:
+0 0
+1 1
+2 2
+3 6
+4 0
+5 3
+6 1
+7 5
+8 5
+9 3
+dtype: int32
+In [116]:
+s.value_counts()
+Out[116]:
+0 2
+1 2
+3 2
+5 2
+2 1
+6 1
+dtype: int64
+In [117]:
+s = pd.Series(['A', 'B', 'C', 'Aaba', 'Baca', np.nan, 'CABA', 'dog', 'cat'])
+In [118]:
+s.str.lower()
+Out[118]:
+0 a
+1 b
+2 c
+3 aaba
+4 baca
+5 NaN
+6 caba
+7 dog
+8 cat
+dtype: object
+In [119]:
+df = pd.DataFrame(np.random.randn(10, 4))
+In [120]:
+df
+Out[120]:
+0
+1
+2
+3
+0
+0.958585
+-0.755804
+0.774030
+-0.472903
+1
+-0.479442
+1.104388
+0.670083
+1.133472
+2
+-0.077221
+-1.493287
+1.185432
+-0.651833
+3
+-0.673329
+0.291420
+0.819669
+-0.271070
+4
+-0.294107
+-0.296040
+0.394320
+-1.175845
+5
+0.662521
+0.213025
+-0.436249
+0.143847
+6
+0.522653
+0.656690
+-1.474060
+0.497625
+7
+0.890123
+-0.578727
+0.321720
+0.246214
+8
+-0.021362
+0.700172
+1.812843
+1.145555
+9
+0.329884
+-0.419136
+-0.571355
+-0.342374
+In [121]:
+pieces = [df[:3], df[3:7], df[7:]]
+In [122]:
+pieces
+Out[122]:
+[ 0 1 2 3
+0 0.958585 -0.755804 0.774030 -0.472903
+1 -0.479442 1.104388 0.670083 1.133472
+2 -0.077221 -1.493287 1.185432 -0.651833,
+0 1 2 3
+3 -0.673329 0.291420 0.819669 -0.271070
+4 -0.294107 -0.296040 0.394320 -1.175845
+5 0.662521 0.213025 -0.436249 0.143847
+6 0.522653 0.656690 -1.474060 0.497625,
+0 1 2 3
+7 0.890123 -0.578727 0.321720 0.246214
+8 -0.021362 0.700172 1.812843 1.145555
+9 0.329884 -0.419136 -0.571355 -0.342374]
+In [123]:
+pd.concat(pieces)
+Out[123]:
+0
+1
+2
+3
+0
+0.958585
+-0.755804
+0.774030
+-0.472903
+1
+-0.479442
+1.104388
+0.670083
+1.133472
+2
+-0.077221
+-1.493287
+1.185432
+-0.651833
+3
+-0.673329
+0.291420
+0.819669
+-0.271070
+4
+-0.294107
+-0.296040
+0.394320
+-1.175845
+5
+0.662521
+0.213025
+-0.436249
+0.143847
+6
+0.522653
+0.656690
+-1.474060
+0.497625
+7
+0.890123
+-0.578727
+0.321720
+0.246214
+8
+-0.021362
+0.700172
+1.812843
+1.145555
+9
+0.329884
+-0.419136
+-0.571355
+-0.342374
+In [124]:
+left = pd.DataFrame({'key': ['foo', 'foo'], 'lval': [1, 2]})
+right = pd.DataFrame({'key': ['foo', 'foo'], 'rval': [4, 5]})
+In [125]:
+left
+Out[125]:
+key
+lval
+0
+foo
+1
+1
+foo
+2
+In [126]:
+right
+Out[126]:
+key
+rval
+0
+foo
+4
+1
+foo
+5
+In [127]:
+pd.merge(left, right, on='key')
+Out[127]:
+key
+lval
+rval
+0
+foo
+1
+4
+1
+foo
+1
+5
+2
+foo
+2
+4
+3
+foo
+2
+5
+In [128]:
+df = pd.DataFrame(np.random.randn(8, 4), columns=['A', 'B', 'C', 'D'])
+In [129]:
+df
+Out[129]:
+A
+B
+C
+D
+0
+2.031602
+1.347399
+0.806225
+-0.586249
+1
+0.080598
+0.617751
+2.704360
+-0.433465
+2
+1.012901
+-0.480574
+-0.030744
+-0.731853
+3
+0.703619
+-0.888384
+0.216657
+-0.122965
+4
+-0.506726
+1.365906
+-2.117702
+-0.479964
+5
+0.515688
+-1.038888
+-1.285366
+-0.176547
+6
+0.603037
+2.216350
+1.117621
+1.594714
+7
+0.362834
+0.604774
+0.628527
+-0.817679
+In [130]:
+s = df.iloc[3]
+In [132]:
+df.append(s, ignore_index=True)
+Out[132]:
+A
+B
+C
+D
+0
+2.031602
+1.347399
+0.806225
+-0.586249
+1
+0.080598
+0.617751
+2.704360
+-0.433465
+2
+1.012901
+-0.480574
+-0.030744
+-0.731853
+3
+0.703619
+-0.888384
+0.216657
+-0.122965
+4
+-0.506726
+1.365906
+-2.117702
+-0.479964
+5
+0.515688
+-1.038888
+-1.285366
+-0.176547
+6
+0.603037
+2.216350
+1.117621
+1.594714
+7
+0.362834
+0.604774
+0.628527
+-0.817679
+8
+0.703619
+-0.888384
+0.216657
+-0.122965
+In [133]:
+df
+Out[133]:
+A
+B
+C
+D
+0
+2.031602
+1.347399
+0.806225
+-0.586249
+1
+0.080598
+0.617751
+2.704360
+-0.433465
+2
+1.012901
+-0.480574
+-0.030744
+-0.731853
+3
+0.703619
+-0.888384
+0.216657
+-0.122965
+4
+-0.506726
+1.365906
+-2.117702
+-0.479964
+5
+0.515688
+-1.038888
+-1.285366
+-0.176547
+6
+0.603037
+2.216350
+1.117621
+1.594714
+7
+0.362834
+0.604774
+0.628527
+-0.817679
+In [134]:
+df = pd.DataFrame({'A': ['foo', 'bar', 'foo', 'bar',
+'foo', 'bar', 'foo', 'foo'],
+'B': ['one', 'one', 'two', 'three',
+'two', 'two', 'one', 'three'],
+'C': np.random.randn(8),
+'D': np.random.randn(8)})
+In [135]:
+df.groupby('A').sum()
+Out[135]:
+C
+D
+A
+bar
+0.205435
+-1.645253
+foo
+-2.736716
+-2.847247
+In [136]:
+df
+Out[136]:
+A
+B
+C
+D
+0
+foo
+one
+1.963009
+0.925192
+1
+bar
+one
+0.281889
+-0.496067
+2
+foo
+two
+-2.784973
+-1.166827
+3
+bar
+three
+0.351230
+-0.961045
+4
+foo
+two
+-0.054522
+-1.764051
+5
+bar
+two
+-0.427684
+-0.188141
+6
+foo
+one
+-1.595628
+-0.685695
+7
+foo
+three
+-0.264600
+-0.155866
+In [137]:
+df.groupby(['A', 'B']).sum()
+Out[137]:
+C
+D
+A
+B
+bar
+one
+0.281889
+-0.496067
+three
+0.351230
+-0.961045
+two
+-0.427684
+-0.188141
+foo
+one
+0.367380
+0.239497
+three
+-0.264600
+-0.155866
+two
+-2.839496
+-2.930878
+In [147]:
+tuples = list(zip(*[['bar', 'bar', 'baz', 'baz',
+'foo', 'foo', 'qux', 'qux'],
+['one', 'two', 'one', 'two',
+'one', 'two', 'one', 'two']]))
+In [148]:
+tuples
+Out[148]:
+[('bar', 'one'),
+('bar', 'two'),
+('baz', 'one'),
+('baz', 'two'),
+('foo', 'one'),
+('foo', 'two'),
+('qux', 'one'),
+('qux', 'two')]
+In [165]:
+nums = [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3']]
+list(zip(*nums))
+Out[165]:
+[('a1', 'b1'), ('a2', 'b2'), ('a3', 'b3')]
+In [158]:
+list(zip(*[('a1', 'b1'), ('a2', 'b2'), ('a3', 'b3')]))
+Out[158]:
+[('a1', 'a2', 'a3'), ('b1', 'b2', 'b3')]
+In [166]:
+index = pd.MultiIndex.from_tuples(tuples, names=['first', 'second'])
+In [167]:
+index
+Out[167]:
+MultiIndex([('bar', 'one'),
+('bar', 'two'),
+('baz', 'one'),
+('baz', 'two'),
+('foo', 'one'),
+('foo', 'two'),
+('qux', 'one'),
+('qux', 'two')],
+names=['first', 'second'])
+In [168]:
+df = pd.DataFrame(np.random.randn(8, 2), index=index, columns=['A', 'B'])
+In [169]:
+df
+Out[169]:
+A
+B
+first
+second
+bar
+one
+0.779458
+0.123808
+two
+-0.567861
+-1.230144
+baz
+one
+2.264945
+-0.738657
+two
+-0.437106
+0.549580
+foo
+one
+-0.134964
+0.088544
+two
+1.197379
+0.483579
+qux
+one
+-1.037872
+-0.696880
+two
+2.550459
+-0.267906
+In [170]:
+stacked = df.stack()
+In [171]:
+stacked
+Out[171]:
+first second bar one A 0.779458
+B 0.123808
+two A -0.567861
+B -1.230144
+baz one A 2.264945
+B -0.738657
+two A -0.437106
+B 0.549580
+foo one A -0.134964
+B 0.088544
+two A 1.197379
+B 0.483579
+qux one A -1.037872
+B -0.696880
+two A 2.550459
+B -0.267906
+dtype: float64
+In [172]:
+stacked.unstack()
+Out[172]:
+A
+B
+first
+second
+bar
+one
+0.779458
+0.123808
+two
+-0.567861
+-1.230144
+baz
+one
+2.264945
+-0.738657
+two
+-0.437106
+0.549580
+foo
+one
+-0.134964
+0.088544
+two
+1.197379
+0.483579
+qux
+one
+-1.037872
+-0.696880
+two
+2.550459
+-0.267906
+In [173]:
+df = pd.DataFrame({'A': ['one', 'one', 'two', 'three'] * 3,
+'B': ['A', 'B', 'C'] * 4,
+'C': ['foo', 'foo', 'foo', 'bar', 'bar', 'bar'] * 2,
+'D': np.random.randn(12),
+'E': np.random.randn(12)})
+In [174]:
+df
+Out[174]:
+A
+B
+C
+D
+E
+0
+one
+A
+foo
+0.311230
+0.376623
+1
+one
+B
+foo
+-0.300332
+-1.142990
+2
+two
+C
+foo
+1.733478
+0.900607
+3
+three
+A
+bar
+0.370384
+0.795241
+4
+one
+B
+bar
+-0.447878
+-0.001976
+5
+one
+C
+bar
+-0.045238
+-0.319566
+6
+two
+A
+foo
+2.105034
+-0.610484
+7
+three
+B
+foo
+0.241047
+0.646759
+8
+one
+C
+foo
+0.332155
+0.049636
+9
+one
+A
+bar
+-0.027176
+-0.056641
+10
+two
+B
+bar
+-0.492703
+0.834728
+11
+three
+C
+bar
+0.289381
+-0.219761
+In [175]:
+pd.pivot_table(df, values='D', index=['A', 'B'], columns=['C'])
+Out[175]:
+C
+bar
+foo
+A
+B
+one
+A
+-0.027176
+0.311230
+B
+-0.447878
+-0.300332
+C
+-0.045238
+0.332155
+three
+A
+0.370384
+NaN
+B
+NaN
+0.241047
+C
+0.289381
+NaN
+two
+A
+NaN
+2.105034
+B
+-0.492703
+NaN
+C
+NaN
+1.733478
+In [194]:
+rng = pd.date_range('20210620', periods=10000, freq='S')
+In [195]:
+ts = pd.Series(np.random.randint(0, 500, len(rng)), index=rng)
+In [203]:
+ts.resample('5min').sum()
+Out[203]:
+2021-06-20 00:00:00 81012
+2021-06-20 00:05:00 75233
+2021-06-20 00:10:00 71585
+2021-06-20 00:15:00 74855
+2021-06-20 00:20:00 76712
+2021-06-20 00:25:00 75373
+2021-06-20 00:30:00 71644
+2021-06-20 00:35:00 78160
+2021-06-20 00:40:00 76491
+2021-06-20 00:45:00 77432
+2021-06-20 00:50:00 75150
+2021-06-20 00:55:00 74481
+2021-06-20 01:00:00 79585
+2021-06-20 01:05:00 78432
+2021-06-20 01:10:00 73260
+2021-06-20 01:15:00 74769
+2021-06-20 01:20:00 73186
+2021-06-20 01:25:00 71850
+2021-06-20 01:30:00 73076
+2021-06-20 01:35:00 75123
+2021-06-20 01:40:00 74842
+2021-06-20 01:45:00 69981
+2021-06-20 01:50:00 75984
+2021-06-20 01:55:00 74864
+2021-06-20 02:00:00 74655
+2021-06-20 02:05:00 77912
+2021-06-20 02:10:00 73833
+2021-06-20 02:15:00 75464
+2021-06-20 02:20:00 79210
+2021-06-20 02:25:00 76232
+2021-06-20 02:30:00 78771
+2021-06-20 02:35:00 72460
+2021-06-20 02:40:00 79790
+2021-06-20 02:45:00 25827
+Freq: 5T, dtype: int32
+In [204]:
+df = pd.DataFrame({"id": [1, 2, 3, 4, 5, 6],
+"raw_grade": ['a', 'b', 'b', 'a', 'a', 'e']})
+In [210]:
+df["grade"] = df["raw_grade"].astype("category")
+In [208]:
+df["grade"].cat.categories = ["very good", "good", "very bad"]
+In [209]:
+df
+Out[209]:
+id
+raw_grade
+grade
+0
+1
+a
+very good
+1
+2
+b
+good
+2
+3
+b
+good
+3
+4
+a
+very good
+4
+5
+a
+very good
+5
+6
+e
+very bad
+In [211]:
+ts = pd.Series(np.random.randn(1000),
+index=pd.date_range('1/1/2000', periods=1000))
+In [212]:
+ts = ts.cumsum()
+In [214]:
+ts.plot()
+Out[214]:
+&lt;AxesSubplot:>
+In [215]:
+df = pd.DataFrame(np.random.randn(1000, 4), index=ts.index,
+columns=['A', 'B', 'C', 'D'])
+In [220]:
+import matplotlib.pyplot as plt
+In [221]:
+df = df.cumsum()
+In [223]:
+plt.figure()
+Out[223]:
+&lt;Figure size 432x288 with 0 Axes>
+&lt;Figure size 432x288 with 0 Axes>
+In [227]:
+df.plot()
+Out[227]:
+&lt;AxesSubplot:>
+In [229]:
+df.to_csv('foo.csv')
+In [230]:
+pd.read_csv('foo.csv')
+Out[230]:
+Unnamed: 0
+A
+B
+C
+D
+0
+2000-01-01
+0.380354
+-0.715600
+0.477168
+-0.615242
+1
+2000-01-02
+0.032450
+-0.499093
+1.974019
+-1.195866
+2
+2000-01-03
+-1.851622
+-0.711985
+3.225540
+-2.417393
+3
+2000-01-04
+-3.696595
+-0.400146
+2.866099
+-3.908053
+4
+2000-01-05
+-5.003217
+1.256739
+0.959486
+-5.810246
+...
+...
+...
+...
+...
+...
+995
+2002-09-22
+28714.956464
+-14075.504773
+-19965.084587
+-7135.555466
+996
+2002-09-23
+28754.517214
+-14097.688732
+-19968.603250
+-7164.606749
+997
+2002-09-24
+28795.287024
+-14120.607755
+-19972.122136
+-7191.300242
+998
+2002-09-25
+28835.603030
+-14143.746478
+-19975.695661
+-7217.591645
+999
+2002-09-26
+28874.365164
+-14166.375748
+-19980.493471
+-7243.154593
+1000 rows × 5 columns
+...</p></div><footer class=entry-footer>2943 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to " href=https://ethereal-lu.github.io/posts/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/pandas%E5%AD%A6%E4%B9%A0/pandas_quickstart/></a></article><footer class=page-footer><nav class=pagination><a class=prev href=https://ethereal-lu.github.io/page/9/>«&nbsp;Prev&nbsp;</a></nav></footer></main><footer class=footer><span>&copy; 2025 <a href=https://ethereal-lu.github.io/>lu</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script></body></html>

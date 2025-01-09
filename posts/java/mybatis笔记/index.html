@@ -1,0 +1,723 @@
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>mybatis学习笔记 | lu</title>
+<meta name=keywords content><meta name=description content='第一个MyBatis项目
+
+先进入mysql创建mybatis数据库，并在其中创建user表，其中有字段值如实体类User中的属性
+
+
+新建一个Maven项目，作为父项目，在其pom.xml配置文件中引入依赖（mysql驱动、junit、mybatis）。则其子模块中都继承了这些依赖。
+在父项目下新建一个Maven子模块，在其main目录的resources下新建文件mybatis-config.xml作为配置文件，内容如下：
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<!--核心配置文件-->
+<configuration>
+    <!--下方这一句为引入外部属性文件，需在resources下创建jdbc.properties文件
+        也可以不引入外部属性文件而直接对4个value赋值-->
+    <properties resource="jdbc.properties"/>
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <!--只需为下面四项赋值即可-->
+                <property name="driver" value="${jdbc.driveClass}"/>
+                <property name="url" value="${jdbc.url}"/>
+                <property name="username" value="${jdbc.username}"/>
+                <property name="password" value="${jdbc.password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+        <!--每一个sql映射文件Mapper.xml都需要在Mybatis的核心配置文件中的<mappers>标签下注册，
+        否则就会报错Type interface com.lu.dao.UserDao is not known to the MapperRegistry.-->
+    <mappers>
+        <!--如果Mapper.xml在resources目录下，则直接写文件名即可，若在其他路径，则要写全路径，用/分割目录-->
+        <mapper resource="UserMapper.xml"/>
+    </mappers>
+</configuration>
+jdbc.properties文件如下：其中jdbc.url字段特别容易引发错误
+jdbc.driveClass=com.mysql.cj.jdbc.Driver
+jdbc.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&amp;useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=Asia/Shanghai
+jdbc.userName=root
+jdbc.password=gaolu666
+
+创建获取sqlSession对象的工具类（类中代码如下）。
+
+// sqlSessionFactory -->  SqlSession
+public class MybatisUtils {
+
+    private static final SqlSessionFactory sqlSessionFactory;
+
+    // 用Mybatis的配置文件获取sqlSessionFactory对象
+    static {
+        String resource = "mybatis-config.xml";
+        InputStream inputStream = null;
+        try {
+            inputStream = Resources.getResourceAsStream(resource);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+    }
+
+    // 用sqlSessionFactory对象获取SqlSession对象
+    public static SqlSession getSqlSession() {
+        return sqlSessionFactory.openSession();
+    }
+}
+
+实现。创建实体类、UserDao接口以及Mapper配置文件UserMapper.xml（该文件代替JDBC中的UserDaoImpl实现类，但是仍然可以将该文件理解为UserDao的实现类），分别如下：【实体类要实现序列化接口】
+
+// 实体类
+public class User implements Serializable {
+    private int id;
+    private String name;
+    private String passwd;
+    ... // 省略部分为有参无参构造，getter、setter方法
+}
+// UserDao接口
+public interface UserDao {
+    List<User> getUserList();
+
+    // 根据ID查询用户
+    User getUserById(int id);
+
+    // 添加用户
+    void addUser(User user);
+
+    // 修改用户
+    void updateUser(User user);
+
+    // 删除用户
+    void deleteUser(int id);
+}
+<!--sql映射文件UserMapper.xml-->
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lu.dao.UserDao"> <!--namespace绑定一个Mapper（Dao）接口-->
+    <!--id对应绑定的接口中的一个方法名，resultType为返回值，
+        当该方法的返回值为集合时resultType对应集合泛型中的类的全路径-->
+    <select id="getUserList" resultType="com.lu.pojo.User">
+        select * from user
+    </select>
+
+    <!--parameterType对应参数类型，当方法的参数只有一个，且参数类型为基本类型时，可以不写parameterType这一项，
+        方法参数有多个时，用map或注解-->
+    <select id="getUserById" parameterType="int" resultType="com.lu.pojo.User">
+        select * from user where id = #{id}  /*此处#{id}接收getUserById方法的参数，因此名称与参数名一致*/
+    </select>
+
+    <insert id="addUser" parameterType="com.lu.pojo.User">
+        /*此处#{id}, #{name}, #{passwd}自动接收User类中的属性，因此名字与三个属性名一致*/
+        insert into user (id, name, passwd) values (#{id}, #{name}, #{passwd})
+    </insert>
+    
+    <update id="updateUser" parameterType="com.lu.pojo.User">
+        update user set name = #{name}, passwd = #{passwd} where id = #{id} /*修改多个参数中间用逗号隔开不要忘*/
+    </update>
+    
+    <delete id="deleteUser" parameterType="int">
+        delete from user where id = #{id}
+    </delete>
+</mapper>
+
+测试，代码如下：
+
+public class UserDaoTest {
+    @Test
+    public void getUserListTest() {
+        // 第一步：获取sqlSession对象
+        SqlSession sqlSession = MybatisUtils.getSqlSession();
+        // 第二部：getMapper
+        UserDao mapper = sqlSession.getMapper(UserDao.class);
+        // 第三步：执行sql
+        for (User user: mapper.getUserList())
+            System.out.println(user);
+        // 第四步：关闭连接
+        sqlSession.close();
+        // 注意事项：增删改操作必须要提交事务 --> sqlSession.commit();
+    }
+}
+
+map的使用（野路子，增加灵活性但不利于维护）
+
+使用场景：当表中的字段过多，而只需要更新少量字段时，不需要像上方一样，传入一个带全部字段的新对象，而只需要利用map传递需要的字段即可。同样在添加操作时，也可以在map中只存放notnull的字段，对于允许null的字段，可以不添加。示例如下：
+
+    <update id="updateUser2" parameterType="map">
+        /*上方参数类型map即表示Map类型，下方的#{key_name}和#{key_id}接收map中的值，故名称与map中的键名一致*/
+        update user set name = #{key_name} where id = #{key_id}
+    </update>
+
+配置解析
+
+核心配置文件mybatis-config.xml
+
+environments
+
+environments标签下可以有多套环境，但同时最多只能使用一套（即互斥使用），修改default的值即可切换环境
+transactionManager标签即事务管理器，只需知道除了JDBC还有一个MANAGED即可
+dataSource即数据源，type的值默认为POOLED即使用连接池，只需知道type不止这一个值即可
+
+
+properties
+
+properties标签即引入外部属性文件
+properties标签必须位于configuration标签下的第一行
+properties标签下也可以添加propertie标签，并优先读取propertie标签内的值，然后读取外部文件，并覆盖同名键
+
+
+typeAliases
+
+typeAliases即类型别名，为java类型设置一个短的名字，用于减少类完全限定名（类的全路径）的冗余
+类型别名有两种实现方式，一种为typeAlias，即为每一个类自定义一个别名，另一种为package，它指定一个包，将包下所有类的别名设定为类名的首字母小写（其实大写也可以用，但建议小写），如下：（当实体类少时用第一种，实体类多时用第二种）
+
+<typeAliases>
+    <typeAlias type="com.lu.pojo.User" alias="User"/>
+    <package name="com.lu.pojo"/>
+</typeAliases>
+
+settings
+
+logImpl：设置日志
+cacheEnabled：缓存
+lazyLoadingEnabled：懒加载
+
+
+mappers
+
+一般会将操作数据库的接口与其同名sql映射文件mapper.xml放在同一个包下，但这样还需另外设置过滤操作。也可以在resources目录下创建与接口所在目录的同名目录，然后将sql映射文件放入该目录中，这样在编译后接口与映射文件就在同一个包下了。
+
+
+
+
+
+
+生命周期与作用域
+错误的使用可能会导致严重的并发问题'><meta name=author content="lu"><link rel=canonical href=https://ethereal-lu.github.io/posts/java/mybatis%E7%AC%94%E8%AE%B0/><link crossorigin=anonymous href=/assets/css/stylesheet.d6fcd20a4fb86efa4dfac8ec95da60244cc8871042183da1ef28e3a762ad79c8.css integrity="sha256-1vzSCk+4bvpN+sjsldpgJEzIhxBCGD2h7yjjp2Ktecg=" rel="preload stylesheet" as=style><link rel=icon href=https://ethereal-lu.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://ethereal-lu.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://ethereal-lu.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://ethereal-lu.github.io/apple-touch-icon.png><link rel=mask-icon href=https://ethereal-lu.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://ethereal-lu.github.io/posts/java/mybatis%E7%AC%94%E8%AE%B0/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51)}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style></noscript><meta property="og:url" content="https://ethereal-lu.github.io/posts/java/mybatis%E7%AC%94%E8%AE%B0/"><meta property="og:site_name" content="lu"><meta property="og:title" content="mybatis学习笔记"><meta property="og:description" content='第一个MyBatis项目 先进入mysql创建mybatis数据库，并在其中创建user表，其中有字段值如实体类User中的属性 新建一个Maven项目，作为父项目，在其pom.xml配置文件中引入依赖（mysql驱动、junit、mybatis）。则其子模块中都继承了这些依赖。 在父项目下新建一个Maven子模块，在其main目录的resources下新建文件mybatis-config.xml作为配置文件，内容如下： <?xml version="1.0" encoding="UTF-8" ?> <!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd"> <!--核心配置文件--> <configuration> <!--下方这一句为引入外部属性文件，需在resources下创建jdbc.properties文件 也可以不引入外部属性文件而直接对4个value赋值--> <properties resource="jdbc.properties"/> <environments default="development"> <environment id="development"> <transactionManager type="JDBC"/> <dataSource type="POOLED"> <!--只需为下面四项赋值即可--> <property name="driver" value="${jdbc.driveClass}"/> <property name="url" value="${jdbc.url}"/> <property name="username" value="${jdbc.username}"/> <property name="password" value="${jdbc.password}"/> </dataSource> </environment> </environments> <!--每一个sql映射文件Mapper.xml都需要在Mybatis的核心配置文件中的<mappers>标签下注册， 否则就会报错Type interface com.lu.dao.UserDao is not known to the MapperRegistry.--> <mappers> <!--如果Mapper.xml在resources目录下，则直接写文件名即可，若在其他路径，则要写全路径，用/分割目录--> <mapper resource="UserMapper.xml"/> </mappers> </configuration> jdbc.properties文件如下：其中jdbc.url字段特别容易引发错误
+jdbc.driveClass=com.mysql.cj.jdbc.Driver jdbc.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&amp;useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=Asia/Shanghai jdbc.userName=root jdbc.password=gaolu666 创建获取sqlSession对象的工具类（类中代码如下）。 // sqlSessionFactory --> SqlSession public class MybatisUtils { private static final SqlSessionFactory sqlSessionFactory; // 用Mybatis的配置文件获取sqlSessionFactory对象 static { String resource = "mybatis-config.xml"; InputStream inputStream = null; try { inputStream = Resources.getResourceAsStream(resource); } catch (IOException e) { e.printStackTrace(); } sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream); } // 用sqlSessionFactory对象获取SqlSession对象 public static SqlSession getSqlSession() { return sqlSessionFactory.openSession(); } } 实现。创建实体类、UserDao接口以及Mapper配置文件UserMapper.xml（该文件代替JDBC中的UserDaoImpl实现类，但是仍然可以将该文件理解为UserDao的实现类），分别如下：【实体类要实现序列化接口】 // 实体类 public class User implements Serializable { private int id; private String name; private String passwd; ... // 省略部分为有参无参构造，getter、setter方法 } // UserDao接口 public interface UserDao { List<User> getUserList(); // 根据ID查询用户 User getUserById(int id); // 添加用户 void addUser(User user); // 修改用户 void updateUser(User user); // 删除用户 void deleteUser(int id); } <!--sql映射文件UserMapper.xml--> <?xml version="1.0" encoding="UTF-8" ?> <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> <mapper namespace="com.lu.dao.UserDao"> <!--namespace绑定一个Mapper（Dao）接口--> <!--id对应绑定的接口中的一个方法名，resultType为返回值， 当该方法的返回值为集合时resultType对应集合泛型中的类的全路径--> <select id="getUserList" resultType="com.lu.pojo.User"> select * from user </select> <!--parameterType对应参数类型，当方法的参数只有一个，且参数类型为基本类型时，可以不写parameterType这一项， 方法参数有多个时，用map或注解--> <select id="getUserById" parameterType="int" resultType="com.lu.pojo.User"> select * from user where id = #{id} /*此处#{id}接收getUserById方法的参数，因此名称与参数名一致*/ </select> <insert id="addUser" parameterType="com.lu.pojo.User"> /*此处#{id}, #{name}, #{passwd}自动接收User类中的属性，因此名字与三个属性名一致*/ insert into user (id, name, passwd) values (#{id}, #{name}, #{passwd}) </insert> <update id="updateUser" parameterType="com.lu.pojo.User"> update user set name = #{name}, passwd = #{passwd} where id = #{id} /*修改多个参数中间用逗号隔开不要忘*/ </update> <delete id="deleteUser" parameterType="int"> delete from user where id = #{id} </delete> </mapper> 测试，代码如下： public class UserDaoTest { @Test public void getUserListTest() { // 第一步：获取sqlSession对象 SqlSession sqlSession = MybatisUtils.getSqlSession(); // 第二部：getMapper UserDao mapper = sqlSession.getMapper(UserDao.class); // 第三步：执行sql for (User user: mapper.getUserList()) System.out.println(user); // 第四步：关闭连接 sqlSession.close(); // 注意事项：增删改操作必须要提交事务 --> sqlSession.commit(); } } map的使用（野路子，增加灵活性但不利于维护） 使用场景：当表中的字段过多，而只需要更新少量字段时，不需要像上方一样，传入一个带全部字段的新对象，而只需要利用map传递需要的字段即可。同样在添加操作时，也可以在map中只存放notnull的字段，对于允许null的字段，可以不添加。示例如下： <update id="updateUser2" parameterType="map"> /*上方参数类型map即表示Map类型，下方的#{key_name}和#{key_id}接收map中的值，故名称与map中的键名一致*/ update user set name = #{key_name} where id = #{key_id} </update> 配置解析 核心配置文件mybatis-config.xml environments environments标签下可以有多套环境，但同时最多只能使用一套（即互斥使用），修改default的值即可切换环境 transactionManager标签即事务管理器，只需知道除了JDBC还有一个MANAGED即可 dataSource即数据源，type的值默认为POOLED即使用连接池，只需知道type不止这一个值即可 properties properties标签即引入外部属性文件 properties标签必须位于configuration标签下的第一行 properties标签下也可以添加propertie标签，并优先读取propertie标签内的值，然后读取外部文件，并覆盖同名键 typeAliases typeAliases即类型别名，为java类型设置一个短的名字，用于减少类完全限定名（类的全路径）的冗余 类型别名有两种实现方式，一种为typeAlias，即为每一个类自定义一个别名，另一种为package，它指定一个包，将包下所有类的别名设定为类名的首字母小写（其实大写也可以用，但建议小写），如下：（当实体类少时用第一种，实体类多时用第二种） <typeAliases> <typeAlias type="com.lu.pojo.User" alias="User"/> <package name="com.lu.pojo"/> </typeAliases> settings logImpl：设置日志 cacheEnabled：缓存 lazyLoadingEnabled：懒加载 mappers 一般会将操作数据库的接口与其同名sql映射文件mapper.xml放在同一个包下，但这样还需另外设置过滤操作。也可以在resources目录下创建与接口所在目录的同名目录，然后将sql映射文件放入该目录中，这样在编译后接口与映射文件就在同一个包下了。 生命周期与作用域 错误的使用可能会导致严重的并发问题'><meta property="og:locale" content="zh-CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2021-04-26T19:42:15+00:00"><meta property="article:modified_time" content="2021-04-26T19:42:15+00:00"><meta name=twitter:card content="summary"><meta name=twitter:title content="mybatis学习笔记"><meta name=twitter:description content='第一个MyBatis项目
+
+先进入mysql创建mybatis数据库，并在其中创建user表，其中有字段值如实体类User中的属性
+
+
+新建一个Maven项目，作为父项目，在其pom.xml配置文件中引入依赖（mysql驱动、junit、mybatis）。则其子模块中都继承了这些依赖。
+在父项目下新建一个Maven子模块，在其main目录的resources下新建文件mybatis-config.xml作为配置文件，内容如下：
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<!--核心配置文件-->
+<configuration>
+    <!--下方这一句为引入外部属性文件，需在resources下创建jdbc.properties文件
+        也可以不引入外部属性文件而直接对4个value赋值-->
+    <properties resource="jdbc.properties"/>
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <!--只需为下面四项赋值即可-->
+                <property name="driver" value="${jdbc.driveClass}"/>
+                <property name="url" value="${jdbc.url}"/>
+                <property name="username" value="${jdbc.username}"/>
+                <property name="password" value="${jdbc.password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+        <!--每一个sql映射文件Mapper.xml都需要在Mybatis的核心配置文件中的<mappers>标签下注册，
+        否则就会报错Type interface com.lu.dao.UserDao is not known to the MapperRegistry.-->
+    <mappers>
+        <!--如果Mapper.xml在resources目录下，则直接写文件名即可，若在其他路径，则要写全路径，用/分割目录-->
+        <mapper resource="UserMapper.xml"/>
+    </mappers>
+</configuration>
+jdbc.properties文件如下：其中jdbc.url字段特别容易引发错误
+jdbc.driveClass=com.mysql.cj.jdbc.Driver
+jdbc.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&amp;useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=Asia/Shanghai
+jdbc.userName=root
+jdbc.password=gaolu666
+
+创建获取sqlSession对象的工具类（类中代码如下）。
+
+// sqlSessionFactory -->  SqlSession
+public class MybatisUtils {
+
+    private static final SqlSessionFactory sqlSessionFactory;
+
+    // 用Mybatis的配置文件获取sqlSessionFactory对象
+    static {
+        String resource = "mybatis-config.xml";
+        InputStream inputStream = null;
+        try {
+            inputStream = Resources.getResourceAsStream(resource);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+    }
+
+    // 用sqlSessionFactory对象获取SqlSession对象
+    public static SqlSession getSqlSession() {
+        return sqlSessionFactory.openSession();
+    }
+}
+
+实现。创建实体类、UserDao接口以及Mapper配置文件UserMapper.xml（该文件代替JDBC中的UserDaoImpl实现类，但是仍然可以将该文件理解为UserDao的实现类），分别如下：【实体类要实现序列化接口】
+
+// 实体类
+public class User implements Serializable {
+    private int id;
+    private String name;
+    private String passwd;
+    ... // 省略部分为有参无参构造，getter、setter方法
+}
+// UserDao接口
+public interface UserDao {
+    List<User> getUserList();
+
+    // 根据ID查询用户
+    User getUserById(int id);
+
+    // 添加用户
+    void addUser(User user);
+
+    // 修改用户
+    void updateUser(User user);
+
+    // 删除用户
+    void deleteUser(int id);
+}
+<!--sql映射文件UserMapper.xml-->
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lu.dao.UserDao"> <!--namespace绑定一个Mapper（Dao）接口-->
+    <!--id对应绑定的接口中的一个方法名，resultType为返回值，
+        当该方法的返回值为集合时resultType对应集合泛型中的类的全路径-->
+    <select id="getUserList" resultType="com.lu.pojo.User">
+        select * from user
+    </select>
+
+    <!--parameterType对应参数类型，当方法的参数只有一个，且参数类型为基本类型时，可以不写parameterType这一项，
+        方法参数有多个时，用map或注解-->
+    <select id="getUserById" parameterType="int" resultType="com.lu.pojo.User">
+        select * from user where id = #{id}  /*此处#{id}接收getUserById方法的参数，因此名称与参数名一致*/
+    </select>
+
+    <insert id="addUser" parameterType="com.lu.pojo.User">
+        /*此处#{id}, #{name}, #{passwd}自动接收User类中的属性，因此名字与三个属性名一致*/
+        insert into user (id, name, passwd) values (#{id}, #{name}, #{passwd})
+    </insert>
+    
+    <update id="updateUser" parameterType="com.lu.pojo.User">
+        update user set name = #{name}, passwd = #{passwd} where id = #{id} /*修改多个参数中间用逗号隔开不要忘*/
+    </update>
+    
+    <delete id="deleteUser" parameterType="int">
+        delete from user where id = #{id}
+    </delete>
+</mapper>
+
+测试，代码如下：
+
+public class UserDaoTest {
+    @Test
+    public void getUserListTest() {
+        // 第一步：获取sqlSession对象
+        SqlSession sqlSession = MybatisUtils.getSqlSession();
+        // 第二部：getMapper
+        UserDao mapper = sqlSession.getMapper(UserDao.class);
+        // 第三步：执行sql
+        for (User user: mapper.getUserList())
+            System.out.println(user);
+        // 第四步：关闭连接
+        sqlSession.close();
+        // 注意事项：增删改操作必须要提交事务 --> sqlSession.commit();
+    }
+}
+
+map的使用（野路子，增加灵活性但不利于维护）
+
+使用场景：当表中的字段过多，而只需要更新少量字段时，不需要像上方一样，传入一个带全部字段的新对象，而只需要利用map传递需要的字段即可。同样在添加操作时，也可以在map中只存放notnull的字段，对于允许null的字段，可以不添加。示例如下：
+
+    <update id="updateUser2" parameterType="map">
+        /*上方参数类型map即表示Map类型，下方的#{key_name}和#{key_id}接收map中的值，故名称与map中的键名一致*/
+        update user set name = #{key_name} where id = #{key_id}
+    </update>
+
+配置解析
+
+核心配置文件mybatis-config.xml
+
+environments
+
+environments标签下可以有多套环境，但同时最多只能使用一套（即互斥使用），修改default的值即可切换环境
+transactionManager标签即事务管理器，只需知道除了JDBC还有一个MANAGED即可
+dataSource即数据源，type的值默认为POOLED即使用连接池，只需知道type不止这一个值即可
+
+
+properties
+
+properties标签即引入外部属性文件
+properties标签必须位于configuration标签下的第一行
+properties标签下也可以添加propertie标签，并优先读取propertie标签内的值，然后读取外部文件，并覆盖同名键
+
+
+typeAliases
+
+typeAliases即类型别名，为java类型设置一个短的名字，用于减少类完全限定名（类的全路径）的冗余
+类型别名有两种实现方式，一种为typeAlias，即为每一个类自定义一个别名，另一种为package，它指定一个包，将包下所有类的别名设定为类名的首字母小写（其实大写也可以用，但建议小写），如下：（当实体类少时用第一种，实体类多时用第二种）
+
+<typeAliases>
+    <typeAlias type="com.lu.pojo.User" alias="User"/>
+    <package name="com.lu.pojo"/>
+</typeAliases>
+
+settings
+
+logImpl：设置日志
+cacheEnabled：缓存
+lazyLoadingEnabled：懒加载
+
+
+mappers
+
+一般会将操作数据库的接口与其同名sql映射文件mapper.xml放在同一个包下，但这样还需另外设置过滤操作。也可以在resources目录下创建与接口所在目录的同名目录，然后将sql映射文件放入该目录中，这样在编译后接口与映射文件就在同一个包下了。
+
+
+
+
+
+
+生命周期与作用域
+错误的使用可能会导致严重的并发问题'><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Posts","item":"https://ethereal-lu.github.io/posts/"},{"@type":"ListItem","position":2,"name":"mybatis学习笔记","item":"https://ethereal-lu.github.io/posts/java/mybatis%E7%AC%94%E8%AE%B0/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"mybatis学习笔记","name":"mybatis学习笔记","description":"第一个MyBatis项目 先进入mysql创建mybatis数据库，并在其中创建user表，其中有字段值如实体类User中的属性 新建一个Maven项目，作为父项目，在其pom.xml配置文件中引入依赖（mysql驱动、junit、mybatis）。则其子模块中都继承了这些依赖。 在父项目下新建一个Maven子模块，在其main目录的resources下新建文件mybatis-config.xml作为配置文件，内容如下： \u0026lt;?xml version=\u0026#34;1.0\u0026#34; encoding=\u0026#34;UTF-8\u0026#34; ?\u0026gt; \u0026lt;!DOCTYPE configuration PUBLIC \u0026#34;-//mybatis.org//DTD Config 3.0//EN\u0026#34; \u0026#34;http://mybatis.org/dtd/mybatis-3-config.dtd\u0026#34;\u0026gt; \u0026lt;!--核心配置文件--\u0026gt; \u0026lt;configuration\u0026gt; \u0026lt;!--下方这一句为引入外部属性文件，需在resources下创建jdbc.properties文件 也可以不引入外部属性文件而直接对4个value赋值--\u0026gt; \u0026lt;properties resource=\u0026#34;jdbc.properties\u0026#34;/\u0026gt; \u0026lt;environments default=\u0026#34;development\u0026#34;\u0026gt; \u0026lt;environment id=\u0026#34;development\u0026#34;\u0026gt; \u0026lt;transactionManager type=\u0026#34;JDBC\u0026#34;/\u0026gt; \u0026lt;dataSource type=\u0026#34;POOLED\u0026#34;\u0026gt; \u0026lt;!--只需为下面四项赋值即可--\u0026gt; \u0026lt;property name=\u0026#34;driver\u0026#34; value=\u0026#34;${jdbc.driveClass}\u0026#34;/\u0026gt; \u0026lt;property name=\u0026#34;url\u0026#34; value=\u0026#34;${jdbc.url}\u0026#34;/\u0026gt; \u0026lt;property name=\u0026#34;username\u0026#34; value=\u0026#34;${jdbc.username}\u0026#34;/\u0026gt; \u0026lt;property name=\u0026#34;password\u0026#34; value=\u0026#34;${jdbc.password}\u0026#34;/\u0026gt; \u0026lt;/dataSource\u0026gt; \u0026lt;/environment\u0026gt; \u0026lt;/environments\u0026gt; \u0026lt;!--每一个sql映射文件Mapper.xml都需要在Mybatis的核心配置文件中的\u0026lt;mappers\u0026gt;标签下注册， 否则就会报错Type interface com.lu.dao.UserDao is not known to the MapperRegistry.--\u0026gt; \u0026lt;mappers\u0026gt; \u0026lt;!--如果Mapper.xml在resources目录下，则直接写文件名即可，若在其他路径，则要写全路径，用/分割目录--\u0026gt; \u0026lt;mapper resource=\u0026#34;UserMapper.xml\u0026#34;/\u0026gt; \u0026lt;/mappers\u0026gt; \u0026lt;/configuration\u0026gt; jdbc.properties文件如下：其中jdbc.url字段特别容易引发错误\njdbc.driveClass=com.mysql.cj.jdbc.Driver jdbc.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false\u0026amp;useUnicode=true\u0026amp;characterEncoding=utf8\u0026amp;serverTimezone=Asia/Shanghai jdbc.userName=root jdbc.password=gaolu666 创建获取sqlSession对象的工具类（类中代码如下）。 // sqlSessionFactory --\u0026gt; SqlSession public class MybatisUtils { private static final SqlSessionFactory sqlSessionFactory; // 用Mybatis的配置文件获取sqlSessionFactory对象 static { String resource = \u0026#34;mybatis-config.xml\u0026#34;; InputStream inputStream = null; try { inputStream = Resources.getResourceAsStream(resource); } catch (IOException e) { e.printStackTrace(); } sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream); } // 用sqlSessionFactory对象获取SqlSession对象 public static SqlSession getSqlSession() { return sqlSessionFactory.openSession(); } } 实现。创建实体类、UserDao接口以及Mapper配置文件UserMapper.xml（该文件代替JDBC中的UserDaoImpl实现类，但是仍然可以将该文件理解为UserDao的实现类），分别如下：【实体类要实现序列化接口】 // 实体类 public class User implements Serializable { private int id; private String name; private String passwd; ... // 省略部分为有参无参构造，getter、setter方法 } // UserDao接口 public interface UserDao { List\u0026lt;User\u0026gt; getUserList(); // 根据ID查询用户 User getUserById(int id); // 添加用户 void addUser(User user); // 修改用户 void updateUser(User user); // 删除用户 void deleteUser(int id); } \u0026lt;!--sql映射文件UserMapper.xml--\u0026gt; \u0026lt;?xml version=\u0026#34;1.0\u0026#34; encoding=\u0026#34;UTF-8\u0026#34; ?\u0026gt; \u0026lt;!DOCTYPE mapper PUBLIC \u0026#34;-//mybatis.org//DTD Mapper 3.0//EN\u0026#34; \u0026#34;http://mybatis.org/dtd/mybatis-3-mapper.dtd\u0026#34;\u0026gt; \u0026lt;mapper namespace=\u0026#34;com.lu.dao.UserDao\u0026#34;\u0026gt; \u0026lt;!--namespace绑定一个Mapper（Dao）接口--\u0026gt; \u0026lt;!--id对应绑定的接口中的一个方法名，resultType为返回值， 当该方法的返回值为集合时resultType对应集合泛型中的类的全路径--\u0026gt; \u0026lt;select id=\u0026#34;getUserList\u0026#34; resultType=\u0026#34;com.lu.pojo.User\u0026#34;\u0026gt; select * from user \u0026lt;/select\u0026gt; \u0026lt;!--parameterType对应参数类型，当方法的参数只有一个，且参数类型为基本类型时，可以不写parameterType这一项， 方法参数有多个时，用map或注解--\u0026gt; \u0026lt;select id=\u0026#34;getUserById\u0026#34; parameterType=\u0026#34;int\u0026#34; resultType=\u0026#34;com.lu.pojo.User\u0026#34;\u0026gt; select * from user where id = #{id} /*此处#{id}接收getUserById方法的参数，因此名称与参数名一致*/ \u0026lt;/select\u0026gt; \u0026lt;insert id=\u0026#34;addUser\u0026#34; parameterType=\u0026#34;com.lu.pojo.User\u0026#34;\u0026gt; /*此处#{id}, #{name}, #{passwd}自动接收User类中的属性，因此名字与三个属性名一致*/ insert into user (id, name, passwd) values (#{id}, #{name}, #{passwd}) \u0026lt;/insert\u0026gt; \u0026lt;update id=\u0026#34;updateUser\u0026#34; parameterType=\u0026#34;com.lu.pojo.User\u0026#34;\u0026gt; update user set name = #{name}, passwd = #{passwd} where id = #{id} /*修改多个参数中间用逗号隔开不要忘*/ \u0026lt;/update\u0026gt; \u0026lt;delete id=\u0026#34;deleteUser\u0026#34; parameterType=\u0026#34;int\u0026#34;\u0026gt; delete from user where id = #{id} \u0026lt;/delete\u0026gt; \u0026lt;/mapper\u0026gt; 测试，代码如下： public class UserDaoTest { @Test public void getUserListTest() { // 第一步：获取sqlSession对象 SqlSession sqlSession = MybatisUtils.getSqlSession(); // 第二部：getMapper UserDao mapper = sqlSession.getMapper(UserDao.class); // 第三步：执行sql for (User user: mapper.getUserList()) System.out.println(user); // 第四步：关闭连接 sqlSession.close(); // 注意事项：增删改操作必须要提交事务 --\u0026gt; sqlSession.commit(); } } map的使用（野路子，增加灵活性但不利于维护） 使用场景：当表中的字段过多，而只需要更新少量字段时，不需要像上方一样，传入一个带全部字段的新对象，而只需要利用map传递需要的字段即可。同样在添加操作时，也可以在map中只存放notnull的字段，对于允许null的字段，可以不添加。示例如下： \u0026lt;update id=\u0026#34;updateUser2\u0026#34; parameterType=\u0026#34;map\u0026#34;\u0026gt; /*上方参数类型map即表示Map类型，下方的#{key_name}和#{key_id}接收map中的值，故名称与map中的键名一致*/ update user set name = #{key_name} where id = #{key_id} \u0026lt;/update\u0026gt; 配置解析 核心配置文件mybatis-config.xml environments environments标签下可以有多套环境，但同时最多只能使用一套（即互斥使用），修改default的值即可切换环境 transactionManager标签即事务管理器，只需知道除了JDBC还有一个MANAGED即可 dataSource即数据源，type的值默认为POOLED即使用连接池，只需知道type不止这一个值即可 properties properties标签即引入外部属性文件 properties标签必须位于configuration标签下的第一行 properties标签下也可以添加propertie标签，并优先读取propertie标签内的值，然后读取外部文件，并覆盖同名键 typeAliases typeAliases即类型别名，为java类型设置一个短的名字，用于减少类完全限定名（类的全路径）的冗余 类型别名有两种实现方式，一种为typeAlias，即为每一个类自定义一个别名，另一种为package，它指定一个包，将包下所有类的别名设定为类名的首字母小写（其实大写也可以用，但建议小写），如下：（当实体类少时用第一种，实体类多时用第二种） \u0026lt;typeAliases\u0026gt; \u0026lt;typeAlias type=\u0026#34;com.lu.pojo.User\u0026#34; alias=\u0026#34;User\u0026#34;/\u0026gt; \u0026lt;package name=\u0026#34;com.lu.pojo\u0026#34;/\u0026gt; \u0026lt;/typeAliases\u0026gt; settings logImpl：设置日志 cacheEnabled：缓存 lazyLoadingEnabled：懒加载 mappers 一般会将操作数据库的接口与其同名sql映射文件mapper.xml放在同一个包下，但这样还需另外设置过滤操作。也可以在resources目录下创建与接口所在目录的同名目录，然后将sql映射文件放入该目录中，这样在编译后接口与映射文件就在同一个包下了。 生命周期与作用域 错误的使用可能会导致严重的并发问题\n","keywords":[],"articleBody":"第一个MyBatis项目 先进入mysql创建mybatis数据库，并在其中创建user表，其中有字段值如实体类User中的属性 新建一个Maven项目，作为父项目，在其pom.xml配置文件中引入依赖（mysql驱动、junit、mybatis）。则其子模块中都继承了这些依赖。 在父项目下新建一个Maven子模块，在其main目录的resources下新建文件mybatis-config.xml作为配置文件，内容如下： \u003c?xml version=\"1.0\" encoding=\"UTF-8\" ?\u003e \u003c!DOCTYPE configuration PUBLIC \"-//mybatis.org//DTD Config 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-config.dtd\"\u003e ","wordCount":"976","inLanguage":"en","datePublished":"2021-04-26T19:42:15Z","dateModified":"2021-04-26T19:42:15Z","author":{"@type":"Person","name":"lu"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://ethereal-lu.github.io/posts/java/mybatis%E7%AC%94%E8%AE%B0/"},"publisher":{"@type":"Organization","name":"lu","logo":{"@type":"ImageObject","url":"https://ethereal-lu.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"?document.body.classList.add("dark"):localStorage.getItem("pref-theme")==="light"?document.body.classList.remove("dark"):window.matchMedia("(prefers-color-scheme: dark)").matches&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://ethereal-lu.github.io/ accesskey=h title="lu (Alt + H)">lu</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://ethereal-lu.github.io/categories/ title=categories><span>categories</span></a></li><li><a href=https://ethereal-lu.github.io/search/ title="search (Alt + /)" accesskey=/><span>search</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://ethereal-lu.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://ethereal-lu.github.io/posts/>Posts</a></div><h1 class="post-title entry-hint-parent">mybatis学习笔记</h1><div class=post-meta><span title='2021-04-26 19:42:15 +0000 UTC'>2021-04-26</span>&nbsp;·&nbsp;976 words&nbsp;·&nbsp;lu</div></header><div class=toc><details><summary accesskey=c title="(Alt + C)"><span class=details>Table of Contents</span></summary><div class=inner><nav id=TableOfContents><ul><li><ul><li><a href=#第一个mybatis项目>第一个MyBatis项目</a></li><li><a href=#map的使用野路子增加灵活性但不利于维护>map的使用（野路子，增加灵活性但不利于维护）</a></li><li><a href=#配置解析>配置解析</a></li><li><a href=#生命周期与作用域>生命周期与作用域</a></li><li><a href=#resultmap结果集映射>resultMap结果集映射</a></li><li><a href=#日志>日志</a></li><li><a href=#分页>分页</a></li><li><a href=#注解开发注解只能实现简单功能推荐使用xml>注解开发（注解只能实现简单功能，推荐使用xml）</a></li><li><a href=#lombok>Lombok</a></li><li><a href=#多对一处理>多对一处理</a></li><li><a href=#一对多处理>一对多处理</a></li><li><a href=#动态sql>动态SQL</a></li><li><a href=#缓存为了提高查询效率>缓存（为了提高查询效率）</a></li></ul></li></ul></nav></div></details></div><div class=post-content><h3 id=第一个mybatis项目>第一个MyBatis项目<a hidden class=anchor aria-hidden=true href=#第一个mybatis项目>#</a></h3><ul><li>先进入mysql创建mybatis数据库，并在其中创建user表，其中有字段值如实体类User中的属性</li></ul><ol><li>新建一个Maven项目，作为父项目，在其pom.xml配置文件中引入依赖（mysql驱动、junit、mybatis）。则其子模块中都继承了这些依赖。</li><li>在父项目下新建一个Maven子模块，在其main目录的resources下新建文件mybatis-config.xml作为配置文件，内容如下：</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#75715e>&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34; ?&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>&lt;!DOCTYPE configuration
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        PUBLIC &#34;-//mybatis.org//DTD Config 3.0//EN&#34;
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        &#34;http://mybatis.org/dtd/mybatis-3-config.dtd&#34;&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>&lt;!--核心配置文件--&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;configuration&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>&lt;!--下方这一句为引入外部属性文件，需在resources下创建jdbc.properties文件
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        也可以不引入外部属性文件而直接对4个value赋值--&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;properties</span> <span style=color:#a6e22e>resource=</span><span style=color:#e6db74>&#34;jdbc.properties&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;environments</span> <span style=color:#a6e22e>default=</span><span style=color:#e6db74>&#34;development&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;environment</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;development&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>            <span style=color:#f92672>&lt;transactionManager</span> <span style=color:#a6e22e>type=</span><span style=color:#e6db74>&#34;JDBC&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>            <span style=color:#f92672>&lt;dataSource</span> <span style=color:#a6e22e>type=</span><span style=color:#e6db74>&#34;POOLED&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>                <span style=color:#75715e>&lt;!--只需为下面四项赋值即可--&gt;</span>
+</span></span><span style=display:flex><span>                <span style=color:#f92672>&lt;property</span> <span style=color:#a6e22e>name=</span><span style=color:#e6db74>&#34;driver&#34;</span> <span style=color:#a6e22e>value=</span><span style=color:#e6db74>&#34;${jdbc.driveClass}&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>                <span style=color:#f92672>&lt;property</span> <span style=color:#a6e22e>name=</span><span style=color:#e6db74>&#34;url&#34;</span> <span style=color:#a6e22e>value=</span><span style=color:#e6db74>&#34;${jdbc.url}&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>                <span style=color:#f92672>&lt;property</span> <span style=color:#a6e22e>name=</span><span style=color:#e6db74>&#34;username&#34;</span> <span style=color:#a6e22e>value=</span><span style=color:#e6db74>&#34;${jdbc.username}&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>                <span style=color:#f92672>&lt;property</span> <span style=color:#a6e22e>name=</span><span style=color:#e6db74>&#34;password&#34;</span> <span style=color:#a6e22e>value=</span><span style=color:#e6db74>&#34;${jdbc.password}&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>            <span style=color:#f92672>&lt;/dataSource&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;/environment&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/environments&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>&lt;!--每一个sql映射文件Mapper.xml都需要在Mybatis的核心配置文件中的&lt;mappers&gt;标签下注册，
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        否则就会报错Type interface com.lu.dao.UserDao is not known to the MapperRegistry.--&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;mappers&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>&lt;!--如果Mapper.xml在resources目录下，则直接写文件名即可，若在其他路径，则要写全路径，用/分割目录--&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;mapper</span> <span style=color:#a6e22e>resource=</span><span style=color:#e6db74>&#34;UserMapper.xml&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/mappers&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/configuration&gt;</span>
+</span></span></code></pre></div><p>jdbc.properties文件如下：其中jdbc.url字段特别容易引发错误</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-properties data-lang=properties><span style=display:flex><span><span style=color:#a6e22e>jdbc.driveClass</span><span style=color:#f92672>=</span><span style=color:#e6db74>com.mysql.cj.jdbc.Driver</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>jdbc.url</span><span style=color:#f92672>=</span><span style=color:#e6db74>jdbc:mysql://localhost:3306/mybatis?useSSL=false&amp;useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=Asia/Shanghai</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>jdbc.userName</span><span style=color:#f92672>=</span><span style=color:#e6db74>root</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>jdbc.password</span><span style=color:#f92672>=</span><span style=color:#e6db74>gaolu666</span>
+</span></span></code></pre></div><ol start=3><li>创建获取sqlSession对象的工具类（类中代码如下）。</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#75715e>// sqlSessionFactory --&gt;  SqlSession</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>MybatisUtils</span> {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> SqlSessionFactory sqlSessionFactory;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// 用Mybatis的配置文件获取sqlSessionFactory对象</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>static</span> {
+</span></span><span style=display:flex><span>        String resource <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;mybatis-config.xml&#34;</span>;
+</span></span><span style=display:flex><span>        InputStream inputStream <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>try</span> {
+</span></span><span style=display:flex><span>            inputStream <span style=color:#f92672>=</span> Resources.<span style=color:#a6e22e>getResourceAsStream</span>(resource);
+</span></span><span style=display:flex><span>        } <span style=color:#66d9ef>catch</span> (IOException e) {
+</span></span><span style=display:flex><span>            e.<span style=color:#a6e22e>printStackTrace</span>();
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        sqlSessionFactory <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> SqlSessionFactoryBuilder().<span style=color:#a6e22e>build</span>(inputStream);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// 用sqlSessionFactory对象获取SqlSession对象</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> SqlSession <span style=color:#a6e22e>getSqlSession</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> sqlSessionFactory.<span style=color:#a6e22e>openSession</span>();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><ol start=4><li>实现。创建实体类、UserDao接口以及Mapper配置文件UserMapper.xml（该文件代替JDBC中的UserDaoImpl实现类，但是仍然可以将该文件理解为UserDao的实现类），分别如下：<strong>【实体类要实现序列化接口】</strong></li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#75715e>// 实体类</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>User</span> <span style=color:#66d9ef>implements</span> Serializable {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> id;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> String name;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> String passwd;
+</span></span><span style=display:flex><span>    ... <span style=color:#75715e>// 省略部分为有参无参构造，getter、setter方法</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#75715e>// UserDao接口</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>interface</span> <span style=color:#a6e22e>UserDao</span> {
+</span></span><span style=display:flex><span>    List<span style=color:#f92672>&lt;</span>User<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>getUserList</span>();
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// 根据ID查询用户</span>
+</span></span><span style=display:flex><span>    User <span style=color:#a6e22e>getUserById</span>(<span style=color:#66d9ef>int</span> id);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// 添加用户</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>addUser</span>(User user);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// 修改用户</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>updateUser</span>(User user);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// 删除用户</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>deleteUser</span>(<span style=color:#66d9ef>int</span> id);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#75715e>&lt;!--sql映射文件UserMapper.xml--&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34; ?&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>&lt;!DOCTYPE mapper
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        PUBLIC &#34;-//mybatis.org//DTD Mapper 3.0//EN&#34;
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        &#34;http://mybatis.org/dtd/mybatis-3-mapper.dtd&#34;&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;mapper</span> <span style=color:#a6e22e>namespace=</span><span style=color:#e6db74>&#34;com.lu.dao.UserDao&#34;</span><span style=color:#f92672>&gt;</span> <span style=color:#75715e>&lt;!--namespace绑定一个Mapper（Dao）接口--&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>&lt;!--id对应绑定的接口中的一个方法名，resultType为返回值，
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        当该方法的返回值为集合时resultType对应集合泛型中的类的全路径--&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;select</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;getUserList&#34;</span> <span style=color:#a6e22e>resultType=</span><span style=color:#e6db74>&#34;com.lu.pojo.User&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        select * from user
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/select&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>&lt;!--parameterType对应参数类型，当方法的参数只有一个，且参数类型为基本类型时，可以不写parameterType这一项，
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        方法参数有多个时，用map或注解--&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;select</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;getUserById&#34;</span> <span style=color:#a6e22e>parameterType=</span><span style=color:#e6db74>&#34;int&#34;</span> <span style=color:#a6e22e>resultType=</span><span style=color:#e6db74>&#34;com.lu.pojo.User&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        select * from user where id = #{id}  /*此处#{id}接收getUserById方法的参数，因此名称与参数名一致*/
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/select&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;insert</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;addUser&#34;</span> <span style=color:#a6e22e>parameterType=</span><span style=color:#e6db74>&#34;com.lu.pojo.User&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        /*此处#{id}, #{name}, #{passwd}自动接收User类中的属性，因此名字与三个属性名一致*/
+</span></span><span style=display:flex><span>        insert into user (id, name, passwd) values (#{id}, #{name}, #{passwd})
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/insert&gt;</span>
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;update</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;updateUser&#34;</span> <span style=color:#a6e22e>parameterType=</span><span style=color:#e6db74>&#34;com.lu.pojo.User&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        update user set name = #{name}, passwd = #{passwd} where id = #{id} /*修改多个参数中间用逗号隔开不要忘*/
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/update&gt;</span>
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;delete</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;deleteUser&#34;</span> <span style=color:#a6e22e>parameterType=</span><span style=color:#e6db74>&#34;int&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        delete from user where id = #{id}
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/delete&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/mapper&gt;</span>
+</span></span></code></pre></div><ol start=5><li>测试，代码如下：</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>UserDaoTest</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Test</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>getUserListTest</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 第一步：获取sqlSession对象</span>
+</span></span><span style=display:flex><span>        SqlSession sqlSession <span style=color:#f92672>=</span> MybatisUtils.<span style=color:#a6e22e>getSqlSession</span>();
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 第二部：getMapper</span>
+</span></span><span style=display:flex><span>        UserDao mapper <span style=color:#f92672>=</span> sqlSession.<span style=color:#a6e22e>getMapper</span>(UserDao.<span style=color:#a6e22e>class</span>);
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 第三步：执行sql</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> (User user: mapper.<span style=color:#a6e22e>getUserList</span>())
+</span></span><span style=display:flex><span>            System.<span style=color:#a6e22e>out</span>.<span style=color:#a6e22e>println</span>(user);
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 第四步：关闭连接</span>
+</span></span><span style=display:flex><span>        sqlSession.<span style=color:#a6e22e>close</span>();
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 注意事项：增删改操作必须要提交事务 --&gt; sqlSession.commit();</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><hr><h3 id=map的使用野路子增加灵活性但不利于维护>map的使用（野路子，增加灵活性但不利于维护）<a hidden class=anchor aria-hidden=true href=#map的使用野路子增加灵活性但不利于维护>#</a></h3><ul><li>使用场景：当表中的字段过多，而只需要更新少量字段时，不需要像上方一样，传入一个带全部字段的新对象，而只需要利用map传递需要的字段即可。同样在添加操作时，也可以在map中只存放notnull的字段，对于允许null的字段，可以不添加。示例如下：</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span>    <span style=color:#f92672>&lt;update</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;updateUser2&#34;</span> <span style=color:#a6e22e>parameterType=</span><span style=color:#e6db74>&#34;map&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        /*上方参数类型map即表示Map类型，下方的#{key_name}和#{key_id}接收map中的值，故名称与map中的键名一致*/
+</span></span><span style=display:flex><span>        update user set name = #{key_name} where id = #{key_id}
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/update&gt;</span>
+</span></span></code></pre></div><hr><h3 id=配置解析>配置解析<a hidden class=anchor aria-hidden=true href=#配置解析>#</a></h3><ol><li>核心配置文件mybatis-config.xml<ol><li><strong>environments</strong><ul><li>environments标签下可以有多套环境，但同时最多只能使用一套（即互斥使用），修改default的值即可切换环境</li><li>transactionManager标签即事务管理器，只需知道除了JDBC还有一个MANAGED即可</li><li>dataSource即数据源，type的值默认为POOLED即使用连接池，只需知道type不止这一个值即可</li></ul></li><li><strong>properties</strong><ul><li>properties标签即引入外部属性文件</li><li>properties标签必须位于configuration标签下的第一行</li><li>properties标签下也可以添加propertie标签，并优先读取propertie标签内的值，然后读取外部文件，并覆盖同名键</li></ul></li><li><strong>typeAliases</strong><ul><li>typeAliases即类型别名，为java类型设置一个短的名字，用于减少类完全限定名（类的全路径）的冗余</li><li>类型别名有两种实现方式，一种为typeAlias，即为每一个类自定义一个别名，另一种为package，它指定一个包，将包下所有类的别名设定为类名的首字母小写（其实大写也可以用，但建议小写），如下：（当实体类少时用第一种，实体类多时用第二种）</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;typeAliases&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;typeAlias</span> <span style=color:#a6e22e>type=</span><span style=color:#e6db74>&#34;com.lu.pojo.User&#34;</span> <span style=color:#a6e22e>alias=</span><span style=color:#e6db74>&#34;User&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;package</span> <span style=color:#a6e22e>name=</span><span style=color:#e6db74>&#34;com.lu.pojo&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/typeAliases&gt;</span>
+</span></span></code></pre></div></li><li><strong>settings</strong><ul><li>logImpl：设置日志</li><li>cacheEnabled：缓存</li><li>lazyLoadingEnabled：懒加载</li></ul></li><li><strong>mappers</strong><ul><li>一般会将操作数据库的接口与其同名sql映射文件mapper.xml放在同一个包下，但这样还需另外设置过滤操作。也可以在resources目录下创建与接口所在目录的同名目录，然后将sql映射文件放入该目录中，这样在编译后接口与映射文件就在同一个包下了。</li></ul></li></ol></li></ol><hr><h3 id=生命周期与作用域>生命周期与作用域<a hidden class=anchor aria-hidden=true href=#生命周期与作用域>#</a></h3><p>错误的使用可能会导致严重的<strong>并发问题</strong></p><ol><li><strong>SqlSessionFactoryBuilder</strong><ul><li>生命周期：一旦创建了SqlSessionFactory就不再需要它了</li><li>作用域：方法作用域（即局部变量）</li></ul></li><li><strong>SqlSessionFactory</strong><ul><li>可以将SqlSessionFactory想象为一个连接池</li><li>生命周期：从被创建直到停止运行，正常情况下在整个运行期间有且只有一个SqlSessionFactory对象。</li><li>作用域：应用作用域（即全局作用域）</li></ul></li><li><strong>SqlSession</strong><ul><li>是Session的一种，代表着一个连接资源的启用。</li><li>生命周期：从建立连接到连接释放</li><li>作用域：方法作用域（即局部变量）</li><li>SqlSession获取的每一个mapper就代表一个具体的业务</li></ul></li></ol><hr><h3 id=resultmap结果集映射>resultMap结果集映射<a hidden class=anchor aria-hidden=true href=#resultmap结果集映射>#</a></h3><p>当数据库中的字段名与实体类的属性名不相同时，可以使用resultMap，示例如下：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#75715e>&lt;!--sql映射文件mapper.xml--&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;mapper</span> <span style=color:#a6e22e>namespace=</span><span style=color:#e6db74>&#34;com.lu.mapper.UserMapper&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>&lt;!--id的值自定义，type的值对应着实体类，此处使用了实体类的别名--&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;resultMap</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;UserMap&#34;</span> <span style=color:#a6e22e>type=</span><span style=color:#e6db74>&#34;user&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>&lt;!--将下方两条注释掉是因为字段名与属性名一致，不需要映射--&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>&lt;!--&lt;result column=&#34;id&#34; property=&#34;id&#34;/&gt;
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        &lt;result column=&#34;name&#34; property=&#34;name&#34;/&gt;--&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>&lt;!--column为数据库中的字段，property为实体类中的属性，只需映射不一致的字段即可--&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;result</span> <span style=color:#a6e22e>column=</span><span style=color:#e6db74>&#34;passwd&#34;</span> <span style=color:#a6e22e>property=</span><span style=color:#e6db74>&#34;password&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/resultMap&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>&lt;!--下方标签中resultMap的值与上方resultMap标签中的id的值要一一对应--&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;select</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;getUserList&#34;</span> <span style=color:#a6e22e>resultMap=</span><span style=color:#e6db74>&#34;UserMap&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        select * from user
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/select&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/mapper&gt;</span>
+</span></span></code></pre></div><hr><h3 id=日志>日志<a hidden class=anchor aria-hidden=true href=#日志>#</a></h3><ol><li>日志工厂<ul><li>如果一个数据库操作出现了异常，需要排错，日志是最好的助手</li><li>在核心配置文件的settings标签下设置日志工厂，如下：</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;settings&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>&lt;!--标准日志工厂实现--&gt;</span>  
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;setting</span> <span style=color:#a6e22e>name=</span><span style=color:#e6db74>&#34;logImpl&#34;</span> <span style=color:#a6e22e>value=</span><span style=color:#e6db74>&#34;STDOUT_LOGGING&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>&lt;!--LOG4J--&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;setting</span> <span style=color:#a6e22e>name=</span><span style=color:#e6db74>&#34;logImpl&#34;</span> <span style=color:#a6e22e>value=</span><span style=color:#e6db74>&#34;LOG4J&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/settings&gt;</span>
+</span></span></code></pre></div></li><li><strong>LOG4J</strong><ul><li>在pom.xml中导入依赖</li><li>网上搜索log4j配置文件，复制粘贴到log4j.properties文件中</li><li>在类中导包：<code>import org.apache.log4j.Logger;</code>， 并创建成员属性<code>static Logger logger = Logger.getLogger(类名.class);</code></li><li>使用，示例如下：(会输出括号中的内容)</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span>logger.<span style=color:#a6e22e>info</span>(<span style=color:#e6db74>&#34;info:entry the testLog4j&#34;</span>);
+</span></span><span style=display:flex><span>logger.<span style=color:#a6e22e>debug</span>(<span style=color:#e6db74>&#34;debug:entry the testLog4j&#34;</span>);
+</span></span><span style=display:flex><span>logger.<span style=color:#a6e22e>error</span>(<span style=color:#e6db74>&#34;error:entry the testLog4j&#34;</span>);
+</span></span></code></pre></div></li></ol><hr><h3 id=分页>分页<a hidden class=anchor aria-hidden=true href=#分页>#</a></h3><ul><li>分页是为了减少数据处理量，减轻数据库的压力</li></ul><ol><li><strong>使用limit分页</strong><ul><li>语法：<code>select * from user limit 起始项， 页大小</code>， 例如：<code>select * from user limit 1, 5</code> 表示从第一项开始，这页共显示5项。当只有一个参数时，该参数表示页大小，起始项为0，例如：<code>select * from user limit 5</code> 等同于 <code>select * from user limit 0, 5</code></li><li>实现如下：</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#75715e>// 接口</span>
+</span></span><span style=display:flex><span>List<span style=color:#f92672>&lt;</span>User<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>getUserByLimit</span>(Map<span style=color:#f92672>&lt;</span>String, Integer<span style=color:#f92672>&gt;</span> map);
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#75715e>&lt;!--Mapper.xml--&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;select</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;getUserByLimit&#34;</span> <span style=color:#a6e22e>parameterType=</span><span style=color:#e6db74>&#34;map&#34;</span> <span style=color:#a6e22e>resultMap=</span><span style=color:#e6db74>&#34;UserMap&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>    select * from user limit #{startIndex}, #{pageSize}
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/select&gt;</span>
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Test</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>getUserByLimitTest</span>() {
+</span></span><span style=display:flex><span>    SqlSession sqlSession <span style=color:#f92672>=</span> MybatisUtils.<span style=color:#a6e22e>getSqlSession</span>();
+</span></span><span style=display:flex><span>    UserMapper mapper <span style=color:#f92672>=</span> sqlSession.<span style=color:#a6e22e>getMapper</span>(UserMapper.<span style=color:#a6e22e>class</span>);
+</span></span><span style=display:flex><span>    Map<span style=color:#f92672>&lt;</span>String, Integer<span style=color:#f92672>&gt;</span> map <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> HashMap<span style=color:#f92672>&lt;&gt;</span>();
+</span></span><span style=display:flex><span>    map.<span style=color:#a6e22e>put</span>(<span style=color:#e6db74>&#34;startIndex&#34;</span>, 1);
+</span></span><span style=display:flex><span>    map.<span style=color:#a6e22e>put</span>(<span style=color:#e6db74>&#34;pageSize&#34;</span>, 2);
+</span></span><span style=display:flex><span>    List<span style=color:#f92672>&lt;</span>User<span style=color:#f92672>&gt;</span> userList <span style=color:#f92672>=</span>  mapper.<span style=color:#a6e22e>getUserByLimit</span>(map);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> (User user: userList)
+</span></span><span style=display:flex><span>        System.<span style=color:#a6e22e>out</span>.<span style=color:#a6e22e>println</span>(user);
+</span></span><span style=display:flex><span>    sqlSession.<span style=color:#a6e22e>close</span>();
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div></li><li>RowBounds分页（了解即可）</li><li>PageHelper插件（了解即可）</li></ol><hr><h3 id=注解开发注解只能实现简单功能推荐使用xml>注解开发（注解只能实现简单功能，推荐使用xml）<a hidden class=anchor aria-hidden=true href=#注解开发注解只能实现简单功能推荐使用xml>#</a></h3><ul><li>本质是反射，底层使用动态代理</li></ul><ol><li>在接口上使用注解</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>interface</span> <span style=color:#a6e22e>UserMapper</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Select</span>(<span style=color:#e6db74>&#34;select * from user&#34;</span>)
+</span></span><span style=display:flex><span>    List<span style=color:#f92672>&lt;</span>User<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>getUserList</span>();
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><ol start=2><li>在核心配置文件中绑定接口</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#75715e>&lt;!--绑定接口--&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;mappers&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;mapper</span> <span style=color:#a6e22e>class=</span><span style=color:#e6db74>&#34;com.lu.mapper.UserMapper&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/mappers&gt;</span>
+</span></span></code></pre></div><ol start=3><li>测试，使用方法和xml配置完全相同</li><li>使用注解实现增删改查<ul><li>在工具类MybatisUtils中，返回SqlSession对象时传入参数true会自动提交事务，如下：</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#75715e>// 使用sqlSessionFactory对象获取SqlSession对象</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> SqlSession <span style=color:#a6e22e>getSqlSession</span>() {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> sqlSessionFactory.<span style=color:#a6e22e>openSession</span>(<span style=color:#66d9ef>true</span>);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><ul><li>在接口中方法如果存在多个参数，所有参数前面必须加上 @Param(&ldquo;value&rdquo;) 注解，其中括号中的值与sql语句中传入的值一致，如下方的#{id}中的id必须与@Param(&ldquo;id&rdquo;)中的id名字一样，否则就报错，而int id 中的id则可不一样。</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Select</span>(<span style=color:#e6db74>&#34;select * from user where id = #{id}&#34;</span>)
+</span></span><span style=display:flex><span>User <span style=color:#a6e22e>getUserByID</span>(<span style=color:#a6e22e>@Param</span>(<span style=color:#e6db74>&#34;id&#34;</span>) <span style=color:#66d9ef>int</span> id, <span style=color:#a6e22e>@Param</span>(<span style=color:#e6db74>&#34;name&#34;</span>) String name);
+</span></span></code></pre></div><ul><li>关于@Param()注解：<ul><li>基本类型与String类型要加上</li><li>引用类型不用加</li><li>只有一个参数可以不加，但建议加上</li></ul></li><li>关于 ${} 和 #{}：#{}可以防止sql注入，${}不可以</li><li>增</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Insert</span>(<span style=color:#e6db74>&#34;insert into user values(#{id}, #{name}, #{passwd})&#34;</span>)
+</span></span><span style=display:flex><span><span style=color:#66d9ef>void</span> <span style=color:#a6e22e>addUser</span>(User user);
+</span></span></code></pre></div><ul><li>其余修改，删除操作都有 @Update @Delete 注解，用法一样。</li></ul></li></ol><hr><h3 id=lombok>Lombok<a hidden class=anchor aria-hidden=true href=#lombok>#</a></h3><ol><li>idea下载插件lombok</li><li>在项目中导入lombok的jar包</li><li>在类前或属性前加注解，代替一些getter、setter等方法。
+<code>@Data：无参构造、get、set、tostring、hashcode、equals</code>。其他的注解使用时再查。</li></ol><hr><h3 id=多对一处理>多对一处理<a hidden class=anchor aria-hidden=true href=#多对一处理>#</a></h3><p>任务：查询所有的学生及其对应的老师</p><ul><li>方法一：子查询（嵌套查询）</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;mapper</span> <span style=color:#a6e22e>namespace=</span><span style=color:#e6db74>&#34;com.lu.mapper.StudentMapper&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;select</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;getStudents&#34;</span> <span style=color:#a6e22e>resultMap=</span><span style=color:#e6db74>&#34;studentTeacher&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        select * from student;
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/select&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;resultMap</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;studentTeacher&#34;</span> <span style=color:#a6e22e>type=</span><span style=color:#e6db74>&#34;student&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>&lt;!--id和name字段一致，不需要映射，需要映射的是数据库中的tid与属性teacher
+</span></span></span><span style=display:flex><span><span style=color:#75715e>            映射对象用association    映射集合用collection--&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>&lt;!--javaType表示赋予该属性一个指定类型的值，select的值对应着下方select标签的id，即嵌套查询--&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>&lt;!--此句意思是用column的值在id为getTeacher的select标签中查到一个Teacher的值并赋予属性teacher--&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>&lt;!--javaType和下方resultType的值都可以为teacher，是别名--&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;association</span> <span style=color:#a6e22e>property=</span><span style=color:#e6db74>&#34;teacher&#34;</span> <span style=color:#a6e22e>column=</span><span style=color:#e6db74>&#34;tid&#34;</span> <span style=color:#a6e22e>javaType=</span><span style=color:#e6db74>&#34;Teacher&#34;</span> <span style=color:#a6e22e>select=</span><span style=color:#e6db74>&#34;getTeacher&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/resultMap&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>&lt;!--实现嵌套查询，将查询结果作为teacher属性的值--&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;select</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;getTeacher&#34;</span> <span style=color:#a6e22e>resultType=</span><span style=color:#e6db74>&#34;teacher&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        select * from teacher where id = #{tid};
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/select&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/mapper&gt;</span>
+</span></span></code></pre></div><ul><li>方法二：关联查询（按照结果嵌套查询）<strong>工作中一般使用这种</strong></li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;select</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;getStudents&#34;</span> <span style=color:#a6e22e>resultMap=</span><span style=color:#e6db74>&#34;studentTeacher&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>&lt;!--下方的s, t, sid, sname, tname均为别名，其中sid, sname, tname为查询出的结果--&gt;</span>
+</span></span><span style=display:flex><span>    select s.id sid, s.name sname, t.name tname
+</span></span><span style=display:flex><span>    from student s, teacher t
+</span></span><span style=display:flex><span>    where s.tid = t.id;
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/select&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>&lt;!--下方将查询出的结果映射到student的属性上，注：查询出的结果已保存在别名里了--&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;resultMap</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;studentTeacher&#34;</span> <span style=color:#a6e22e>type=</span><span style=color:#e6db74>&#34;student&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;result</span> <span style=color:#a6e22e>property=</span><span style=color:#e6db74>&#34;id&#34;</span> <span style=color:#a6e22e>column=</span><span style=color:#e6db74>&#34;sid&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;result</span> <span style=color:#a6e22e>property=</span><span style=color:#e6db74>&#34;name&#34;</span> <span style=color:#a6e22e>column=</span><span style=color:#e6db74>&#34;sname&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>&lt;!--这里展开对teacher属性进行映射，将查询到的tname映射到Teacher的name属性上，
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        也可以以同样的方式映射id，javaType仍然是将属性teacher的值指定为Teacher类型--&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;association</span> <span style=color:#a6e22e>property=</span><span style=color:#e6db74>&#34;teacher&#34;</span> <span style=color:#a6e22e>javaType=</span><span style=color:#e6db74>&#34;Teacher&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;result</span> <span style=color:#a6e22e>property=</span><span style=color:#e6db74>&#34;name&#34;</span> <span style=color:#a6e22e>column=</span><span style=color:#e6db74>&#34;tname&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/association&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/resultMap&gt;</span>
+</span></span></code></pre></div><hr><h3 id=一对多处理>一对多处理<a hidden class=anchor aria-hidden=true href=#一对多处理>#</a></h3><p>任务：获取指定老师及其所有学生</p><ul><li>方法一：按结果嵌套查询</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;mapper</span> <span style=color:#a6e22e>namespace=</span><span style=color:#e6db74>&#34;com.lu.mapper.TeacherMapper&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#75715e>&lt;!--按结果嵌套查询--&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;select</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;getTeacher&#34;</span> <span style=color:#a6e22e>resultMap=</span><span style=color:#e6db74>&#34;teacherStudent&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>       select s.id sid, s.name sname, t.id tid, t.name tname
+</span></span><span style=display:flex><span>       from teacher t, student s 
+</span></span><span style=display:flex><span>       where t.id = s.tid and t.id = #{id};
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;/select&gt;</span>
+</span></span><span style=display:flex><span>   
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;resultMap</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;teacherStudent&#34;</span> <span style=color:#a6e22e>type=</span><span style=color:#e6db74>&#34;teacher&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>       <span style=color:#f92672>&lt;result</span> <span style=color:#a6e22e>property=</span><span style=color:#e6db74>&#34;id&#34;</span> <span style=color:#a6e22e>column=</span><span style=color:#e6db74>&#34;tid&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>       <span style=color:#f92672>&lt;result</span> <span style=color:#a6e22e>property=</span><span style=color:#e6db74>&#34;name&#34;</span> <span style=color:#a6e22e>column=</span><span style=color:#e6db74>&#34;tname&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>       <span style=color:#75715e>&lt;!--由于students属性为List类型，故用collection标签--&gt;</span>
+</span></span><span style=display:flex><span>       <span style=color:#75715e>&lt;!--javaType给属性指定类型，下方也可以写上 javaType=&#34;ArrayList&#34; （不写也可以）
+</span></span></span><span style=display:flex><span><span style=color:#75715e>           ofType给集合中的泛型指定类型。相当于指定属性students的类型为ArrayList&lt;Student&gt;--&gt;</span>
+</span></span><span style=display:flex><span>       <span style=color:#f92672>&lt;collection</span> <span style=color:#a6e22e>property=</span><span style=color:#e6db74>&#34;students&#34;</span> <span style=color:#a6e22e>ofType=</span><span style=color:#e6db74>&#34;Student&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>           <span style=color:#f92672>&lt;result</span> <span style=color:#a6e22e>property=</span><span style=color:#e6db74>&#34;id&#34;</span> <span style=color:#a6e22e>column=</span><span style=color:#e6db74>&#34;sid&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>           <span style=color:#f92672>&lt;result</span> <span style=color:#a6e22e>property=</span><span style=color:#e6db74>&#34;name&#34;</span> <span style=color:#a6e22e>column=</span><span style=color:#e6db74>&#34;sname&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>           <span style=color:#f92672>&lt;result</span> <span style=color:#a6e22e>property=</span><span style=color:#e6db74>&#34;tid&#34;</span> <span style=color:#a6e22e>column=</span><span style=color:#e6db74>&#34;tid&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>       <span style=color:#f92672>&lt;/collection&gt;</span>
+</span></span><span style=display:flex><span>   <span style=color:#f92672>&lt;/resultMap&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/mapper&gt;</span>
+</span></span></code></pre></div><ul><li>方法二：子嵌套</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span> <span style=color:#f92672>&lt;mapper</span> <span style=color:#a6e22e>namespace=</span><span style=color:#e6db74>&#34;com.lu.mapper.TeacherMapper&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;select</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;getTeacher&#34;</span> <span style=color:#a6e22e>resultMap=</span><span style=color:#e6db74>&#34;teacherStudent&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        select * from teacher where id = #{id};
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/select&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;resultMap</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;teacherStudent&#34;</span> <span style=color:#a6e22e>type=</span><span style=color:#e6db74>&#34;teacher&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>&lt;!--colum即为传递的值--&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;collection</span> <span style=color:#a6e22e>property=</span><span style=color:#e6db74>&#34;students&#34;</span> <span style=color:#a6e22e>javaType=</span><span style=color:#e6db74>&#34;ArrayList&#34;</span> <span style=color:#a6e22e>ofType=</span><span style=color:#e6db74>&#34;Student&#34;</span> <span style=color:#a6e22e>select=</span><span style=color:#e6db74>&#34;getStudent&#34;</span> <span style=color:#a6e22e>colum=</span><span style=color:#e6db74>&#34;id&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/resultMap&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;select</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;getStudent&#34;</span> <span style=color:#a6e22e>resultType=</span><span style=color:#e6db74>&#34;Student&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>        select * from student where tid = #{id};
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/select&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/mapper&gt;</span>
+</span></span></code></pre></div><hr><h3 id=动态sql>动态SQL<a hidden class=anchor aria-hidden=true href=#动态sql>#</a></h3><ul><li>动态SQL就是根据不同的条件生成不同的SQL语句</li><li><strong>动态SQL就是在拼接SQL语句</strong>，我们只需要保证sql的正确性，按照sql的格式去排列组合就可以了。</li><li>因此使用动态SQL时，先写好正常的sql语句，然后将正常sql语句改写为动态sql语句就可以了。</li><li><strong>if</strong><ul><li>需求：啥也不输入，则查询全部，若输入title或author则按照要求查找</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;select</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;queryBlogIF&#34;</span> <span style=color:#a6e22e>parameterType=</span><span style=color:#e6db74>&#34;map&#34;</span> <span style=color:#a6e22e>resultType=</span><span style=color:#e6db74>&#34;blog&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>    select * from blog
+</span></span><span style=display:flex><span>    <span style=color:#75715e>&lt;!--where标签会根据if条件是否成立，自动保留或删除SQL语句前的and语句
+</span></span></span><span style=display:flex><span><span style=color:#75715e>        若where中没有满足的条件，则会自动删除where标签--&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;where&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>&lt;!-- if标签用来连接条件，test的值为布尔表达式，若为真则里面的sql语句作为where的条件 --&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;if</span> <span style=color:#a6e22e>test=</span><span style=color:#e6db74>&#34;title != null&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>            title = #{title}
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;/if&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;if</span> <span style=color:#a6e22e>test=</span><span style=color:#e6db74>&#34;author != null&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>            and author = #{author}
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;/if&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/where&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/select&gt;</span>
+</span></span></code></pre></div></li><li><strong>choose(when, otherwise)</strong> ，类似于switch语句<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;select</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;queryBlogChoose&#34;</span> <span style=color:#a6e22e>parameterType=</span><span style=color:#e6db74>&#34;map&#34;</span> <span style=color:#a6e22e>resultType=</span><span style=color:#e6db74>&#34;blog&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>    select * from blog
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;where&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>&lt;!--when类似于case， otherwise类似于default--&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;choose&gt;</span>
+</span></span><span style=display:flex><span>            <span style=color:#f92672>&lt;when</span> <span style=color:#a6e22e>test=</span><span style=color:#e6db74>&#34;title != null&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>                title = #{title}
+</span></span><span style=display:flex><span>            <span style=color:#f92672>&lt;/when&gt;</span>
+</span></span><span style=display:flex><span>            <span style=color:#f92672>&lt;when</span> <span style=color:#a6e22e>test=</span><span style=color:#e6db74>&#34;author != null&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>                author = #{author}
+</span></span><span style=display:flex><span>            <span style=color:#f92672>&lt;/when&gt;</span>
+</span></span><span style=display:flex><span>            <span style=color:#f92672>&lt;otherwise&gt;</span>
+</span></span><span style=display:flex><span>                views = #{views}
+</span></span><span style=display:flex><span>            <span style=color:#f92672>&lt;/otherwise&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;/choose&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/where&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/select&gt;</span>
+</span></span></code></pre></div></li><li><strong>trim(where, set)</strong> trim还可以自定义<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;update</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;updateBlog&#34;</span> <span style=color:#a6e22e>parameterType=</span><span style=color:#e6db74>&#34;map&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>    update blog
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;set&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>&lt;!--若第二个条件不成立，则自动删除第一句sql后的逗号--&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;if</span> <span style=color:#a6e22e>test=</span><span style=color:#e6db74>&#34;title != null&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>            title = #{title},
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;/if&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;if</span> <span style=color:#a6e22e>test=</span><span style=color:#e6db74>&#34;author != null&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>            author = #{author}
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;/if&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/set&gt;</span>
+</span></span><span style=display:flex><span>    where id = #{id}
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/update&gt;</span>
+</span></span></code></pre></div></li><li><strong>(sql, include)</strong><ul><li>用sql标签将公共的代码段提取出来，用include引用。公共代码段最好简单，且不包含where标签</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;sql</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;if-title-author&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;if</span> <span style=color:#a6e22e>test=</span><span style=color:#e6db74>&#34;title != null&#34;</span><span style=color:#f92672>&gt;</span>title = #{title}<span style=color:#f92672>&lt;/if&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;if</span> <span style=color:#a6e22e>test=</span><span style=color:#e6db74>&#34;author != null&#34;</span><span style=color:#f92672>&gt;</span>and author = #{author}<span style=color:#f92672>&lt;/if&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/sql&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;select</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;queryBlogIF&#34;</span> <span style=color:#a6e22e>parameterType=</span><span style=color:#e6db74>&#34;map&#34;</span> <span style=color:#a6e22e>resultType=</span><span style=color:#e6db74>&#34;blog&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>    select * from blog
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;where&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;include</span> <span style=color:#a6e22e>refid=</span><span style=color:#e6db74>&#34;if-title-author&#34;</span><span style=color:#f92672>/&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/where&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/select&gt;</span>
+</span></span></code></pre></div></li><li><strong>foreach</strong><ul><li>查询多个元组，如查询id为1、2、3的元组，则将1、2、3放入一个集合中，由下方查询。其中collection=&ldquo;ids"为集合的名称，item=&ldquo;id"表示集合中的每个元素，与sql语句中的id对应。仍然是用于拼接sql语句。</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;select</span> <span style=color:#a6e22e>id=</span><span style=color:#e6db74>&#34;queryBlogForeach&#34;</span> <span style=color:#a6e22e>parameterType=</span><span style=color:#e6db74>&#34;list&#34;</span> <span style=color:#a6e22e>resultType=</span><span style=color:#e6db74>&#34;blog&#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>    select * from blog
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;where&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>&lt;!--若集合中元素为1、2、3时，拼接成的语句为
+</span></span></span><span style=display:flex><span><span style=color:#75715e>            select * from blog where (id = 1 or id = 2 or id = 3)--&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;foreach</span> <span style=color:#a6e22e>collection=</span><span style=color:#e6db74>&#34;ids&#34;</span> <span style=color:#a6e22e>item=</span><span style=color:#e6db74>&#34;id&#34;</span> <span style=color:#a6e22e>open=</span><span style=color:#e6db74>&#34;(&#34;</span> <span style=color:#a6e22e>close=</span><span style=color:#e6db74>&#34;)&#34;</span> <span style=color:#a6e22e>separator=</span><span style=color:#e6db74>&#34; or &#34;</span><span style=color:#f92672>&gt;</span>
+</span></span><span style=display:flex><span>            id = #{id}
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;/foreach&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/where&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/select&gt;</span>
+</span></span></code></pre></div></li></ul><hr><h3 id=缓存为了提高查询效率>缓存（为了提高查询效率）<a hidden class=anchor aria-hidden=true href=#缓存为了提高查询效率>#</a></h3><ul><li>一级缓存<ul><li>mybatis默认开启一级缓存，缓存有效时间为sqlSession的生命周期。</li><li>每次执行增删改操作必定会刷新缓存</li></ul></li><li>二级缓存<br>二级缓存需手动开启，<ol><li>虽然mybatis的cacheEnabled默认为true，但为了增加可读性，需在核心配置文件的settings标签下添加<code>&lt;setting name="cacheEnabled" value="true"/></code>来显示地开启全局缓存。</li><li>在sql映射文件mapper.xml中的mapper标签下添加一个<code>&lt;cache/></code>即可开启，二级缓存有效时间为整个命名空间</li></ol></li><li>工作机制<ul><li>一次会话结束后，一级缓存清除，但一级缓存中的内容会保存在二级缓存中。当开启一个新的会话时，会优先读取二级缓存中的内容。</li></ul></li><li>一个新的会话读取缓存的顺序<ol><li>先查看二级缓存，若有，直接读取</li><li>若二级缓存没有，则查看一级缓存</li><li>若一级缓存也没有，则读取数据库</li></ol></li></ul></div><footer class=post-footer><ul class=post-tags></ul><nav class=paginav><a class=prev href=https://ethereal-lu.github.io/posts/java/springboot%E7%AC%94%E8%AE%B0/><span class=title>« Prev</span><br><span>SpringBoot学习笔记</span>
+</a><a class=next href=https://ethereal-lu.github.io/posts/java/springmvc%E7%AC%94%E8%AE%B0/><span class=title>Next »</span><br><span>SpringMVC学习笔记</span></a></nav></footer></article></main><footer class=footer><span>&copy; 2025 <a href=https://ethereal-lu.github.io/>lu</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
