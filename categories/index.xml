@@ -6,8 +6,15 @@
     <description>Recent content in Categories on lu</description>
     <generator>Hugo -- 0.140.1</generator>
     <language>zh-CN</language>
-    <lastBuildDate>Fri, 04 Nov 2022 21:12:41 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 09 Jan 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://ethereal-lu.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>小碎片知识</title>
+      <link>https://ethereal-lu.github.io/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/</link>
+      <pubDate>Thu, 09 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/</guid>
+      <description></description>
+    </item>
     <item>
       <title>银行</title>
       <link>https://ethereal-lu.github.io/categories/%E9%93%B6%E8%A1%8C/</link>
@@ -111,13 +118,6 @@
       <link>https://ethereal-lu.github.io/categories/redis/</link>
       <pubDate>Mon, 02 May 2022 21:39:41 +0000</pubDate>
       <guid>https://ethereal-lu.github.io/categories/redis/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>小碎片知识</title>
-      <link>https://ethereal-lu.github.io/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/</link>
-      <pubDate>Fri, 08 Apr 2022 23:08:18 +0000</pubDate>
-      <guid>https://ethereal-lu.github.io/categories/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/</guid>
       <description></description>
     </item>
     <item>

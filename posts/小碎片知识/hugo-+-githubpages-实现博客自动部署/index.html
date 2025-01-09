@@ -1,0 +1,493 @@
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Hugo + GithubPages 实现博客自动部署 | lu</title>
+<meta name=keywords content><meta name=description content='1  安装Hugo
+
+下载 Hugo 最新版本并安装
+将 Hugo 安装目录添加到环境变量
+hugo version查看安装情况
+
+2 安装Git
+
+在安装过程中选择下方图片的选项。在 windows 上安装 git 都推荐选择该选项。
+
+
+
+如果已经安装完成，执行git config --global core.autocrlf false
+
+因为Windows和Linux的回车符不一样，在git add时，回车符会进行转换，导致网站发布后文件的一致性检查不通过，从而显示异常。
+3 创建网站
+
+在任意位置通过hugo new site my-site创建名称为my-site的博客根目录
+
+my-site/
+├── archetypes/      <-- 模板
+│   └── default.md
+├── assets/
+├── content/         <-- 存放 笔记.md
+├── data/
+├── i18n/
+├── layouts/
+├── static/
+├── themes/           <-- 主题
+└── hugo.toml         <-- site configuration
+
+
+进入 content 文件夹，创建 post 目录，并把所有笔记拷贝到该目录下。
+
+
+返回博客根目录，执行hugo server，打开终端显示的网址，由于没有主题，此时显示空白页。
+
+
+4 安装主题
+
+在 hugo 官网的 theme 页面选择任意主题，进入该主题的 github 仓库，拉取在仓库到本地，此处以hugo-PaperMod为例：进入博客的 themes 目录，执行 git clone https://github.com/adityatelange/hugo-PaperMod.git
+回到博客根目录，将配置文件hugo.toml格式修改为hugo.yml，内容如下：
+
+baseURL: https://ethereal-lu.github.io/
+languageCode: zh-CN
+title: lu
+theme: hugo-PaperMod
+
+enableRobotsTXT: true
+buildDrafts: false
+buildFuture: false
+buildExpired: false
+
+minify:
+  disableXML: true
+  minifyOutput: true
+
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+
+taxonomies:
+  category: categories
+
+outputs:
+  home:
+    - HTML
+    - RSS
+    - JSON # necessary for search
+
+params:
+  env: production # to enable google analytics, opengraph, twitter-cards and schema.
+  author: lu
+  # author: ["Me", "You"] # multiple authors
+  DateFormat: "2006-01-02" # 修改日期格式时，格式自由，但是日期必须是2006年1月2日
+  defaultTheme: auto # dark, light
+  disableThemeToggle: false
+
+  ShowReadingTime: false
+  ShowShareButtons: false
+  ShowPostNavLinks: true
+  ShowBreadCrumbs: true
+  ShowCodeCopyButtons: true
+  ShowWordCount: true
+  ShowRssButtonInSectionTermList: true
+  UseHugoToc: true
+  disableSpecial1stPost: false
+  disableScrollToTop: false
+  comments: false
+  hidemeta: false
+  hideSummary: false
+  showtoc: true
+  tocopen: false
+
+  # home-info mode
+  homeInfoParams:
+    Title: "Hi there \U0001F44B"
+    Content: Welcome to my blog
+
+  # for search
+  # https://fusejs.io/api/options.html
+  fuseOpts:
+    isCaseSensitive: false
+    shouldSort: true
+    location: 0
+    distance: 1000
+    threshold: 0.4
+    minMatchCharLength: 0
+    limit: 10 # refer: https://www.fusejs.io/api/methods.html#search
+    keys: ["title", "permalink", "summary", "content"]
+
+# 主页菜单
+menu:
+  main:
+    - identifier: categories      # 分类
+      name: categories
+      url: /categories/
+      weight: 10
+    - identifier: search          # 搜索
+      name: search
+      url: /search/
+      weight: 10
+
+进入 content 文件夹，创建 search.md文件，内容如下。此步骤也是为了实现搜索功能。
+
+---
+title: "Search" # in any language you want
+layout: "search" # necessary for search
+
+---
+
+此时在博客根目录执行hugo server，即可正常打开网站。
+
+5 自动化部署
+
+在 github 创建一个存放网站源文件的私有仓库，名称以blog-src为例。
+在 github 点击个人头像，依次点击Settings -> Developer Settings -> Personal access tokens -> Tokens (classic) -> Generate new token -> Generate new token (classic)，在 note 框写入 token 名称，以token为例，并勾选repo 全部和workflow，然后点击Generate token，将生成的 token 值保存下来。
+进入blog-src仓库，依次点击Settings -> Secrets and variables -> Actions -> New repository secret，Name 自定义，以BLOG_SECRET为例，Secret 填写上一步保存好的 token 值，点击Add secret。
+在项目根目录创建.github\workflows\workflows.yaml，文件内容如下：
+
+name: GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # 博客根目录的默认分支，这里是main，有时也是master
+  pull_request:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # windows操作系统也用这个
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: &#39;0.140.1&#39;  # 填写你的hugo版本，可用hugo version查看
+          extended: true           # 如果你使用的不是extended版本的hugo，将true改为false
+
+      - name: Build
+        run: hugo --minify
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.ref == &#39;refs/heads/main&#39; }}  # 注意填写main或者master
+        with:
+          personal_token: ${{ secrets.BLOG_SECRET}} # 如果secret取了其他名称，将BLOG_SECRET替换掉
+          external_repository: Ethereal-lu/Ethereal-lu.github.io # 填写远程仓库，不一定是这个格式，按照自己的情况写 
+          publish_dir: ./public
+          #cname: www.example.com        # 填写你的自定义域名。如果没有用自定义域名，注释掉这行
+
+
+在博客根目录，使用 git 与blog-src仓库建立远程连接，同时执行git submodule add https://github.com/adityatelange/hugo-PaperMod.git themes/hugo-PaperMod将主题作为当前项目的子项目。同时创建.gitignore文件，内容为public 和 .hugo_build.lock。'><meta name=author content="lu"><link rel=canonical href=https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/hugo-+-githubpages-%E5%AE%9E%E7%8E%B0%E5%8D%9A%E5%AE%A2%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2/><link crossorigin=anonymous href=/assets/css/stylesheet.d6fcd20a4fb86efa4dfac8ec95da60244cc8871042183da1ef28e3a762ad79c8.css integrity="sha256-1vzSCk+4bvpN+sjsldpgJEzIhxBCGD2h7yjjp2Ktecg=" rel="preload stylesheet" as=style><link rel=icon href=https://ethereal-lu.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://ethereal-lu.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://ethereal-lu.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://ethereal-lu.github.io/apple-touch-icon.png><link rel=mask-icon href=https://ethereal-lu.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/hugo-+-githubpages-%E5%AE%9E%E7%8E%B0%E5%8D%9A%E5%AE%A2%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51)}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style></noscript><meta property="og:url" content="https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/hugo-+-githubpages-%E5%AE%9E%E7%8E%B0%E5%8D%9A%E5%AE%A2%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2/"><meta property="og:site_name" content="lu"><meta property="og:title" content="Hugo + GithubPages 实现博客自动部署"><meta property="og:description" content='1 安装Hugo 下载 Hugo 最新版本并安装 将 Hugo 安装目录添加到环境变量 hugo version查看安装情况 2 安装Git 在安装过程中选择下方图片的选项。在 windows 上安装 git 都推荐选择该选项。 如果已经安装完成，执行git config --global core.autocrlf false 因为Windows和Linux的回车符不一样，在git add时，回车符会进行转换，导致网站发布后文件的一致性检查不通过，从而显示异常。
+3 创建网站 在任意位置通过hugo new site my-site创建名称为my-site的博客根目录 my-site/ ├── archetypes/ <-- 模板 │ └── default.md ├── assets/ ├── content/ <-- 存放 笔记.md ├── data/ ├── i18n/ ├── layouts/ ├── static/ ├── themes/ <-- 主题 └── hugo.toml <-- site configuration 进入 content 文件夹，创建 post 目录，并把所有笔记拷贝到该目录下。
+返回博客根目录，执行hugo server，打开终端显示的网址，由于没有主题，此时显示空白页。
+4 安装主题 在 hugo 官网的 theme 页面选择任意主题，进入该主题的 github 仓库，拉取在仓库到本地，此处以hugo-PaperMod为例：进入博客的 themes 目录，执行 git clone https://github.com/adityatelange/hugo-PaperMod.git 回到博客根目录，将配置文件hugo.toml格式修改为hugo.yml，内容如下： baseURL: https://ethereal-lu.github.io/ languageCode: zh-CN title: lu theme: hugo-PaperMod enableRobotsTXT: true buildDrafts: false buildFuture: false buildExpired: false minify: disableXML: true minifyOutput: true markup: goldmark: renderer: unsafe: true taxonomies: category: categories outputs: home: - HTML - RSS - JSON # necessary for search params: env: production # to enable google analytics, opengraph, twitter-cards and schema. author: lu # author: ["Me", "You"] # multiple authors DateFormat: "2006-01-02" # 修改日期格式时，格式自由，但是日期必须是2006年1月2日 defaultTheme: auto # dark, light disableThemeToggle: false ShowReadingTime: false ShowShareButtons: false ShowPostNavLinks: true ShowBreadCrumbs: true ShowCodeCopyButtons: true ShowWordCount: true ShowRssButtonInSectionTermList: true UseHugoToc: true disableSpecial1stPost: false disableScrollToTop: false comments: false hidemeta: false hideSummary: false showtoc: true tocopen: false # home-info mode homeInfoParams: Title: "Hi there \U0001F44B" Content: Welcome to my blog # for search # https://fusejs.io/api/options.html fuseOpts: isCaseSensitive: false shouldSort: true location: 0 distance: 1000 threshold: 0.4 minMatchCharLength: 0 limit: 10 # refer: https://www.fusejs.io/api/methods.html#search keys: ["title", "permalink", "summary", "content"] # 主页菜单 menu: main: - identifier: categories # 分类 name: categories url: /categories/ weight: 10 - identifier: search # 搜索 name: search url: /search/ weight: 10 进入 content 文件夹，创建 search.md文件，内容如下。此步骤也是为了实现搜索功能。 --- title: "Search" # in any language you want layout: "search" # necessary for search --- 此时在博客根目录执行hugo server，即可正常打开网站。 5 自动化部署 在 github 创建一个存放网站源文件的私有仓库，名称以blog-src为例。 在 github 点击个人头像，依次点击Settings -> Developer Settings -> Personal access tokens -> Tokens (classic) -> Generate new token -> Generate new token (classic)，在 note 框写入 token 名称，以token为例，并勾选repo 全部和workflow，然后点击Generate token，将生成的 token 值保存下来。 进入blog-src仓库，依次点击Settings -> Secrets and variables -> Actions -> New repository secret，Name 自定义，以BLOG_SECRET为例，Secret 填写上一步保存好的 token 值，点击Add secret。 在项目根目录创建.github\workflows\workflows.yaml，文件内容如下： name: GitHub Pages on: push: branches: - main # 博客根目录的默认分支，这里是main，有时也是master pull_request: jobs: deploy: runs-on: ubuntu-latest # windows操作系统也用这个 steps: - uses: actions/checkout@v4 with: submodules: true fetch-depth: 0 - name: Setup Hugo uses: peaceiris/actions-hugo@v3 with: hugo-version: &#39;0.140.1&#39; # 填写你的hugo版本，可用hugo version查看 extended: true # 如果你使用的不是extended版本的hugo，将true改为false - name: Build run: hugo --minify - name: Deploy uses: peaceiris/actions-gh-pages@v3 if: ${{ github.ref == &#39;refs/heads/main&#39; }} # 注意填写main或者master with: personal_token: ${{ secrets.BLOG_SECRET}} # 如果secret取了其他名称，将BLOG_SECRET替换掉 external_repository: Ethereal-lu/Ethereal-lu.github.io # 填写远程仓库，不一定是这个格式，按照自己的情况写 publish_dir: ./public #cname: www.example.com # 填写你的自定义域名。如果没有用自定义域名，注释掉这行 在博客根目录，使用 git 与blog-src仓库建立远程连接，同时执行git submodule add https://github.com/adityatelange/hugo-PaperMod.git themes/hugo-PaperMod将主题作为当前项目的子项目。同时创建.gitignore文件，内容为public 和 .hugo_build.lock。'><meta property="og:locale" content="zh-CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2025-01-09T00:00:00+00:00"><meta property="article:modified_time" content="2025-01-09T00:00:00+00:00"><meta name=twitter:card content="summary"><meta name=twitter:title content="Hugo + GithubPages 实现博客自动部署"><meta name=twitter:description content='1  安装Hugo
+
+下载 Hugo 最新版本并安装
+将 Hugo 安装目录添加到环境变量
+hugo version查看安装情况
+
+2 安装Git
+
+在安装过程中选择下方图片的选项。在 windows 上安装 git 都推荐选择该选项。
+
+
+
+如果已经安装完成，执行git config --global core.autocrlf false
+
+因为Windows和Linux的回车符不一样，在git add时，回车符会进行转换，导致网站发布后文件的一致性检查不通过，从而显示异常。
+3 创建网站
+
+在任意位置通过hugo new site my-site创建名称为my-site的博客根目录
+
+my-site/
+├── archetypes/      <-- 模板
+│   └── default.md
+├── assets/
+├── content/         <-- 存放 笔记.md
+├── data/
+├── i18n/
+├── layouts/
+├── static/
+├── themes/           <-- 主题
+└── hugo.toml         <-- site configuration
+
+
+进入 content 文件夹，创建 post 目录，并把所有笔记拷贝到该目录下。
+
+
+返回博客根目录，执行hugo server，打开终端显示的网址，由于没有主题，此时显示空白页。
+
+
+4 安装主题
+
+在 hugo 官网的 theme 页面选择任意主题，进入该主题的 github 仓库，拉取在仓库到本地，此处以hugo-PaperMod为例：进入博客的 themes 目录，执行 git clone https://github.com/adityatelange/hugo-PaperMod.git
+回到博客根目录，将配置文件hugo.toml格式修改为hugo.yml，内容如下：
+
+baseURL: https://ethereal-lu.github.io/
+languageCode: zh-CN
+title: lu
+theme: hugo-PaperMod
+
+enableRobotsTXT: true
+buildDrafts: false
+buildFuture: false
+buildExpired: false
+
+minify:
+  disableXML: true
+  minifyOutput: true
+
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+
+taxonomies:
+  category: categories
+
+outputs:
+  home:
+    - HTML
+    - RSS
+    - JSON # necessary for search
+
+params:
+  env: production # to enable google analytics, opengraph, twitter-cards and schema.
+  author: lu
+  # author: ["Me", "You"] # multiple authors
+  DateFormat: "2006-01-02" # 修改日期格式时，格式自由，但是日期必须是2006年1月2日
+  defaultTheme: auto # dark, light
+  disableThemeToggle: false
+
+  ShowReadingTime: false
+  ShowShareButtons: false
+  ShowPostNavLinks: true
+  ShowBreadCrumbs: true
+  ShowCodeCopyButtons: true
+  ShowWordCount: true
+  ShowRssButtonInSectionTermList: true
+  UseHugoToc: true
+  disableSpecial1stPost: false
+  disableScrollToTop: false
+  comments: false
+  hidemeta: false
+  hideSummary: false
+  showtoc: true
+  tocopen: false
+
+  # home-info mode
+  homeInfoParams:
+    Title: "Hi there \U0001F44B"
+    Content: Welcome to my blog
+
+  # for search
+  # https://fusejs.io/api/options.html
+  fuseOpts:
+    isCaseSensitive: false
+    shouldSort: true
+    location: 0
+    distance: 1000
+    threshold: 0.4
+    minMatchCharLength: 0
+    limit: 10 # refer: https://www.fusejs.io/api/methods.html#search
+    keys: ["title", "permalink", "summary", "content"]
+
+# 主页菜单
+menu:
+  main:
+    - identifier: categories      # 分类
+      name: categories
+      url: /categories/
+      weight: 10
+    - identifier: search          # 搜索
+      name: search
+      url: /search/
+      weight: 10
+
+进入 content 文件夹，创建 search.md文件，内容如下。此步骤也是为了实现搜索功能。
+
+---
+title: "Search" # in any language you want
+layout: "search" # necessary for search
+
+---
+
+此时在博客根目录执行hugo server，即可正常打开网站。
+
+5 自动化部署
+
+在 github 创建一个存放网站源文件的私有仓库，名称以blog-src为例。
+在 github 点击个人头像，依次点击Settings -> Developer Settings -> Personal access tokens -> Tokens (classic) -> Generate new token -> Generate new token (classic)，在 note 框写入 token 名称，以token为例，并勾选repo 全部和workflow，然后点击Generate token，将生成的 token 值保存下来。
+进入blog-src仓库，依次点击Settings -> Secrets and variables -> Actions -> New repository secret，Name 自定义，以BLOG_SECRET为例，Secret 填写上一步保存好的 token 值，点击Add secret。
+在项目根目录创建.github\workflows\workflows.yaml，文件内容如下：
+
+name: GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # 博客根目录的默认分支，这里是main，有时也是master
+  pull_request:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # windows操作系统也用这个
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: &#39;0.140.1&#39;  # 填写你的hugo版本，可用hugo version查看
+          extended: true           # 如果你使用的不是extended版本的hugo，将true改为false
+
+      - name: Build
+        run: hugo --minify
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.ref == &#39;refs/heads/main&#39; }}  # 注意填写main或者master
+        with:
+          personal_token: ${{ secrets.BLOG_SECRET}} # 如果secret取了其他名称，将BLOG_SECRET替换掉
+          external_repository: Ethereal-lu/Ethereal-lu.github.io # 填写远程仓库，不一定是这个格式，按照自己的情况写 
+          publish_dir: ./public
+          #cname: www.example.com        # 填写你的自定义域名。如果没有用自定义域名，注释掉这行
+
+
+在博客根目录，使用 git 与blog-src仓库建立远程连接，同时执行git submodule add https://github.com/adityatelange/hugo-PaperMod.git themes/hugo-PaperMod将主题作为当前项目的子项目。同时创建.gitignore文件，内容为public 和 .hugo_build.lock。'><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Posts","item":"https://ethereal-lu.github.io/posts/"},{"@type":"ListItem","position":2,"name":"Hugo + GithubPages 实现博客自动部署","item":"https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/hugo-+-githubpages-%E5%AE%9E%E7%8E%B0%E5%8D%9A%E5%AE%A2%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Hugo + GithubPages 实现博客自动部署","name":"Hugo \u002b GithubPages 实现博客自动部署","description":"1 安装Hugo 下载 Hugo 最新版本并安装 将 Hugo 安装目录添加到环境变量 hugo version查看安装情况 2 安装Git 在安装过程中选择下方图片的选项。在 windows 上安装 git 都推荐选择该选项。 如果已经安装完成，执行git config --global core.autocrlf false 因为Windows和Linux的回车符不一样，在git add时，回车符会进行转换，导致网站发布后文件的一致性检查不通过，从而显示异常。\n3 创建网站 在任意位置通过hugo new site my-site创建名称为my-site的博客根目录 my-site/ ├── archetypes/ \u0026lt;-- 模板 │ └── default.md ├── assets/ ├── content/ \u0026lt;-- 存放 笔记.md ├── data/ ├── i18n/ ├── layouts/ ├── static/ ├── themes/ \u0026lt;-- 主题 └── hugo.toml \u0026lt;-- site configuration 进入 content 文件夹，创建 post 目录，并把所有笔记拷贝到该目录下。\n返回博客根目录，执行hugo server，打开终端显示的网址，由于没有主题，此时显示空白页。\n4 安装主题 在 hugo 官网的 theme 页面选择任意主题，进入该主题的 github 仓库，拉取在仓库到本地，此处以hugo-PaperMod为例：进入博客的 themes 目录，执行 git clone https://github.com/adityatelange/hugo-PaperMod.git 回到博客根目录，将配置文件hugo.toml格式修改为hugo.yml，内容如下： baseURL: https://ethereal-lu.github.io/ languageCode: zh-CN title: lu theme: hugo-PaperMod enableRobotsTXT: true buildDrafts: false buildFuture: false buildExpired: false minify: disableXML: true minifyOutput: true markup: goldmark: renderer: unsafe: true taxonomies: category: categories outputs: home: - HTML - RSS - JSON # necessary for search params: env: production # to enable google analytics, opengraph, twitter-cards and schema. author: lu # author: [\u0026#34;Me\u0026#34;, \u0026#34;You\u0026#34;] # multiple authors DateFormat: \u0026#34;2006-01-02\u0026#34; # 修改日期格式时，格式自由，但是日期必须是2006年1月2日 defaultTheme: auto # dark, light disableThemeToggle: false ShowReadingTime: false ShowShareButtons: false ShowPostNavLinks: true ShowBreadCrumbs: true ShowCodeCopyButtons: true ShowWordCount: true ShowRssButtonInSectionTermList: true UseHugoToc: true disableSpecial1stPost: false disableScrollToTop: false comments: false hidemeta: false hideSummary: false showtoc: true tocopen: false # home-info mode homeInfoParams: Title: \u0026#34;Hi there \\U0001F44B\u0026#34; Content: Welcome to my blog # for search # https://fusejs.io/api/options.html fuseOpts: isCaseSensitive: false shouldSort: true location: 0 distance: 1000 threshold: 0.4 minMatchCharLength: 0 limit: 10 # refer: https://www.fusejs.io/api/methods.html#search keys: [\u0026#34;title\u0026#34;, \u0026#34;permalink\u0026#34;, \u0026#34;summary\u0026#34;, \u0026#34;content\u0026#34;] # 主页菜单 menu: main: - identifier: categories # 分类 name: categories url: /categories/ weight: 10 - identifier: search # 搜索 name: search url: /search/ weight: 10 进入 content 文件夹，创建 search.md文件，内容如下。此步骤也是为了实现搜索功能。 --- title: \u0026#34;Search\u0026#34; # in any language you want layout: \u0026#34;search\u0026#34; # necessary for search --- 此时在博客根目录执行hugo server，即可正常打开网站。 5 自动化部署 在 github 创建一个存放网站源文件的私有仓库，名称以blog-src为例。 在 github 点击个人头像，依次点击Settings -\u0026gt; Developer Settings -\u0026gt; Personal access tokens -\u0026gt; Tokens (classic) -\u0026gt; Generate new token -\u0026gt; Generate new token (classic)，在 note 框写入 token 名称，以token为例，并勾选repo 全部和workflow，然后点击Generate token，将生成的 token 值保存下来。 进入blog-src仓库，依次点击Settings -\u0026gt; Secrets and variables -\u0026gt; Actions -\u0026gt; New repository secret，Name 自定义，以BLOG_SECRET为例，Secret 填写上一步保存好的 token 值，点击Add secret。 在项目根目录创建.github\\workflows\\workflows.yaml，文件内容如下： name: GitHub Pages on: push: branches: - main # 博客根目录的默认分支，这里是main，有时也是master pull_request: jobs: deploy: runs-on: ubuntu-latest # windows操作系统也用这个 steps: - uses: actions/checkout@v4 with: submodules: true fetch-depth: 0 - name: Setup Hugo uses: peaceiris/actions-hugo@v3 with: hugo-version: \u0026#39;0.140.1\u0026#39; # 填写你的hugo版本，可用hugo version查看 extended: true # 如果你使用的不是extended版本的hugo，将true改为false - name: Build run: hugo --minify - name: Deploy uses: peaceiris/actions-gh-pages@v3 if: ${{ github.ref == \u0026#39;refs/heads/main\u0026#39; }} # 注意填写main或者master with: personal_token: ${{ secrets.BLOG_SECRET}} # 如果secret取了其他名称，将BLOG_SECRET替换掉 external_repository: Ethereal-lu/Ethereal-lu.github.io # 填写远程仓库，不一定是这个格式，按照自己的情况写 publish_dir: ./public #cname: www.example.com # 填写你的自定义域名。如果没有用自定义域名，注释掉这行 在博客根目录，使用 git 与blog-src仓库建立远程连接，同时执行git submodule add https://github.com/adityatelange/hugo-PaperMod.git themes/hugo-PaperMod将主题作为当前项目的子项目。同时创建.gitignore文件，内容为public 和 .hugo_build.lock。\n","keywords":[],"articleBody":"1 安装Hugo 下载 Hugo 最新版本并安装 将 Hugo 安装目录添加到环境变量 hugo version查看安装情况 2 安装Git 在安装过程中选择下方图片的选项。在 windows 上安装 git 都推荐选择该选项。 如果已经安装完成，执行git config --global core.autocrlf false 因为Windows和Linux的回车符不一样，在git add时，回车符会进行转换，导致网站发布后文件的一致性检查不通过，从而显示异常。\n3 创建网站 在任意位置通过hugo new site my-site创建名称为my-site的博客根目录 my-site/ ├── archetypes/ \u003c-- 模板 │ └── default.md ├── assets/ ├── content/ \u003c-- 存放 笔记.md ├── data/ ├── i18n/ ├── layouts/ ├── static/ ├── themes/ \u003c-- 主题 └── hugo.toml \u003c-- site configuration 进入 content 文件夹，创建 post 目录，并把所有笔记拷贝到该目录下。\n返回博客根目录，执行hugo server，打开终端显示的网址，由于没有主题，此时显示空白页。\n4 安装主题 在 hugo 官网的 theme 页面选择任意主题，进入该主题的 github 仓库，拉取在仓库到本地，此处以hugo-PaperMod为例：进入博客的 themes 目录，执行 git clone https://github.com/adityatelange/hugo-PaperMod.git 回到博客根目录，将配置文件hugo.toml格式修改为hugo.yml，内容如下： baseURL: https://ethereal-lu.github.io/ languageCode: zh-CN title: lu theme: hugo-PaperMod enableRobotsTXT: true buildDrafts: false buildFuture: false buildExpired: false minify: disableXML: true minifyOutput: true markup: goldmark: renderer: unsafe: true taxonomies: category: categories outputs: home: - HTML - RSS - JSON # necessary for search params: env: production # to enable google analytics, opengraph, twitter-cards and schema. author: lu # author: [\"Me\", \"You\"] # multiple authors DateFormat: \"2006-01-02\" # 修改日期格式时，格式自由，但是日期必须是2006年1月2日 defaultTheme: auto # dark, light disableThemeToggle: false ShowReadingTime: false ShowShareButtons: false ShowPostNavLinks: true ShowBreadCrumbs: true ShowCodeCopyButtons: true ShowWordCount: true ShowRssButtonInSectionTermList: true UseHugoToc: true disableSpecial1stPost: false disableScrollToTop: false comments: false hidemeta: false hideSummary: false showtoc: true tocopen: false # home-info mode homeInfoParams: Title: \"Hi there \\U0001F44B\" Content: Welcome to my blog # for search # https://fusejs.io/api/options.html fuseOpts: isCaseSensitive: false shouldSort: true location: 0 distance: 1000 threshold: 0.4 minMatchCharLength: 0 limit: 10 # refer: https://www.fusejs.io/api/methods.html#search keys: [\"title\", \"permalink\", \"summary\", \"content\"] # 主页菜单 menu: main: - identifier: categories # 分类 name: categories url: /categories/ weight: 10 - identifier: search # 搜索 name: search url: /search/ weight: 10 进入 content 文件夹，创建 search.md文件，内容如下。此步骤也是为了实现搜索功能。 --- title: \"Search\" # in any language you want layout: \"search\" # necessary for search --- 此时在博客根目录执行hugo server，即可正常打开网站。 5 自动化部署 在 github 创建一个存放网站源文件的私有仓库，名称以blog-src为例。 在 github 点击个人头像，依次点击Settings -\u003e Developer Settings -\u003e Personal access tokens -\u003e Tokens (classic) -\u003e Generate new token -\u003e Generate new token (classic)，在 note 框写入 token 名称，以token为例，并勾选repo 全部和workflow，然后点击Generate token，将生成的 token 值保存下来。 进入blog-src仓库，依次点击Settings -\u003e Secrets and variables -\u003e Actions -\u003e New repository secret，Name 自定义，以BLOG_SECRET为例，Secret 填写上一步保存好的 token 值，点击Add secret。 在项目根目录创建.github\\workflows\\workflows.yaml，文件内容如下： name: GitHub Pages on: push: branches: - main # 博客根目录的默认分支，这里是main，有时也是master pull_request: jobs: deploy: runs-on: ubuntu-latest # windows操作系统也用这个 steps: - uses: actions/checkout@v4 with: submodules: true fetch-depth: 0 - name: Setup Hugo uses: peaceiris/actions-hugo@v3 with: hugo-version: '0.140.1' # 填写你的hugo版本，可用hugo version查看 extended: true # 如果你使用的不是extended版本的hugo，将true改为false - name: Build run: hugo --minify - name: Deploy uses: peaceiris/actions-gh-pages@v3 if: ${{ github.ref == 'refs/heads/main' }} # 注意填写main或者master with: personal_token: ${{ secrets.BLOG_SECRET}} # 如果secret取了其他名称，将BLOG_SECRET替换掉 external_repository: Ethereal-lu/Ethereal-lu.github.io # 填写远程仓库，不一定是这个格式，按照自己的情况写 publish_dir: ./public #cname: www.example.com # 填写你的自定义域名。如果没有用自定义域名，注释掉这行 在博客根目录，使用 git 与blog-src仓库建立远程连接，同时执行git submodule add https://github.com/adityatelange/hugo-PaperMod.git themes/hugo-PaperMod将主题作为当前项目的子项目。同时创建.gitignore文件，内容为public 和 .hugo_build.lock。\n在博客根目录将当前项目推送到blog-src仓库，进入blog-src仓库会看到触发了 action，待action完成后，在Ethereal-lu.github.io仓库会新建一个gh-pages分支，然后在Ethereal-lu.github.io仓库依次点击Settings -\u003e Pages，将 Branch 切换为 gh-pages分支。\n重新将本地博客推送到blog-src仓库，会看到blog-src仓库和Ethereal-lu.github.io仓库的 action 依次被触发，打开https://ethereal-lu.github.io/网址，就能看到最终成品。\n以后更新内容时，只需重复步骤 6 即可。\n","wordCount":"427","inLanguage":"en","datePublished":"2025-01-09T00:00:00Z","dateModified":"2025-01-09T00:00:00Z","author":{"@type":"Person","name":"lu"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/hugo-+-githubpages-%E5%AE%9E%E7%8E%B0%E5%8D%9A%E5%AE%A2%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2/"},"publisher":{"@type":"Organization","name":"lu","logo":{"@type":"ImageObject","url":"https://ethereal-lu.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"?document.body.classList.add("dark"):localStorage.getItem("pref-theme")==="light"?document.body.classList.remove("dark"):window.matchMedia("(prefers-color-scheme: dark)").matches&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://ethereal-lu.github.io/ accesskey=h title="lu (Alt + H)">lu</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://ethereal-lu.github.io/categories/ title=categories><span>categories</span></a></li><li><a href=https://ethereal-lu.github.io/search/ title="search (Alt + /)" accesskey=/><span>search</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://ethereal-lu.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://ethereal-lu.github.io/posts/>Posts</a></div><h1 class="post-title entry-hint-parent">Hugo + GithubPages 实现博客自动部署</h1><div class=post-meta><span title='2025-01-09 00:00:00 +0000 UTC'>2025-01-09</span>&nbsp;·&nbsp;427 words&nbsp;·&nbsp;lu</div></header><div class=toc><details><summary accesskey=c title="(Alt + C)"><span class=details>Table of Contents</span></summary><div class=inner><nav id=TableOfContents><ul><li><ul><li><a href=#1--安装hugo>1 安装Hugo</a></li><li><a href=#2-安装git>2 安装Git</a></li><li><a href=#3-创建网站>3 创建网站</a></li><li><a href=#4-安装主题>4 安装主题</a></li><li><a href=#5-自动化部署>5 自动化部署</a></li></ul></li></ul></nav></div></details></div><div class=post-content><h3 id=1--安装hugo>1 安装Hugo<a hidden class=anchor aria-hidden=true href=#1--安装hugo>#</a></h3><ol><li>下载 Hugo 最新版本并安装</li><li>将 Hugo 安装目录添加到环境变量</li><li><code>hugo version</code>查看安装情况</li></ol><h3 id=2-安装git>2 安装Git<a hidden class=anchor aria-hidden=true href=#2-安装git>#</a></h3><ul><li>在安装过程中选择下方图片的选项。在 windows 上安装 git 都推荐选择该选项。</li></ul><p><img alt=git安装指引 loading=lazy src=/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/hugo-+-githubpages-%E5%AE%9E%E7%8E%B0%E5%8D%9A%E5%AE%A2%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2/gitinst.jpg></p><ul><li>如果已经安装完成，执行<code>git config --global core.autocrlf false</code></li></ul><p>因为Windows和Linux的回车符不一样，在<code>git add</code>时，回车符会进行转换，导致网站发布后文件的一致性检查不通过，从而显示异常。</p><h3 id=3-创建网站>3 创建网站<a hidden class=anchor aria-hidden=true href=#3-创建网站>#</a></h3><ol><li>在任意位置通过<code>hugo new site my-site</code>创建名称为<code>my-site</code>的博客根目录</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-markdown data-lang=markdown><span style=display:flex><span>my-site/
+</span></span><span style=display:flex><span>├── archetypes/      &lt;<span style=color:#f92672>--</span> <span style=color:#a6e22e>模板</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>│</span>   <span style=color:#960050;background-color:#1e0010>└──</span> <span style=color:#a6e22e>default</span><span style=color:#960050;background-color:#1e0010>.</span><span style=color:#a6e22e>md</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>├──</span> <span style=color:#a6e22e>assets</span><span style=color:#960050;background-color:#1e0010>/</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>├──</span> <span style=color:#a6e22e>content</span><span style=color:#960050;background-color:#1e0010>/</span>         <span style=color:#960050;background-color:#1e0010>&lt;</span><span style=color:#a6e22e>--</span> <span style=color:#a6e22e>存放</span> <span style=color:#a6e22e>笔记</span><span style=color:#960050;background-color:#1e0010>.</span><span style=color:#a6e22e>md</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>├──</span> <span style=color:#a6e22e>data</span><span style=color:#960050;background-color:#1e0010>/</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>├──</span> <span style=color:#a6e22e>i18n</span><span style=color:#960050;background-color:#1e0010>/</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>├──</span> <span style=color:#a6e22e>layouts</span><span style=color:#960050;background-color:#1e0010>/</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>├──</span> <span style=color:#a6e22e>static</span><span style=color:#960050;background-color:#1e0010>/</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>├──</span> <span style=color:#a6e22e>themes</span><span style=color:#960050;background-color:#1e0010>/</span>           <span style=color:#960050;background-color:#1e0010>&lt;</span><span style=color:#a6e22e>--</span> <span style=color:#a6e22e>主题</span>
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>└──</span> <span style=color:#a6e22e>hugo</span><span style=color:#960050;background-color:#1e0010>.</span><span style=color:#a6e22e>toml</span>         <span style=color:#960050;background-color:#1e0010>&lt;</span><span style=color:#a6e22e>--</span> <span style=color:#a6e22e>site</span> <span style=color:#a6e22e>configuration</span>
+</span></span></code></pre></div><ol start=2><li><p>进入 content 文件夹，创建 post 目录，并把所有笔记拷贝到该目录下。</p></li><li><p>返回博客根目录，执行<code>hugo server</code>，打开终端显示的网址，由于没有主题，此时显示空白页。</p></li></ol><h3 id=4-安装主题>4 安装主题<a hidden class=anchor aria-hidden=true href=#4-安装主题>#</a></h3><ol><li>在 hugo 官网的 theme 页面选择任意主题，进入该主题的 github 仓库，拉取在仓库到本地，此处以<code>hugo-PaperMod</code>为例：进入博客的 themes 目录，执行 <code>git clone https://github.com/adityatelange/hugo-PaperMod.git</code></li><li>回到博客根目录，将配置文件<code>hugo.toml</code>格式修改为<code>hugo.yml</code>，内容如下：</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>baseURL</span>: <span style=color:#ae81ff>https://ethereal-lu.github.io/</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>languageCode</span>: <span style=color:#ae81ff>zh-CN</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>title</span>: <span style=color:#ae81ff>lu</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>theme</span>: <span style=color:#ae81ff>hugo-PaperMod</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>enableRobotsTXT</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>buildDrafts</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>buildFuture</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>buildExpired</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>minify</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>disableXML</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>minifyOutput</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>markup</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>goldmark</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>renderer</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>unsafe</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>taxonomies</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>category</span>: <span style=color:#ae81ff>categories</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>outputs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>home</span>:
+</span></span><span style=display:flex><span>    - <span style=color:#ae81ff>HTML</span>
+</span></span><span style=display:flex><span>    - <span style=color:#ae81ff>RSS</span>
+</span></span><span style=display:flex><span>    - <span style=color:#ae81ff>JSON</span> <span style=color:#75715e># necessary for search</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>params</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>env</span>: <span style=color:#ae81ff>production</span> <span style=color:#75715e># to enable google analytics, opengraph, twitter-cards and schema.</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>author</span>: <span style=color:#ae81ff>lu</span>
+</span></span><span style=display:flex><span>  <span style=color:#75715e># author: [&#34;Me&#34;, &#34;You&#34;] # multiple authors</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>DateFormat</span>: <span style=color:#e6db74>&#34;2006-01-02&#34;</span> <span style=color:#75715e># 修改日期格式时，格式自由，但是日期必须是2006年1月2日</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>defaultTheme</span>: <span style=color:#ae81ff>auto</span> <span style=color:#75715e># dark, light</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>disableThemeToggle</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>ShowReadingTime</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>ShowShareButtons</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>ShowPostNavLinks</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>ShowBreadCrumbs</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>ShowCodeCopyButtons</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>ShowWordCount</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>ShowRssButtonInSectionTermList</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>UseHugoToc</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>disableSpecial1stPost</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>disableScrollToTop</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>comments</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>hidemeta</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>hideSummary</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>showtoc</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>tocopen</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  <span style=color:#75715e># home-info mode</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>homeInfoParams</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>Title</span>: <span style=color:#e6db74>&#34;Hi there \U0001F44B&#34;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>Content</span>: <span style=color:#ae81ff>Welcome to my blog</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  <span style=color:#75715e># for search</span>
+</span></span><span style=display:flex><span>  <span style=color:#75715e># https://fusejs.io/api/options.html</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>fuseOpts</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>isCaseSensitive</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>shouldSort</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>location</span>: <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>distance</span>: <span style=color:#ae81ff>1000</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>threshold</span>: <span style=color:#ae81ff>0.4</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>minMatchCharLength</span>: <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>limit: 10 # refer</span>: <span style=color:#ae81ff>https://www.fusejs.io/api/methods.html#search</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>keys</span>: [<span style=color:#e6db74>&#34;title&#34;</span>, <span style=color:#e6db74>&#34;permalink&#34;</span>, <span style=color:#e6db74>&#34;summary&#34;</span>, <span style=color:#e6db74>&#34;content&#34;</span>]
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 主页菜单</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>menu</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>main</span>:
+</span></span><span style=display:flex><span>    - <span style=color:#f92672>identifier</span>: <span style=color:#ae81ff>categories     </span> <span style=color:#75715e># 分类</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>name</span>: <span style=color:#ae81ff>categories</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>url</span>: <span style=color:#ae81ff>/categories/</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>weight</span>: <span style=color:#ae81ff>10</span>
+</span></span><span style=display:flex><span>    - <span style=color:#f92672>identifier</span>: <span style=color:#ae81ff>search         </span> <span style=color:#75715e># 搜索</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>name</span>: <span style=color:#ae81ff>search</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>url</span>: <span style=color:#ae81ff>/search/</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>weight</span>: <span style=color:#ae81ff>10</span>
+</span></span></code></pre></div><ol start=3><li>进入 content 文件夹，创建 <code>search.md</code>文件，内容如下。此步骤也是为了实现搜索功能。</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-markdown data-lang=markdown><span style=display:flex><span>---
+</span></span><span style=display:flex><span>title: &#34;Search&#34; # in any language you want
+</span></span><span style=display:flex><span>layout: &#34;search&#34; # necessary for search
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>---
+</span></span></code></pre></div><ol start=4><li>此时在博客根目录执行<code>hugo server</code>，即可正常打开网站。</li></ol><h3 id=5-自动化部署>5 自动化部署<a hidden class=anchor aria-hidden=true href=#5-自动化部署>#</a></h3><ol><li>在 github 创建一个存放网站源文件的私有仓库，名称以<code>blog-src</code>为例。</li><li>在 github 点击个人头像，依次点击<code>Settings -> Developer Settings -> Personal access tokens -> Tokens (classic) -> Generate new token -> Generate new token (classic)</code>，在 note 框写入 token 名称，以<code>token</code>为例，并勾选<code>repo</code> 全部和<code>workflow</code>，然后点击<code>Generate token</code>，将生成的 token 值保存下来。</li><li>进入<code>blog-src</code>仓库，依次点击<code>Settings -> Secrets and variables -> Actions -> New repository secret</code>，Name 自定义，以<code>BLOG_SECRET</code>为例，Secret 填写上一步保存好的 token 值，点击<code>Add secret</code>。</li><li>在项目根目录创建<code>.github\workflows\workflows.yaml</code>，文件内容如下：</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>name</span>: <span style=color:#ae81ff>GitHub Pages</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>on</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>push</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>branches</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>main </span> <span style=color:#75715e># 博客根目录的默认分支，这里是main，有时也是master</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>pull_request</span>:
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>deploy</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>runs-on</span>: <span style=color:#ae81ff>ubuntu-latest </span> <span style=color:#75715e># windows操作系统也用这个</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>steps</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/checkout@v4</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>with</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>submodules</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>fetch-depth</span>: <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Setup Hugo</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>peaceiris/actions-hugo@v3</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>with</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>hugo-version</span>: <span style=color:#e6db74>&#39;0.140.1&#39;</span>  <span style=color:#75715e># 填写你的hugo版本，可用hugo version查看</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>extended</span>: <span style=color:#66d9ef>true</span>           <span style=color:#75715e># 如果你使用的不是extended版本的hugo，将true改为false</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Build</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>run</span>: <span style=color:#ae81ff>hugo --minify</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Deploy</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>peaceiris/actions-gh-pages@v3</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>if</span>: <span style=color:#ae81ff>${{ github.ref == &#39;refs/heads/main&#39; }} </span> <span style=color:#75715e># 注意填写main或者master</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>with</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>personal_token</span>: <span style=color:#ae81ff>${{ secrets.BLOG_SECRET}}</span> <span style=color:#75715e># 如果secret取了其他名称，将BLOG_SECRET替换掉</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>external_repository</span>: <span style=color:#ae81ff>Ethereal-lu/Ethereal-lu.github.io</span> <span style=color:#75715e># 填写远程仓库，不一定是这个格式，按照自己的情况写 </span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>publish_dir</span>: <span style=color:#ae81ff>./public</span>
+</span></span><span style=display:flex><span>          <span style=color:#75715e>#cname: www.example.com        # 填写你的自定义域名。如果没有用自定义域名，注释掉这行</span>
+</span></span></code></pre></div><ol start=5><li><p>在博客根目录，使用 git 与<code>blog-src</code>仓库建立远程连接，同时执行<code>git submodule add https://github.com/adityatelange/hugo-PaperMod.git themes/hugo-PaperMod</code>将主题作为当前项目的子项目。同时创建<code>.gitignore</code>文件，内容为<code>public 和 .hugo_build.lock</code>。</p></li><li><p>在博客根目录将当前项目推送到<code>blog-src</code>仓库，进入<code>blog-src</code>仓库会看到触发了 action，待action完成后，在<code>Ethereal-lu.github.io</code>仓库会新建一个<code>gh-pages</code>分支，然后在<code>Ethereal-lu.github.io</code>仓库依次点击<code>Settings -> Pages</code>，将 Branch 切换为 <code>gh-pages</code>分支。</p></li><li><p>重新将本地博客推送到<code>blog-src</code>仓库，会看到<code>blog-src</code>仓库和<code>Ethereal-lu.github.io</code>仓库的 action 依次被触发，打开<code>https://ethereal-lu.github.io/</code>网址，就能看到最终成品。</p></li><li><p>以后更新内容时，只需重复步骤 6 即可。</p></li></ol></div><footer class=post-footer><ul class=post-tags></ul><nav class=paginav><a class=next href=https://ethereal-lu.github.io/posts/%E9%93%B6%E8%A1%8C/%E9%9D%A2%E8%AF%95/%E5%B8%B8%E8%A7%81%E9%9D%A2%E8%AF%95%E9%97%AE%E9%A2%98/><span class=title>Next »</span><br><span>常见面试问题</span></a></nav></footer></article></main><footer class=footer><span>&copy; 2025 <a href=https://ethereal-lu.github.io/>lu</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
