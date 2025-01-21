@@ -1,67 +1,6 @@
 <!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Posts | lu</title>
 <meta name=keywords content><meta name=description content="Posts - lu"><meta name=author content="lu"><link rel=canonical href=https://ethereal-lu.github.io/posts/><link crossorigin=anonymous href=/assets/css/stylesheet.d6fcd20a4fb86efa4dfac8ec95da60244cc8871042183da1ef28e3a762ad79c8.css integrity="sha256-1vzSCk+4bvpN+sjsldpgJEzIhxBCGD2h7yjjp2Ktecg=" rel="preload stylesheet" as=style><link rel=icon href=https://ethereal-lu.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://ethereal-lu.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://ethereal-lu.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://ethereal-lu.github.io/apple-touch-icon.png><link rel=mask-icon href=https://ethereal-lu.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate type=application/rss+xml href=https://ethereal-lu.github.io/posts/index.xml><link rel=alternate hreflang=en href=https://ethereal-lu.github.io/posts/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51)}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style></noscript><meta property="og:url" content="https://ethereal-lu.github.io/posts/"><meta property="og:site_name" content="lu"><meta property="og:title" content="Posts"><meta property="og:locale" content="zh-CN"><meta property="og:type" content="website"><meta name=twitter:card content="summary"><meta name=twitter:title content="Posts"><meta name=twitter:description content><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Posts","item":"https://ethereal-lu.github.io/posts/"}]}</script></head><body class=list id=top><script>localStorage.getItem("pref-theme")==="dark"?document.body.classList.add("dark"):localStorage.getItem("pref-theme")==="light"?document.body.classList.remove("dark"):window.matchMedia("(prefers-color-scheme: dark)").matches&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://ethereal-lu.github.io/ accesskey=h title="lu (Alt + H)">lu</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://ethereal-lu.github.io/categories/ title=categories><span>categories</span></a></li><li><a href=https://ethereal-lu.github.io/search/ title="search (Alt + /)" accesskey=/><span>search</span></a></li></ul></nav></header><main class=main><header class=page-header><div class=breadcrumbs><a href=https://ethereal-lu.github.io/>Home</a></div><h1>Posts
-<a href=/posts/index.xml title=RSS aria-label=RSS><svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" height="23"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg></a></h1></header><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>MySQL索引</h2></header><div class=entry-content><p>索引对于InnoDB（对索引支持行级锁）非常重要，因为它可以让查询锁更少的元组。
-1、索引类型 普通索引：最基本的索引，可以在任意一列或多列的组合上加普通索引。允许存在重复值以及空值。 唯一索引：与普通索引不同的是，索引列的值必须唯一，但允许有空值。如果是组合索引，则列值的组合必须唯一。 主键索引：与唯一索引不同的是，不允许有空值。 组合索引：组合索引与单列索引相对应，只包含一个字段的索引叫做单列索引，包含两个或以上字段的索引叫做复合索引（或组合索引）。上述三种索引既可以是单列索引也可以是组合索引。 2、聚集索引 聚簇索引的叶子节点就是数据节点，而非聚簇索引的叶子节点仍然是索引节点，只不过有指向对应数据块的指针。
-怎么理解呢？
-聚簇索引的顺序，就是数据在硬盘上的物理顺序。一般情况下主键就是默认的聚簇索引。
-一张表只允许存在一个聚簇索引，因为真实数据的物理顺序只能有一种。如果一张表上还没有聚簇索引，为它新创建聚簇索引时，就需要对已有数据重新进行排序，所以对表进行修改速度较慢是聚簇索引的缺点，对于经常更新的列不宜建立聚簇索引。
-聚簇索引性能最好，因为一旦具有第一个索引值的记录被找到，具有连续索引值的记录也一定物理地紧跟其后。一张表只能有一个聚簇索引，所以非常珍贵，必须慎重设置，一般要根据这个表最常用的SQL查询方式选择某个（或多个）字段作为聚簇索引（或复合聚簇索引）。
-InnoDB对主键建立聚簇索引。 如果你不指定主键，InnoDB会用一个具有唯一且非空值的索引来代替。 如果不存在这样的索引，InnoDB会定义一个隐藏的主键，然后对其建立聚簇索引。 3、索引的最左匹配 最左前缀匹配原则，非常重要的原则，建立一个索引，对于索引中的字段，mysql会一直向右匹配直到遇到范围查询(>、&lt;、between、like)就停止匹配，比如a = 1 and b = 2 and c > 3 and d = 4 如果建立(a,b,c,d)顺序的索引，d是用不到索引的，如果建立(a,b,d,c)的索引则都可以用到，a,b,d的顺序可以任意调整。 =和in可以乱序，比如a = 1 and b = 2 and c = 3 建立(a,b,c)索引可以任意顺序，mysql的查询优化器会帮你优化成索引可以识别的形式。
-mysql创建复合索引的规则是首先会对复合索引的最左边的，也就是第一个name字段的数据进行排序，在第一个字段的排序基础上，然后再对后面第二个的cid字段进行排序。其实就相当于实现了类似 order by name cid这样一种排序规则。 所以：第一个name字段是绝对有序的，而第二字段就是无序的了。所以通常情况下，直接使用第二个cid字段进行条件判断是用不到索引的。
-在第一个值等值匹配的前提下，第二个值是有序的，因此mysql索引规则中要求复合索引要想使用第二个索引，必须先使用第一个索引的原因。（而且第一个索引必须是等值匹配）。
-order by也会用到索引，但前提是 where子句必须用到索引；如果 where子句的字段没有索引，即使order by的字段有索引也不会用到。where和order by使用的索引可以是同一个组合索引，同样符合最左匹配原则，比如 select * from tb_user where name = "lu" and age &lt; 21 order by score，如果有 (name, age, score) 的组合索引，由于 age 使用了范围搜索，score 索引就会失效。
-...</p></div><footer class=entry-footer><span title='2022-03-27 17:39:41 +0000 UTC'>2022-03-27</span>&nbsp;·&nbsp;371 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to MySQL索引" href=https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/mysql%E7%B4%A2%E5%BC%95/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>事务实现原理</h2></header><div class=entry-content><p>MySQL 默认开启事务自动提交模式，即除非显式的开启事务（BEGIN 或 START TRANSACTION），否则每条 SOL 语句都会被当做一个单独的事务自动执行。
-在 MySQL 中，可以使用 SET autocommit 语句设置事务的自动提交模式，语法格式如下：
-SET autocommit = 0|1|ON|OFF; 对取值的说明：
-值为 0 和值为 OFF：关闭事务自动提交。如果关闭自动提交，用户将会一直处于某个事务中，只有提交或回滚后才会结束当前事务，重新开始一个新事务。 值为 1 和值为 ON：开启事务自动提交。如果开启自动提交，则每执行一条 SQL 语句，事务都会提交一次。 事务想要做到可靠性以及并发处理。
-1、redo log 与 undo log 1.1、redo log mysql 为了提升性能不会把每次的修改都实时同步到磁盘，而是会先存到Boffer Pool(缓冲池)里头，把这个当作缓存来用。然后使用后台线程去做缓冲池和磁盘之间的同步。
-那么问题来了，如果还没来的同步的时候宕机或断电了怎么办？还没来得及执行上面图中红色的操作。这样会导致丢部分已提交事务的修改信息！
-所以引入了redo log来记录已成功提交事务的修改信息，并且会把redo log持久化到磁盘，系统重启之后在读取redo log恢复最新数据。
-redo log在事务提交时就写入磁盘，不会等待后台程序执行。
-总结： redo log是用来恢复数据的 用于保障，已提交事务的持久化特性。
-既然redo log也需要存储，也涉及磁盘IO为啥还用它？
-（1）redo log 的存储是顺序存储，而缓存同步是随机操作。
-（2）缓存同步是以数据页为单位的，每次传输的数据大小大于redo log。
-1.2、undo log undo log 叫做回滚日志，用于记录数据被修改前的信息。会记录执行的操作以及修改前的信息，这样根据操作记录做相反的操作即可恢复到事务执行前的状态。
-undo log 记录事务修改之前版本的数据信息，因此假如由于系统错误或者rollback操作而回滚的话可以根据undo log的信息来进行回滚到没被修改前的状态。
-总结： undo log是用来回滚数据的用于保障 未提交事务的原子性
-2、事务的实现 事务的原子性是通过 undo log 来实现的 事务的持久性性是通过 redo log 来实现的 事务的隔离性是通过 (读写锁+MVCC)来实现的 一致性是通过原子性，持久性，隔离性来实现的！！ 2.1、原子性的实现 一个事务必须被视为不可分割的最小工作单位，一个事务中的所有操作要么全部成功提交，要么全部失败回滚，对于一个事务来说不可能只执行其中的部分操作，这就是事务的原子性。
-...</p></div><footer class=entry-footer><span title='2022-03-27 17:39:41 +0000 UTC'>2022-03-27</span>&nbsp;·&nbsp;188 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to 事务实现原理" href=https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>ConcurrentHashMap</h2></header><div class=entry-content><p>1、ConcurrentHashMap 如何保证线程安全 ConcurrentHashMap 是由 Node 数组构成，这里先将 Node 数组的每个下标对应的空间称为一个桶，以方便叙述。ConcurrentHashMap 的 get 操作不需要加锁，只有 put 和 remove 需要加锁。当执行 put\remove 操作时，会先定位到桶，然后将桶中的链表头节点或树的根节点锁住，因为必须要获取到链表头节点或树的根节点才能对整个链表或树操作，所以可以保证线程安全。
-当 put 操作发现桶中没有数据时，会通过 cas 操作赋值，而不是上锁。
-2、ConcurrentHashMap 扩容 ConcurrentHashMap 中有一个 sizeCtl 变量，它类似于 HashMap 中的 threshold ，通过比较元素数量与 sizeCtl 的大小判断是否需要扩容。扩容时，先创建一个2倍大小的新数组并初始化一个forwardNode实例fwd，然后遍历每一个桶，若桶中元素为 null 时，直接将其赋值为fwd，否则将桶中的元素转移到新数组，再将其赋值为fwd。在扩容的过程中若进来其他的读线程，若读线程发现桶中的元素是 fwd，就会帮助进行转移，否则进行正常的读操作。若进来写线程，若写线程发现桶中的元素是 fwd，就会帮助进行转移，否则阻塞，直到扩容完成。</p></div><footer class=entry-footer><span title='2022-03-26 11:12:41 +0000 UTC'>2022-03-26</span>&nbsp;·&nbsp;38 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to ConcurrentHashMap" href=https://ethereal-lu.github.io/posts/java/java-%E8%BF%9B%E9%98%B6/concurrenthashmap/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>基础数据结构</h2></header><div class=entry-content><p>1、总体注意事项 1.1、输入方式 两种输入方式，对于绝大多数时候，均选择Scanner作为输入。
-import java.util.Scanner; Scanner sc = new Scanner(System.in); 当输入数据很大时，选择 BufferedReader，但其只能以行作为单位读取，需要分割为字符串数组，再解析为其他类型。
-import java.io.BufferedReader; import java.io.InputStreamReader; BufferedReader br = new BufferedReader(new InputStreamReader(System.in)); 1.2、读取 有些题目会有共包含 T 组案例，每组案例内 *** 操作，这种只需按 T 建循环即可。但有些题目没有指明共有 T 组案例，却在案例中包含了多组案例，此使必须在所有代码的外面包裹一层 while (sc.hasNext()) {...}，否则会出现虽然自测通过，但提交时却通过 0 组。
-1.3、审题 当感觉找到一个比题目复杂度要求还低的方法时，一定要慎重考虑，这个方法真的对吗，能否覆盖所有情况，尽早换思路。 遇到与数字相关的题目，先看能不能找规律或化简，将题目转化为简单的模型再做。 与数字相关的题目，一定看是否为越界，注意用 long 和 double。 2、链表 2.1、链表反转 可以使用的方法有 栈、三指针法、头插法
-使用头插法，因为对于一个区间的反转或者 k 个一组反转，使用头插法非常方便。
-public ListNode reverseKGroup (ListNode head, int k) { ListNode pre = new ListNode(-1); pre.next = head; ListNode ret = pre, p = head; tag: while (p != null) { // 如果最后不够 k 个，则不反转 for (int i = 0; i &lt; k; i++) { if (p == null) break tag; p = p.next; } p = pre.next; // 使用头插法，注意：循环 k - 1 次。 for (int i = 0; i &lt; k - 1; i++) { ListNode temp = p.next; p.next = temp.next; temp.next = pre.next; pre.next = temp; } pre = p; p = p.next; } return ret.next; } 2.2、LRU缓存 方法一：LinkedHashMap。
-...</p></div><footer class=entry-footer><span title='2022-03-26 11:12:41 +0000 UTC'>2022-03-26</span>&nbsp;·&nbsp;991 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to 基础数据结构" href=https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>面经-美团</h2></header><div class=entry-content><p>实习一面：75min 4.21 1、自我介绍
-2、项目中用户权限控制的数据表设计问题
-3、如果有 100 个元素，且之后不会增加，存储在 hashmap 中，初始容量应该设置为多少？
-答：64？ 100？ 128？ 瞎蒙
-正确：为了不触发扩容操作，初始值应该设置为 129 到 256 的任意一个值；因为在 hashmap 的构造函数中，会将输入的初始容量转换为第一个大于等于它的 2 的幂次值并赋值给 threshold ，而在 put 操作中，会将该 threshold 赋值给 capacity ，并根据 capacity * loadfactory得到新 threshold 。因此，如果初始值设置为小于等于 128，则经过 put 操作后，threshold 会变为 96，小于 100，如此一定会触发扩容操作。故为了不触发扩容需保证初始容量为 256。
-4、如果有 41 个 int 数字，另外再给一个数字，如何判断这个数字在不在之前的 41 中？（后续准备八股文才反应过来，应该是40亿吧）
-答：hashset 或 布隆过滤器，瞎蒙。布隆过滤器存在误差。
-应该使用位图。由于 2^32 大约42亿多，故可以申请 2^32 个 bit，每个数对应一个bit，若有值该bit位为1，否则为0；如若 1 在，则第一个 bit 位置为 1，若17在，则第17个 bit 位置为 1。这样判断一个值在不在时只需判断该 bit 位是否为 1 即可。40 亿个 32 位int 大约 16GB，而使用位图算法，大约只需 500MB，可以在内存中判断。
-...</p></div><footer class=entry-footer><span title='2022-03-26 11:12:41 +0000 UTC'>2022-03-26</span>&nbsp;·&nbsp;255 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to 面经-美团" href=https://ethereal-lu.github.io/posts/%E9%9D%A2%E7%BB%8F/%E9%9D%A2%E7%BB%8F-%E7%BE%8E%E5%9B%A2/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Docker基础</h2></header><div class=entry-content><p>1、概述 Docker 基于 Go 语言实现。一次镜像，处处运行。
-Go文件编译后是平台级别的机器码，因此Docker 不需要 Go 环境支撑。由于 Docker 容器模型是基于 linux 内核的，因此 Docker 必须安装在 linux 环境上。
-Docker for Windows 中负责运行环境配置的工具是 Docker Machine。它会在 Windows 上创建一个 Linux 虚拟机，用于运行 Docker 引擎。
-Docker 相关的本地资源都存放在/var/lib/docker/目录下
-docker 的配置文件路劲：/etc/default/docker
-1.1、LCX Linux Container容器是一种内核虚拟化技术，可以提供轻量级的虚拟化，以便隔离进程和资源。
-LXC与docker的关系
-Docker并不是LXC的替代品，Docker的底层就是使用了LXC来实现的。LXC将Linux进程沙盒化，使得进程之间相互隔离，并且能够控制各进程的资源分配。 在LXC的基础之上，Docker提供了一系列更强的功能。 移植性：通过抽象容器配置，容器可以实现一个平台移植到另一个平台； 镜像系统：基于 AUFS 的镜像系统为容器的分发带来了很多的便利，同时共同的 镜像层只需要存储一份，实现高效率的存储； 版本管理：类似于 GIT 的版本管理理念，用户可以更方面的创建、管理镜像文件； 仓库系统：仓库系统大大降低了镜像的分发和管理的成本； 1.2、docker 启动为什么比虚拟机快 1.Docker有着比虚拟机更少的抽象层，由于Docker不需要Hypervisor实现硬件资源虚拟化，运行在Docker容器上的程序直接使用的都是实际物理机的硬件资源，因此在Cpu、内存利用率上Docker将会在效率上有明显优势。
-2.Docker利用的是宿主机的内核，而不需要Guest OS，因此，当新建一个容器时，Docker不需要和虚拟机一样重新加载一个操作系统，避免了引导、加载操作系统内核这个比较费时费资源的过程，当新建一个虚拟机时，虚拟机软件需要加载Guest OS，这个新建过程是分钟级别的，而Docker由于直接利用宿主机的操作系统则省略了这个过程，因此新建一个Docker容器只需要几秒钟。
-Docker容器 虚拟机（VM） 操作系统 与宿主机共享OS 宿主机OS上运行宿主机OS 存储大小 镜像小，便于存储与传输 镜像庞大（vmdk等） 运行性能 几乎无额外性能损失 操作系统额外的cpu、内存消耗 移植性 轻便、灵活、适用于Linux 笨重、与虚拟化技术耦合度高 硬件亲和性 面向软件开发者 面向硬件运维者 2、基本组成 docker 的三要素是：镜像、容器、仓库。
-...</p></div><footer class=entry-footer><span title='2022-03-17 17:12:41 +0000 UTC'>2022-03-17</span>&nbsp;·&nbsp;631 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to Docker基础" href=https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%AE%B9%E5%99%A8/docker/docker%E7%AC%94%E8%AE%B0/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>C# 学习笔记</h2></header><div class=entry-content><p>1、基础概念 1.1、.Net 概念 通常所说的 .Net 包括 .Net 平台和 .Net FrameWork 框架。它们两者的关系即 jvm 和 jre 的关系。
-.Net FrameWork 框架由两部分组成，分别是 .Net 类库和 CLR（公共语言运行时）。
-1.2、C# 语言 C# 是一种编程语言，可以开发基于 .Net 平台 的应用。
-1.3、.Net 作用 Winform 开发桌面应用程序 ASP.NET 开发 web 网站 Unity3D 开发游戏和虚拟现实 1.4、.Net 两种交互模式 C/S：客户机（Client）/服务器模式。客户端需要安装专用的客户端软件，如 微信。 B/S：浏览器（Browser）/服务器模式。客户端只需要安装浏览器即可。 2、语法规则 C# 的基础语法规则几乎与 java 一样。
-2.1、基本类型 与 java 一样，包括 byte、short、int、long、float、double、bool等，u开头表示无符号。
-如果一个小数是浮点类型，则其后需加个 f ，否则默认为 double 型。
-2.2、字符串 类名为 string ，小写。它的使用和 java 几乎一样，注意方法名为大写开头。
-字符串格式化：string str = $"{name}的年龄为{age}"，其中name和age为之前声明的变量。
-2.3、函数 C# 的函数名要大写开头。
-...</p></div><footer class=entry-footer><span title='2021-12-01 21:39:41 +0000 UTC'>2021-12-01</span>&nbsp;·&nbsp;349 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to C# 学习笔记" href=https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/c%23-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>VMware + Ubuntu18.04设置静态 IP</h2></header><div class=entry-content><p>进入VMware 的虚拟网络编辑器；
+<a href=/posts/index.xml title=RSS aria-label=RSS><svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" height="23"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg></a></h1></header><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>VMware + Ubuntu18.04设置静态 IP</h2></header><div class=entry-content><p>进入VMware 的虚拟网络编辑器；
 选择 VMnet8，点击 DHCP 设置，记住子网 IP，子网掩码和起始终止 IP，关闭。
 点击右下方的更改设置，取消勾选 DHCP 分配 IP。再输入刚才记住的子网 IP 和子网掩码。
 点击 NET 设置，记住网关并点击左下方的 DNS 设置，取消勾选自动检测并设置首选DNS为 8.8.8.8，备用为 114.114.114.114。确定、确定、应用。
@@ -85,7 +24,79 @@ Restful 通信风格
 2.2、Eureka 入门案例 1、创建一个 SpringBoot 项目并引入web、test和下方两个依赖 。
 &lt;dependency> &lt;groupId>org.springframework.cloud&lt;/groupId> &lt;artifactId>spring-cloud-dependencies&lt;/artifactId> &lt;version>2020.0.4&lt;/version> &lt;type>pom&lt;/type> &lt;scope>runtime&lt;/scope> &lt;/dependency> &lt;dependency> &lt;groupId>org.springframework.cloud&lt;/groupId> &lt;artifactId>spring-cloud-starter-netflix-eureka-server&lt;/artifactId> &lt;version>3.0.4&lt;/version> &lt;/dependency> 2、application.yaml 如下
 server: port: 8761 # 官方文档使用的端口 spring: application: name: eureka-server # 应用名称 # 配置 eureka-server 注册中心 eureka: instance: hostname: localhost # 主机名，默认根据操作系统的主机名获取 client: # 下方值为 false 的两项，只有当自身为单节点的注册中心时才需要设置为 false 。 # 单节点指的是只有一个注册中心，不是只有一个微服务。 # 当自身是微服务或者是集群中的注册中心之一时无需设置，使用默认 true。 register-with-eureka: false # 是否将自己注册到注册中心，默认为 true fetch-registry: false # 是否从注册中心获取服务注册信息，默认 true service-url: # 注册中心对外暴露的注册地址 defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/ 3、启动类前添加 @EnableEurekaServer 注解
-...</p></div><footer class=entry-footer><span title='2021-10-25 17:42:15 +0000 UTC'>2021-10-25</span>&nbsp;·&nbsp;2155 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to 微服务学习笔记" href=https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E7%AC%94%E8%AE%B0/></a></article><footer class=page-footer><nav class=pagination><a class=prev href=https://ethereal-lu.github.io/posts/page/5/>«&nbsp;Prev&nbsp;
+...</p></div><footer class=entry-footer><span title='2021-10-25 17:42:15 +0000 UTC'>2021-10-25</span>&nbsp;·&nbsp;2155 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to 微服务学习笔记" href=https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E7%AC%94%E8%AE%B0/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>设计模式</h2></header><div class=entry-content><p>1、设计模式分类 创建型模式
+用于描述“怎样创建对象”，它的主要特点是“将对象的创建与使用分离”。GoF（四人组）书中提供了单例、原型、工厂方法、抽象工厂、建造者等 5 种创建型模式。
+结构型模式
+用于描述如何将类或对象按某种布局组成更大的结构，GoF（四人组）书中提供了代理、适配器、桥接、装饰、外观、享元、组合等 7 种结构型模式。
+行为型模式
+用于描述类或对象之间怎样相互协作共同完成单个对象无法单独完成的任务，以及怎样分配职责。GoF（四人组）书中提供了模板方法、策略、命令、职责链、状态、观察者、中介者、迭代器、访问者、备忘录、解释器等 11 种行为型模式。
+2、UML图 统一建模语言（Unified Modeling Language，UML）是用来设计软件的可视化建模语言。
+2.1、类的表示方式 在UML类图中，类使用包含类名、属性(field) 和方法(method) 且带有分割线的矩形来表示，比如下图表示一个Employee类，它包含name,age和address这3个属性，以及work()方法。
+属性/方法名称前加的加号和减号表示了这个属性/方法的可见性，UML类图中表示可见性的符号有三种：
++：表示public
+-：表示private
+#：表示protected
+属性的完整表示方式是： 可见性 名称 ：类型 [ = 缺省值]
+方法的完整表示方式是： 可见性 名称(参数列表) [ ： 返回类型]
+2.2、类与类之间关系的表示方式 感觉没必要记，用到时再查吧。
+3、软件设计原则 在软件开发中，为了提高软件系统的可维护性和可复用性，增加软件的可扩展性和灵活性，程序员要尽量根据6条原则来开发程序，从而提高软件开发效率、节约软件开发成本和维护成本。
+3.1 开闭原则 对扩展开放，对修改关闭。即使用接口和抽象类，扩展时实现新的派生类而不修改子类。增加新功能时添加新的代码，而不要修改原有代码。
+3.2 里氏代换原则 里氏代换原则：任何基类可以出现的地方，子类一定可以出现。通俗理解：子类可以扩展父类的功能，但不能改变父类原有的功能。换句话说，子类继承父类时，除添加新的方法完成新增功能外，尽量不要重写父类的方法。
+3.3 依赖倒转原则 高层模块不应该依赖低层模块，两者都应该依赖其抽象；抽象不应该依赖细节，细节应该依赖抽象。
+简单说就是尽量让接口作为成员变量，而不要让实现类作为成员变量。
+3.4 接口隔离原则 客户端不应该被迫依赖于它不使用的方法；一个类对另一个类的依赖应该建立在最小的接口上。
+被迫依赖：类 B 为了定义一个已经在类 A 中定义了的方法而去继承类 A，此时类 B 被迫依赖于类 A 中其他它并不需要的方法。
+应该将该方法单独抽象为接口，若所有实现类的方法体都一样，可以用 default 修饰并实现。
+继承接口时也一样，不要使类被迫依赖于接口中其他不适用的方法。应该将接口拆分为多个接口。
+...</p></div><footer class=entry-footer><span title='2021-09-25 17:12:41 +0000 UTC'>2021-09-25</span>&nbsp;·&nbsp;6688 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to 设计模式" href=https://ethereal-lu.github.io/posts/java/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E7%AC%94%E8%AE%B0/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>指令重排与内存屏障</h2></header><div class=entry-content><p>指令重排 有两种发生指令重排的情况：一个是编译的时候，由编译原理的知识知道，编译器会对代码进行优化，这一步就涉及到指令重排，当然，编译完成之后的目标代码中指令的顺序就是确定的，不同线程执行该代码的顺序是一样的；另一个就是CPU在执行具体的指令的时候，也会因为计算机当前的状态（比如寄存器的占用情况、ALU的使用情况，cup缓存层的存在等原因）的不同导致指令最终的执行顺序发生变化(实际上，cpu本身并不会对指令进行重排，它本身是按照编译后的顺序来执行指令的，只是由于执行不同的指令需要的时间长短不同，以及缓存层的存在，再加上CPU执行指令的流水线并不是串行化等因素，那么就有可能出现排在靠前位置的指令还没执行完，而排在靠后的指令已经执行完了的情况，这一情况就是所谓的CPU执行指令的乱序）
+编译器指令重排 如果两条有依赖关系 (像 a++; b=f(a); ) 的指令挨得很近，后一条指令必定会因为等待前一条执行的结果，而在流水线中阻塞很久(这个“很久”是对计算机而言哈)。而编译器的乱序，作为编译优化的一种手段，则试图通过指令重排，在这两条指令之间插入其他指令，将这两条指令拉开一定的距离，以保证后一条指令执行的时候前一条指令结果已经得到了，那么也就不需要阻塞等待了。所以相比于CPU的乱序，编译器的乱序才是真正对指令顺序做了调整，但是编译器所进行的调整也必须保证上下文的依赖逻辑，即存在依赖关系的指令顺序不能调整。
+CPU 指令重排 现在的CPU一般采用流水线来执行指令。一个指令的执行被分成：取址，译码，访存，执行，写回等若干个阶段。流水线中的多个指令是可以同时处于同一个阶段的，只要CPU内部相应的处理部件未被占满。这样一来，乱序就可能产生了。比如一条加法指令出现在一条除法指令的后面，但由于除法的执行时间很长，在它执行完之前，加法可能就先执行完了。再比如两条访存指令，可能由于第二条指令中了cache(或其它原因)而导致它先于第一条指令完成。指令流水线除了在资源不足的情况下会卡住之外(如一个加法器应付两条加法指令)，指令之间存在的相互依赖才是导致流水线阻塞的主要原因。当然，CPU的乱序执行并不是任意地乱序，而必须保证上下文依赖逻辑的正确性。
+内存屏障 不存在依赖关系的内存操作会被按随机顺序有效得到执行，但这在CPU与CPU(多核)交互时或CPU与IO设备交互(一般IO比较耗时)时，这可能成为问题。我们需要一些手段来干预编译器和CPU对指令顺序的影响，而内存屏障就是这样的干预手段。它们能保证处于屏障两边的内存操作满足部分有序(“部分有序”的意思是，内存屏障之前的操作必须都先于屏障之后的操作，但是如果几个操作出现在屏障的一边，则不保证它们有序)。这样的强制措施是非常重要的，因为系统中的CPU和其它设备可以使用各种各样的策略来提高性能，包括对内存操作的乱序、延迟和合并执行、预取、投机性的分支预测和各种缓存……内存屏障就是用于禁用或者抑制这些策略，使代码能够清楚地控制多个CPU和/或设备的交互。操心系统中存在各式各样的内存屏障，不同的内存屏障涉及到了各种复杂的实现，这里不过多地讲了，但关于内存屏障还要记住的一点就是：在内存屏障之前出现的内存访问不保证在内存屏障指令完成之前完成，内存屏障相当于在该CPU的访问队列中画了一条线，使得相关访存类型的请求不能相互跨越(用于实现内存屏障的指令，其本身并不作为参考对象，其两边的访存操作才被当作参考对象，所以屏障指令执行完成并不表示出现在屏障之前的所有访存操作都已经完成，但如果屏障之后的某一个访存操作已经完成，则屏障指令之前的所有访存操作必定都已经完成了)。
+要想并发程序正确地执行，必须要保证程序的原子性、可见性以及有序性。只要有一个没有被保证，就可能会导致程序运行不正确。</p></div><footer class=entry-footer><span title='2021-08-26 23:08:18 +0000 UTC'>2021-08-26</span>&nbsp;·&nbsp;15 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to 指令重排与内存屏障" href=https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%8C%87%E4%BB%A4%E9%87%8D%E6%8E%92%E4%B8%8E%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>lambda 表达式中使用的变量为什么必须是 final</h2></header><div class=entry-content><p>Java 规范中规定：Lambda 表达式中要用到的，但又未在 Lambda 表达式中声明的变量，必须声明为 final 或者是 effectively final，否则就会出现编译错误。
+有效 final 即不用显示声明为 final，由 JVM 添加 final。
+个人理解 由于 lambda 表达式相当于生成一个对象，存储在堆中（生命周期长），而方法的局部变量存储在栈中（生命周期短）。如果 lambda 表达式在使用了外部方法中的局部变量后，该局部变量又发生变化，且方法执行完毕内存被释放，此 lambda 表达式生成的对象可能依然存活（未被GC回收），但是却无法得知局部变量改变后的值，造成数据一致性破坏。
+// 报错 public class Test { public void func() { int a = 5; Runnable runnable = () -> { a++; }; } } 上方在方法中报错而下方在类中不报错，因此推断与栈和堆的生存周期有关系。
+// 不报错 public class Test { private int a = 3; Runnable runnable = () -> { a++; }; } **存在问题：**作为方法中的内部类，既然方法被释放后，该类绝不可能再被使用，矛盾！
+其他理解 lambda是对接口中的方法的一种简写方式，当方法想要使用外部的变量的时候，需要把值给传过去，但是方法中无论怎么改变量的值，都不会改变这个变量在外部的值（值传递和引用传递的区别），所以加上final就是为了方便开发者，以免误以为可以更改这个变量的值。final的目的就是告诉开发人员不能改变外面的变量值。
+**存在问题：**外部变量什么时候传递给 lambda 的。难道隐式的传了？
+悬而未决，先睡觉
+...</p></div><footer class=entry-footer><span title='2021-08-18 23:08:18 +0000 UTC'>2021-08-18</span>&nbsp;·&nbsp;76 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to lambda 表达式中使用的变量为什么必须是 final" href=https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/lambda/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>文件的 MD5 值</h2></header><div class=entry-content><p>是什么 文件的 MD5 值不是文件的属性也不是文件存储的内容，而是由分析程序根据文件的信息分析得到的一串独一无二的字符值。当两个文件的 MD5 值相同时说明这两个文件的内容完全一样。任何数据计算得到的 MD5 值长度都相等。
+作用 由于同一个分析程序对于内容一样的文件分析得到的 MD5 值始终是一样的，因此可以通过对传输前后的文件进行 MD5 值的对比来检验传输途中文件是否被他人篡改。
+MD5 值何时改变 1、不同的分析程序对同一份文件分析得到的 MD5 值可能不同。
+2、对文件的内容进行增删改后，文件的 MD5 值会发生改变。
+3、修改文件的名称和后缀都不会改变文件的 MD5 值。
+查看文件 MD5 值的方法 1、Windows
+certutil -hashfile 文件路径 md5 # 示例 certutil -hashfile E:\资料\作业资料\abc.py md5 2、Linux
+md5sum 文件路径</p></div><footer class=entry-footer><span title='2021-08-18 23:08:18 +0000 UTC'>2021-08-18</span>&nbsp;·&nbsp;42 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to 文件的 MD5 值" href=https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%96%87%E4%BB%B6md5/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>JUC 并发编程</h2></header><div class=entry-content><p>线程基础知识 概述 每个线程拥有一个自己独立的栈，但是共享进程的堆空间。
+Thread 中的 run 方法是一个回调函数，与普通函数没什么区别，所以以如下方式调用run时，就是一个普通的方法执行。而 start 方法会在本地创建一个线程，然后在本地代码中通过 jvm 回调 run 方法来执行任务。
+Thread thread = new Thread(() -> {...}); thread.run(); 线程实现方法 Thread类是描述线程的类，要实现多线程，必须继承Thread类
+方法一、创建Thread类的子类 1、创建Thread类的子类，并重写run方法，其中设置线程的任务
+2、创建子类对象，并执行start方法
+​ （执行start方法会创建一个新的栈空间，并在该栈空间中执行run方法。每执行一次步骤2，就开启一个新的线程）
+方法二、实现Runnable接口 推荐使用这种 —> 使用该方法时，Thread 类是咱们自定义类的静态代理类
+1、创建一个Runnable接口的实现类，并重写run方法，其中设置线程的任务
+2、创建对象，并将其作为参数传递给Thread类的构造方法，再调用start方法。
+​ new Thread(new MyRunnable()).start(); ​ 匿名内部类实现： new Thread(new Runnable(){重写run方法}).start();
+方法三、实现Callable接口 Callable接口类似于Runnable，但Runnable不会返回结果，也不会抛出检查异常，Callable可以，Runnable 效率比 Callable 低。
+1、创建一个Callable接口的实现类，并重写call方法，其中设置线程的任务 2、在使用的地方创建该类对象 obj 。 3、ExecutorService executorService = Executors.newFixedThreadPool(5); // 创建执行服务 4、Future future = executorService.submit(obj); // 提交执行 5、V result = future.get(); // 获取结果 6、executorService.shutdownNow(); // 关闭服务
+...</p></div><footer class=entry-footer><span title='2021-08-16 17:12:41 +0000 UTC'>2021-08-16</span>&nbsp;·&nbsp;2357 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to JUC 并发编程" href=https://ethereal-lu.github.io/posts/java/juc%E7%AC%94%E8%AE%B0/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Enum 向注解赋值问题</h2></header><div class=entry-content><p>问题 Enum 如下
+@Getter @AllArgsConstructor(access = AccessLevel.PRIVATE) public enum RoleEnum { ADMIN (0, "admin"), ANALYST (1, "analyst"); private final Integer intValue; private final String strValue; } 将该 enum 对象的属性赋值给注解时报错：
+@RequiresRoles(RoleEnum.ADMIN.getStrValue()) // error: "attribute value must be constant" 报错显示注解所需值必须是常量
+这是因为 ADMIN 作为 RoleEnum 的对象，只有当 RoleEnum 被类加载器所加载之后才会生成，而在编译期 strValue 属性还是变量，所以会报错。
+解决 在 enum 中添加内部类存储常量
+@Getter @AllArgsConstructor(access = AccessLevel.PRIVATE) public enum RoleEnum { ADMIN (0, Names.ADMIN), ANALYST (1, Names.ANALYST); public static class Names { public static final String ADMIN = "admin"; public static final String ANALYST = "analyst"; } private final Integer intValue; private final String strValue; } 向注解中赋值时使用内部类的常量
+...</p></div><footer class=entry-footer><span title='2021-08-11 16:39:41 +0000 UTC'>2021-08-11</span>&nbsp;·&nbsp;97 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to Enum 向注解赋值问题" href=https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/enum%E8%B5%8B%E5%80%BC/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Shrio学习笔记</h2></header><div class=entry-content><p>作者 小陈
+微信 chenxu521600
+B站 编程不良人 | 百知教育
+资料 http://www.baizhiedu.xin
+1.权限的管理 1.1 什么是权限管理 基本上涉及到用户参与的系统都要进行权限管理，权限管理属于系统安全的范畴，权限管理实现对用户访问系统的控制，按照安全规则或者安全策略控制用户可以访问而且只能访问自己被授权的资源。
+权限管理包括用户身份认证和授权两部分，简称认证授权。对于需要访问控制的资源用户首先经过身份认证，认证通过后用户具有该资源的访问权限方可访问。
+1.2 什么是身份认证 身份认证，就是判断一个用户是否为合法用户的处理过程。最常用的简单身份认证方式是系统通过核对用户输入的用户名和口令，看其是否与系统中存储的该用户的用户名和口令一致，来判断用户身份是否正确。对于采用指纹等系统，则出示指纹；对于硬件Key等刷卡系统，则需要刷卡。
+1.3 什么是授权 授权，即访问控制，控制谁能访问哪些资源。主体进行身份认证后需要分配权限方可访问系统的资源，对于某些资源没有权限是无法访问的
+2.什么是shiro Apache Shiro™ is a powerful and easy-to-use Java security framework that performs authentication, authorization, cryptography, and session management. With Shiro’s easy-to-understand API, you can quickly and easily secure any application – from the smallest mobile applications to the largest web and enterprise applications.
+Shiro 是一个功能强大且易于使用的Java安全框架，它执行身份验证、授权、加密和会话管理。使用Shiro易于理解的API，您可以快速轻松地保护任何应用程序—从最小的移动应用程序到最大的web和企业应用程序。
+Shiro是apache旗下一个开源框架，它将软件系统的安全认证相关的功能抽取出来，实现用户身份认证，权限授权、加密、会话管理等功能，组成了一个通用的安全认证框架。
+3.shiro的核心架构 ...</p></div><footer class=entry-footer><span title='2021-07-27 18:48:13 +0000 UTC'>2021-07-27</span>&nbsp;·&nbsp;2810 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to Shrio学习笔记" href=https://ethereal-lu.github.io/posts/java/shiro%E7%AC%94%E8%AE%B0/></a></article><footer class=page-footer><nav class=pagination><a class=prev href=https://ethereal-lu.github.io/posts/page/5/>«&nbsp;Prev&nbsp;
 </a><a class=next href=https://ethereal-lu.github.io/posts/page/7/>Next&nbsp;&nbsp;»</a></nav></footer></main><footer class=footer><span>&copy; 2025 <a href=https://ethereal-lu.github.io/>lu</a></span> ·
 <span>Powered by
 <a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &

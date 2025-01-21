@@ -1,69 +1,6 @@
 <!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Posts | lu</title>
 <meta name=keywords content><meta name=description content="Posts - lu"><meta name=author content="lu"><link rel=canonical href=https://ethereal-lu.github.io/posts/><link crossorigin=anonymous href=/assets/css/stylesheet.d6fcd20a4fb86efa4dfac8ec95da60244cc8871042183da1ef28e3a762ad79c8.css integrity="sha256-1vzSCk+4bvpN+sjsldpgJEzIhxBCGD2h7yjjp2Ktecg=" rel="preload stylesheet" as=style><link rel=icon href=https://ethereal-lu.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://ethereal-lu.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://ethereal-lu.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://ethereal-lu.github.io/apple-touch-icon.png><link rel=mask-icon href=https://ethereal-lu.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate type=application/rss+xml href=https://ethereal-lu.github.io/posts/index.xml><link rel=alternate hreflang=en href=https://ethereal-lu.github.io/posts/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51)}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style></noscript><meta property="og:url" content="https://ethereal-lu.github.io/posts/"><meta property="og:site_name" content="lu"><meta property="og:title" content="Posts"><meta property="og:locale" content="zh-CN"><meta property="og:type" content="website"><meta name=twitter:card content="summary"><meta name=twitter:title content="Posts"><meta name=twitter:description content><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Posts","item":"https://ethereal-lu.github.io/posts/"}]}</script></head><body class=list id=top><script>localStorage.getItem("pref-theme")==="dark"?document.body.classList.add("dark"):localStorage.getItem("pref-theme")==="light"?document.body.classList.remove("dark"):window.matchMedia("(prefers-color-scheme: dark)").matches&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://ethereal-lu.github.io/ accesskey=h title="lu (Alt + H)">lu</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://ethereal-lu.github.io/categories/ title=categories><span>categories</span></a></li><li><a href=https://ethereal-lu.github.io/search/ title="search (Alt + /)" accesskey=/><span>search</span></a></li></ul></nav></header><main class=main><header class=page-header><div class=breadcrumbs><a href=https://ethereal-lu.github.io/>Home</a></div><h1>Posts
-<a href=/posts/index.xml title=RSS aria-label=RSS><svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" height="23"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg></a></h1></header><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Redis哨兵机制</h2></header><div class=entry-content><p>由于主从模式是读写分离的，如果主节点故障，那么将没有主节点来执行写操作，也没有主节点给从节点进行数据同步了。若是每次主节点故障都需要人工切换主从节点太繁琐，于是哨兵机制出现了。哨兵的核心功能是主节点的自动故障转移。
-1、哨兵集群的组建 哨兵实例之间可以相互发现，要归功于 Redis 提供的发布 / 订阅机制。
-首先主节点的信息配置在哨兵(Sentinel)的配置文件中 哨兵节点会和配置的主节点建立起连接 哨兵每10秒会向主节点发送info命令，主节点会返回自己的run_id和自己的从节点信息。 哨兵会对这些从节点也建立连接。之后每10秒会向主节点和从节点都发送info命令以获取最新的拓扑结构。 每个哨兵都订阅主节点的_sentinel:hello频道，且每2秒向该频道发布自己的信息，各哨兵由此与其他哨兵建立连接。 每隔1秒每个哨兵会向主节点、从节点、其他哨兵发送ping命令，做心跳检测。 上述 6 点中，加粗部分为每个哨兵的三个定时任务。
-2、主库下线的判定 主观下线：哨兵节点每隔1秒向各节点发送PING命令，如果在规定时间内没有收到有效响应，哨兵就会将该节点标记为主观下线。 客观下线：当某个哨兵判断主库主观下线后，就会给其他哨兵发起询问，其他哨兵会根据自己和主库的连接情况，做出赞成或反对的响应。如果赞成票数大于等于哨兵配置文件中的配置项 quorum 的值, 则判定主库客观下线。quorum 的值一般为哨兵个数 / 2 + 1。 3、新主库选取 根据以下规则选取新主库：
-过滤掉网络状态不好的：redis 有一个参数用于表示主从节点的通信超时时间，如果从节点的超时次数超过10次，说明这个从节点的网络状况不好，不适合作为新主节点。 选择从节点优先级最高的（redis.conf 中有一个配置项salve-priority表示从节点优先级） 优先级相同时选择复制偏移量最大的 若优先级和偏移量都相同，则选择 id 号小的 4、选举Leader哨兵 新主库选取选举之后需要进行故障转移，但是哨兵节点有多个，需要选举一个 leader 哨兵来负责进行主从切换。
-选举算法Raft选举算法：哪个哨兵节点判断主节点为「客观下线」，这个哨兵节点就是候选者。候选者会向其他哨兵发送命令，表明希望成为 Leader 来执行主从切换，并让所有其他哨兵对它进行投票。每个哨兵只有一次投票机会，如果用完后就不能参与投票了，可以投给自己或投给别人，但是只有候选者才能把票投给自己。若只有一个候选者，则其他哨兵会将票投给它，若有多个候选者，即多个哨兵同时判断主节点为「客观下线」，此时其他非候选者哨兵会对它收到的第一个拉票候选者投票，对后续收到的其他拉票请求给予拒绝。
-一个候选者若能成为 Leader ，那它获得的赞成票必须既大于哨兵节点的一半又大于quorum的值。如果所有候选者都不满足，则发起下一轮选举。
-若有超过一半的哨兵宕机，则无法完成Leader哨兵的选举。
-5、故障转移 通过 slave of no one 命令将 4 中选举的从节点变为主节点。 通过replicaof命令将其他从节点和旧的主节点都成为新主节点的从节点。</p></div><footer class=entry-footer><span title='2022-05-02 15:39:41 +0000 UTC'>2022-05-02</span>&nbsp;·&nbsp;58 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to Redis哨兵机制" href=https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%93%A8%E5%85%B5%E6%9C%BA%E5%88%B6/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Redis底层数据结构</h2></header><div class=entry-content><p>1、压缩列表 - ZipList Redis是基于内存的nosql，有些场景下为了节省内存redis会用“时间”换“空间”。ziplist就是很典型的例子。
-1.1、整体布局 ziplist是为了节省内存空间而设计的由一系列特殊编码的连续内存块组成的顺序存储结构，类似于数组，ziplist在内存中是连续存储的，但是不同于数组，为了节省内存 ziplist的每个元素所占的内存大小可以不同（数组中叫元素，ziplist叫节点entry），每个节点可以用来存储一个整数或者一个字符串。存储整数时是采用整数的二进制而不是字符串形式存储。
-zlbytes: ziplist的长度（单位: 字节)，是一个32位无符号整数 zltail: ziplist最后一个节点的偏移量，反向遍历ziplist或者pop尾部节点的时候有用。 zllen: ziplist的节点（entry）个数 entry: 节点 zlend: 值为0xFF，用于标记ziplist的结尾 1.2、节点的布局(entry) 每个节点由三部分组成：prevlength、encoding、data
-prevlengh: 记录上一个节点的长度，为了方便反向遍历ziplist encoding: 当前节点的编码规则 data: 当前节点的值，可以是数字或字符串 为了节省内存，根据上一个节点的长度prevlength 可以将ziplist节点分为两类：
-entry的前8位小于254，则这8位就表示上一个节点的长度 entry的前8位等于254，则意味着上一个节点的长度无法用8位表示，后面32位才是真实的prevlength。用254 不用255(11111111)作为分界是因为255是zlend的值，它用于判断ziplist是否到达尾部。 根据当前节点存储的数据类型及长度，可以将ziplist节点分为9类：
-当 encoding 的高两位为 11 时表明是整数节点，否则表明是字符串节点。其中整数节点共有 6 中类型（int16、int32、int64等），字符串节点共有3中类型（3种类型的字符串长度不同）。
-1.3、复杂度 新建 ZipList：O(1) 查找：O(n) 插入：O(n) 删除：O(n) 1.4、总结 ziplist是为节省内存空间而生的。让每个元素按照实际的内容大小存储，不浪费空间。 ziplist是一个为Redis专门提供的底层数据结构之一，本身可以有序也可以无序。当作为list和hash的底层实现时，节点之间没有顺序；当作为zset的底层实现时，节点之间会按照大小顺序排列。 2、快表 - QuickList 在Redis的早期版本中，存储list列表结构时，如果元素少则使用压缩列表ziplist，否则使用双向链表linkedlist。
-但是考虑到链表的每个节点都要有两个指针，prev 和 next 指针要占去 16 个字节 (64bit 系统的指针是 8 个字节)。因此Redis3.2版本开始使用 quicklist 代替了 ziplist 和 linkedlist。
-quicklist 实际上是 zipList 和 linkedList 的混合体，它将 linkedList 中的多个节点并为一个 quicklistNode，使用 zipList 来紧凑存储，多个 zipList 之间使用双向指针串接起来。
-...</p></div><footer class=entry-footer><span title='2022-05-01 17:39:41 +0000 UTC'>2022-05-01</span>&nbsp;·&nbsp;427 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to Redis底层数据结构" href=https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Linux基础</h2></header><div class=entry-content><p>1、#!/bin/bash shell 脚本第一行的 #!/bin/bash 用于指定执行该文件的解释器路径，不写默认是 /bin/bash；也可以执行时手动指定解释器路径，如：/usr/bin/python3 test_py，手动指定优先级高于文件内第一行指定的优先级。
-2、 /bin；/sbin；/usr/sbin；/usr/bin /bin 存放系统的一些指令。如：ls、chmod、rm、cp、mkdir、su等等 **/sbin **存放超级用户指令。如：shutdown、halt、init、ifconfig、fdisk等等 /usr/bin 存放用户后期安装的一些软件的运行脚本。如：awk、man、python3、c++、less等等 /usr/sbin 存放一些用户安装的系统命令：如：httpd、netconfig、swap等等。 3、软硬链接 硬链接是指针，所有的硬链接都是指向同一个磁盘块。 删除一个指针不会真正删除文件，只有把所有的指针都删除才会真正删除文件。 软链接是另外一种类型的文件，保存的是它指向文件的全路径，访问时会替换成绝对路径。 4、查看 cpu、mem 信息 查看 cpu 信息： cat /proc/cpuinfo
-查看内存信息：cat /proc/meminfo；free
-此外：top命令动态显示进程信息，其中也包含 cpu 和 mem 的使用情况。</p></div><footer class=entry-footer><span title='2022-04-28 14:42:15 +0000 UTC'>2022-04-28</span>&nbsp;·&nbsp;36 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to Linux基础" href=https://ethereal-lu.github.io/posts/linux/linux%E5%9F%BA%E7%A1%80/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>其他面经</h2></header><div class=entry-content><p>字节 一面 http1.1 与 http 2.0 区别？
-tcp 三次握手
-状态码 500 503
-进程、线程、协程
-进程通信
-信号
-kill -9 -15
-bio、nio、aio
-多路复用
-两个栈？
-utf-8 varchar int bigint
-b树 b+树
-聚集索引
-主键索引
-手写 SQL？ join
-编程：三数之和？
-二面 unicode 和 ascii
-死锁及避免
-栈和堆
-json
-RPC
-子网掩码
-syn洪范攻击
-dns劫持、避免
-http 状态码
-断点续传
-手写sql update table set name=“zhangsan” where id > 3
-泛型
-容器类
-treeMap
-斐波那契dp？
-链表题
-三 虚拟内存
-死锁、避免
-linux 基础命令介绍
-状态码介绍。细问，全记。
-cooike sesson
-docker 细问
-...</p></div><footer class=entry-footer><span title='2022-04-26 11:12:41 +0000 UTC'>2022-04-26</span>&nbsp;·&nbsp;72 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to 其他面经" href=https://ethereal-lu.github.io/posts/%E9%9D%A2%E7%BB%8F/%E5%85%B6%E4%BB%96%E9%9D%A2%E7%BB%8F/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Redis缓存一致性</h2></header><div class=entry-content><p>1、先更新缓存再更新DB 缓存更新后 DB 更新失败回滚，此时缓存与 DB 数据不一致。因此不推荐
-2、先删除缓存再更新DB 删除缓存后立即来一条线程查询，此时 DB 可能还未更新完成，读取到了旧值，这相当于白删了，做了无用功。不推荐。
-因此最好先操作 DB 再操作缓存
-3、先更新DB再更新缓存 更新操作远多于查询操作时，对于缓存的更新完全是没必要的，浪费。 并发修改问题：若线程A、B同时修改数据，A先修改DB，释放锁后B再修改；但是有可能 B 先于 A 修改缓存（STW），此时 A 覆盖了缓存中 B 的修改，导致不一致问题。 因此最好删除缓存而不是更新缓存
-4、先更新DB再删除缓存 延迟双删：更新期间读取的是旧值；第一次删除后，读取线程可能因操作缓慢将读到旧值写回缓存中，为了避免缓存中一直是旧值，需要在一定时间后再次删除缓存，保证之后的读取线程写回缓存的值为更新后的值。这段时间应该大于线程读数据 + 写缓存的时间。
-public void putValue(key, value){ putToDB(key, value); deleteFromRedis(key); // 5秒之后再次进行删除 deleteFromRedisDelay(key, 5second); } 5、其他策略 如果对于一致性要求不高，可以将缓存中数据的过期时间设置的短一些（如 5 秒），这样每过 5 秒，缓存就会从 DB 中取一次最新值。</p></div><footer class=entry-footer><span title='2022-04-25 22:39:41 +0000 UTC'>2022-04-25</span>&nbsp;·&nbsp;49 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to Redis缓存一致性" href=https://ethereal-lu.github.io/posts/%E6%95%B0%E6%8D%AE%E5%BA%93/redis/redis%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>缓存穿透、击穿、雪崩</h2></header><div class=entry-content><p>1、缓存穿透 1.1、问题描述 如果在请求数据时，在缓存层和数据库层都没有命中，这种情况就叫作缓存穿透。
+<a href=/posts/index.xml title=RSS aria-label=RSS><svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" height="23"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg></a></h1></header><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>缓存穿透、击穿、雪崩</h2></header><div class=entry-content><p>1、缓存穿透 1.1、问题描述 如果在请求数据时，在缓存层和数据库层都没有命中，这种情况就叫作缓存穿透。
 造成缓存穿透的主要原因就是：查询某个 Key 对应的数据，Redis 缓存中没有相应的数据，则直接到数据库中查询。数据库中也不存在要查询的数据，则数据库会返回空，而 Redis 也不会缓存这个空结果。这就造成每次通过这样的 Key 去查询数据都会直接到数据库中查询，Redis 不会缓存空结果。这就造成了缓存穿透的问题。
 1.2、解决办法 将空对象也缓存起来。即如果某个 key 在缓存和数据库都没有命中，就将该 key 的值置为空对象缓存到 redis。 布隆过滤器。将所有的 key 都存放在足够大的布隆过滤器中，每次查询先由其对 key 过滤，若布隆过滤器命中，则该 key 有可能存在，若布隆过滤器未命中，则该 key 一定不存在。 1.3、布隆过滤器 布隆过滤器由一个 bit 数组和若干哈希函数组成。
 初始时将 bit 数组所有位置置 0。
@@ -130,7 +67,58 @@ int main() { pid_t pid; if((pid = fork()) = 0) { // TODO: 在子进程中实现�
 （4）内存使用的一大机制（虚拟内存能实现的原因）：缺页中断（见文章最后）。
 3. fork()是如何产生子进程的？ 上面说了每一个进程都有自己0-4G的虚拟地址空间，因此，fork所做的动作就是在当前进程的基础上产生一个新进程：（1）复制父进程的0-3G的用户空间（2）创建新进程（子进程）的PCB
 看一个例子吧：
-#include &lt;unistd.h> #include &lt;stdio.h> #include &lt;stdlib.h> //global variable int globalVar = 78; int main(){ pid_t pid = getpid(); int k = 0; int i; for(i = 0; i &lt; 5; ++i){ pid = fork(); // 循环生成5个子进程 if(-1 == pid){ perror("FORK"); exit(1); } // 由于fork()返回两个值，该分支一定会被子进程执行，即每子进程都会跳出循环去执行下方代码， // 而父进程一直执行到循环结束，故每个子进程都会执行下方的if(i &lt; 5)，而父进程执行else // 所以下方图片输出可表明每个子进程写时都复制父进程的变量再修改，且不影响其他进程。 else if(0 == pid){ break; } } sleep(i); // 保证父进程最后退出 if(i &lt; 5){ ++k; // 写时复制 --globalVar; //写时复制 printf("I'm %dth child, pid = %d, parent is %d, k = %d, globalVar = %d\n", i, getpid(), getppid(), k, globalVar); }else{ ++k; --globalVar; printf("I'm parent, pid = %d, k = %d, globalVar = %d\n", getpid(), k, globalVar); } } ...</p></div><footer class=entry-footer><span title='2022-04-09 19:42:15 +0000 UTC'>2022-04-09</span>&nbsp;·&nbsp;194 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to linux创建子进程--fork()方法" href=https://ethereal-lu.github.io/posts/linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork%E6%96%B9%E6%B3%95/></a></article><footer class=page-footer><nav class=pagination><a class=prev href=https://ethereal-lu.github.io/posts/page/3/>«&nbsp;Prev&nbsp;
+#include &lt;unistd.h> #include &lt;stdio.h> #include &lt;stdlib.h> //global variable int globalVar = 78; int main(){ pid_t pid = getpid(); int k = 0; int i; for(i = 0; i &lt; 5; ++i){ pid = fork(); // 循环生成5个子进程 if(-1 == pid){ perror("FORK"); exit(1); } // 由于fork()返回两个值，该分支一定会被子进程执行，即每子进程都会跳出循环去执行下方代码， // 而父进程一直执行到循环结束，故每个子进程都会执行下方的if(i &lt; 5)，而父进程执行else // 所以下方图片输出可表明每个子进程写时都复制父进程的变量再修改，且不影响其他进程。 else if(0 == pid){ break; } } sleep(i); // 保证父进程最后退出 if(i &lt; 5){ ++k; // 写时复制 --globalVar; //写时复制 printf("I'm %dth child, pid = %d, parent is %d, k = %d, globalVar = %d\n", i, getpid(), getppid(), k, globalVar); }else{ ++k; --globalVar; printf("I'm parent, pid = %d, k = %d, globalVar = %d\n", getpid(), k, globalVar); } } ...</p></div><footer class=entry-footer><span title='2022-04-09 19:42:15 +0000 UTC'>2022-04-09</span>&nbsp;·&nbsp;194 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to linux创建子进程--fork()方法" href=https://ethereal-lu.github.io/posts/linux/linux%E5%88%9B%E5%BB%BA%E5%AD%90%E8%BF%9B%E7%A8%8B--fork%E6%96%B9%E6%B3%95/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>编码</h2></header><div class=entry-content><p>1、为什么使用编码 人类的语言并不适合计算机使用，所以就需要发明一种适合计算机的语言，这就是二进制。电脑读不懂人类语言，所以需要将人类语言转换为二进制语言，这就是编码；人类读不懂电脑的二进制语言，所以需要转换为人类语言，这就是解码。
+2、为什么会乱码 编码与解码使用的规则不一样，就会乱码。即解码的时候，解码器不知道如何将当前的二进制转换为人类语言，就会乱码。
+3、字符集的历史 3.1、百花齐放 ASCII 码占用了 0~127，即一个字节中的后 7 位。
+IOS-8859-n 编码家族占用了 128~255，即利用了 ASCII 码未使用的第 1 位，因此IOS-8859-n 编码家族兼容ASCII 码。
+至此一个字节的 8 位已全部占用，后来的编码必须使用多个字节。
+GB2312：GB2312 并不兼容 ISO-8859-n 编码集，但是兼容 ASCII 编码。因为 ASCII 编码中的单字节字符一定是小于 128 的，所以最后我们就决定，中文的双字节字符都从 128 之后开始，也就是当发现字符连续两位都大于 128 时，就说明这是一个中文，指定了之后我们就把这种编码方式称之为 GB2312 编码。
+GB2312 中收录的中文汉字都是简体字和常用字，对于一些生僻字以及繁体字没有收录，于是乎 GBK 出现了。
+GBK： GBK 只要求第一位是大于 128，第二位可以小于 128，只要发现一个字节大于 128，那么紧随其后的一个字节就是和其作为一个整体作为中文字符。GBK兼容GB2312、ASCII，不兼容IOS-8859-n 。
+3.2、Unicode Unicode 不兼容以上任何编码。Unicode 字符最开始采用的是 UCS-2 标准，UCS-2 标准规定一个字符至少使用 2 个字节来表示。由于无法攘括全世界所有字符，后来又有了 UCS-4 标准，可以用 4 个字节来存储一个字符。
+Unicode 编码只是定义了字符集，对于字符集具体应该如何存储并没有做要求。
+UTF 系列编码就是对 Unicode 字符集的实现，只不过实现的方式有所区别，其中主要有：UTF-8，UTF-16，UTF-32 等类型。
+3.2.1、UTF-32 编码 UTF-32 编码基本按照 Unicode字符集标准来实现，任何一个符号都占用 4 个字节。浪费严重。
+...</p></div><footer class=entry-footer><span title='2022-04-08 23:08:18 +0000 UTC'>2022-04-08</span>&nbsp;·&nbsp;369 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to 编码" href=https://ethereal-lu.github.io/posts/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E7%BC%96%E7%A0%81/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>RabbitMQ基础</h2></header><div class=entry-content><p>一、概述 1.1、什么是消息队列 消息：指的是两个应用间传递的数据。数据的类型有很多种形式，可能只包含文本字符串，也可能包含嵌入对象。
+消息协议：为了让消息发送者和消息接收者都能够明白消息所承载的信息，它们就需要按照一种统一的格式描述消息。
+消息队列：（Message Queue，简称MQ），从字面意思上看，本质是个队列，FIFO先入先出，只不过队列中存放的内容是message。
+消息从发送者到接收者的方式也有两种。 一种为即时消息通讯，也就是说消息从一端发出后（消息发送者）立即就可以达到另一端（消息接收者），这种方式的具体实现就是RPC（当然单纯的http通讯也满足这个定义）； 另一种为延迟消息通讯，即消息从某一端发出后，首先进入一个容器进行临时存储，当达到某种条件后，再由这个容器发送给另一端。 这个容器的一种具体实现就是消息队列，如RabbitMQ。
+1.2、为什么使用消息队列 应用解耦：不同进程（process）之间传递消息时，两个进程之间耦合程度过高，改动一个进程，引发必须修改另一个进程，为了隔离这两个进程，在两进程间抽离出一层（一个模块），所有两进程之间传递的消息，都必须通过消息队列来传递，单独修改某一个进程，不会影响另一个； 流量削峰：如数据库只能同时处理一万条请求，如果来了两万条请求就执行一万条，将剩余一万条放在消息队列顺序执行。 异步处理：A 调用 B 处理数据，但 B 处理时间很长；A可以不用等，当B执行完将结果放在消息队列，再由消息队列将结果给A，这样就不用轮询或提供回调函数了。 广播 最终一致性 1.3、mqtt 与 MQ 的区别 mqtt：一种通信协议，类似人类交谈中的汉语、英语、俄语中的一种语言规范 MQ：一种通信通道，也叫消息队列，类似人类交谈中的用电话、email、微信的一种通信方式 json：一种内容格式，类似人类交谈中的排比句等方式
+1.4、RPC 执行流程 RPC（Remote Procedure Call）远程过程调用协议，一种通过网络从远程计算机上请求服务，而不需要了解底层网络技术的协议。其主要目的是做到不同服务间调用方法像同一服务间调用本地方法一样。
+当业务需要强一致性，关注业务逻辑的处理结果，则 RPC 比消息队列更合适。
+强一致性指不论在任何时候读取的都是最新的数据，最终一致性是允许可以在一段时间内每个结点的数据不一致，但是经过一段时间每个结点的数据必须一致，它强调的是最终数据的一致性。
+客户端处理过程中调用client sub，就像调用本地方法一样，传入参数 client sub将参数编组为消息，然后通过系统调用向服务端发送消息 服务端将接收到的数据包传递给server sub server sub将接收到的数据解组为参数 server sub再调用服务端的过程，过程执行的结果以反方向的相同步骤响应给客户端 以 Google 的 grpc 为例：先在 proto 文件中声明接口，包括方法名、参数和返回值，然后使用工具生成 go 可以用的库；服务端创建 grpc 服务实例并将本地实现的服务注册进该实例中，然后监听本地端口，收到请求后就执行本地方法并将结果返回；客户端创建 grpc 客户端实例，然后调用 proto 中声明的方法即可获得结果。
+1.5、MQ 分类 ActiveMQ：老、较少使用 Kafka：大数据实时计算和日志采集方面卓越 RocketMQ：阿里开源产品 RabbitMQ：主流 二、RabbitMQ介绍 2.1、RabbitMQ 简介 RabbitMQ是一个在AMQP（Advanced Message Queuing Protocol ）基础上实现的，可复用的企业消息系统。它可以用于大型软件系统各个模块之间的高效通信，支持高并发，支持可扩展。
+...</p></div><footer class=entry-footer><span title='2022-04-07 14:42:15 +0000 UTC'>2022-04-07</span>&nbsp;·&nbsp;2148 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to RabbitMQ基础" href=https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/rabbitmq/rabbitmq/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>ubuntu的ufw与iptables</h2></header><div class=entry-content><p>1、概述 进出计算机的流量通过“端口”进行过滤，“端口”是附加到特定应用程序使用的流量数据包的相对任意名称。
+按照惯例，某些端口通常用于特定类型的应用程序。例如，端口 80 通常用于不安全的 Web 浏览，端口 443 用于安全的 Web 浏览。
+可以通过“打开”或“关闭”（即过滤）为特定类型的流量指定的端口来允许或阻止到特定应用程序的流量。例如，如果端口 80 “关闭”，则无法进行（不安全的）网页浏览。
+Linux 内核包括 netfilter 子系统，用于操纵或决定进入或通过计算机的网络流量的命运。所有现代 Linux 防火墙解决方案都使用该系统进行数据包过滤。
+如果没有用户界面来管理内核的数据包过滤系统，那么用户或管理员几乎没有什么用处。这就是 iptables 的目的。当一个数据包到达您的计算机时，它会根据通过 iptables 提供给它的规则传递给 netfilter 子系统接受、处理或拒绝。因此，iptables 是您管理防火墙所需的一切（如果您熟悉它）。然而，许多前端可用于简化任务。
+因此，用户可以配置防火墙以允许某些类型的网络流量进出系统（例如 SSH 或 Web 服务器流量）。这是通过在防火墙中打开和关闭 TCP 和 UDP“端口”来完成的。此外，防火墙可以配置为允许或限制对特定 IP 地址（或 IP 地址范围）的访问。
+2、端口映射与端口转发 端口映射：端口映射就是将内网中的主机的一个端口映射到外网主机的一个端口，提供相应的服务。当用户访问外网IP的这个端口时，服务器自动将请求映射到对应局域网内部的机器上。
+我们在内网中有一台Web服务器，但是外网中的用户是没有办法直接访问该服务器的。于是我们可以在路由器上设置一个端口映射，只要外网用户访问路由器ip的80端口，那么路由器会把自动把流量转到内网Web服务器的80端口上。并且，在路由器上还存在一个Session，当内网服务器返回数据给路由器时，路由器能准确的将消息发送给外网请求用户的主机。在这过程中，路由器充当了一个反向代理的作用，他保护了内网中主机的安全。
+端口转发：端口转发（Port forwarding），有时被叫做隧道，是安全壳（SSH） 为网络安全通信使用的一种方法。
+比如，我们现在在内网中，是没有办法直接访问外网的。但是我们可以通过路由器的NAT方式访问外网。假如我们内网现在有100台主机，那么我们现在都是通过路由器的这一个公网IP和外网通信的。那么，当互联网上的消息发送回来时，路由器是怎么知道这个消息是给他的，而另外消息是给你的呢？这就要我们的ip地址和路由器的端口进行绑定了，这时，在路由器中就会有一个内网ip和路由器端口对应的一张表。当路由器的10000端口收到消息时，就知道把消息发送给他，而当20000端口收到消息时，就知道把消息发送给你。这就是端口转发，其转发一个端口收到的流量，给另一个主机。
+端口转发：转发的重点在“转”上面。送快递的过来，把所有快递都交给门口保安，保安再根据每件快递上的收件人来分发。
+端口映射：就是在大门口给每个人装个柜子，送快递的直接按收件人名字，把快递放到对应的柜子里面。
+3、ufw与iptables iptables 是防火墙规则的数据库，是 Linux 系统中实际使用的防火墙。 Linux系统中配置iptables的传统界面是命令行界面终端。
+UFW（简单防火墙）是 iptables 的前端，是Ubuntu系统上配置iptables防火墙的工具，特别适合基于主机的防火墙。 UFW 是专门为 Ubuntu 开发的（但在其他发行版中可用），也可以从终端进行配置。</p></div><footer class=entry-footer><span title='2022-04-07 14:42:15 +0000 UTC'>2022-04-07</span>&nbsp;·&nbsp;62 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to ubuntu的ufw与iptables" href=https://ethereal-lu.github.io/posts/linux/ubuntu%E7%9A%84ufw%E4%B8%8Eiptables/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>AQS</h2></header><div class=entry-content><p>AQS的核心思想是，如果被请求的共享资源空闲，则将当前请求资源的线程设置为有效的工作线程，并将共享资源设置为锁定状态，如果被请求的共享资源被占用，那么就通过cas 的方式将当前线程添加到等待队列的尾部，直到它的前继节点释放锁并唤醒它。
+在 AQS 中用变量 state 代表共享资源，通过 cas 改变 state 的值来竞争锁。
+ReentrantLock 实现了公平锁和非公平锁，他们都继承了 AQS，公平锁和非公平锁的最大区别就是在获取锁的时候，非公平锁直接和等待队列的头节点竞争锁，而非公平锁只有在自己是队列头结点时才去获取锁。
+ReentrantLock 中，若 state 的值为0，说明当前共享资源是空闲的，可以获取。若获取到锁的线程再次获取锁时，state 的值加 1，这就是可重入锁。同时这样会避免多余的 cas 开销。</p></div><footer class=entry-footer><span title='2022-04-06 21:12:41 +0000 UTC'>2022-04-06</span>&nbsp;·&nbsp;22 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to AQS" href=https://ethereal-lu.github.io/posts/java/java-%E8%BF%9B%E9%98%B6/aqs/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>BIO,NIO,AIO</h2></header><div class=entry-content><p>本文摘自(31条消息) Java面试常考的 BIO，NIO，AIO 总结_有梦想的小树的博客-CSDN博客_bio nio
+Java 中的 BIO、NIO和 AIO 理解为是 Java 语言对操作系统的各种 IO 模型的封装。程序员在使用这些 API 的时候，不需要关心操作系统层面的知识，也不需要根据不同操作系统编写不同的代码。只需要使用Java的API就可以了。
+同步与异步
+同步： 同步就是发起一个调用后，需要等待被调用者返回结果。 异步： 异步就是发起一个调用后，立刻得到被调用者的回应表示已接收到请求，但是被调用者并没有返回结果，此时我们可以处理其他的请求，被调用者通常依靠事件，回调等机制来通知调用者其返回结果。 同步和异步的区别最大在于异步的话调用者不需要等待处理结果，被调用者会通过回调等机制来通知调用者其返回结果。
+阻塞和非阻塞
+阻塞： 阻塞就是发起一个请求，调用者一直等待请求结果返回，也就是当前线程会被挂起，无法从事其他任务，只有当条件就绪才能继续。 非阻塞： 非阻塞就是发起一个请求，调用者不用一直等着结果返回，可以先去干其他事情。 同步和阻塞最大的区别就是线程是否会被挂起。
+那么同步阻塞、同步非阻塞和异步非阻塞又代表什么意思呢？
+在等待返回结果前如果什么也不干就是同步阻塞；如果可以做一些其他的事只需要以轮询的方式查看结果是否返回就是同步非阻塞；如果不需要等待返回结果就是异步非阻塞。
+举个生活中简单的例子，你妈妈让你烧水，小时候你比较笨啊，在哪里傻等着水开（同步阻塞）。等你稍微再长大一点，你知道每次烧水的空隙可以去干点其他事，然后只需要时不时来看看水开了没有（同步非阻塞）。后来，你们家用上了水开了会发出声音的壶，这样你就只需要听到响声后就知道水开了，在这期间你可以随便干自己的事情，你需要去倒水了（异步非阻塞）。
+1. BIO (Blocking I/O) 最传统的一种IO模型，即在读写数据过程中会发生阻塞现象。 当用户线程发出IO请求之后，内核会去查看数据是否就绪，如果没有就绪就会等待数据就绪，而用户线程就会处于阻塞状态，用户线程交出CPU。当数据就绪之后，内核会将数据拷贝到用户线程，并返回结果给用户线程，用户线程才解除block状态。 典型的阻塞IO模型的例子为 data = socket.read(); 如果数据没有就绪，就会一直阻塞在read方法。
+1.1 传统 BIO BIO通信（一请求一应答）模型图如下(图源网络，原出处不明)：
+采用 BIO 通信模型 的服务端，通常由一个独立的 Acceptor 线程负责监听客户端的连接。我们一般通过在 while(true) 循环中服务端会调用 accept() 方法等待接收客户端的连接的方式监听请求，请求一旦接收到一个连接请求，就可以建立通信套接字在这个通信套接字上进行读写操作，此时不能再接收其他客户端连接请求，只能等待同当前连接的客户端的操作执行完成， 不过可以通过多线程来支持多个客户端的连接，如上图所示。
+如果要让 BIO 通信模型 能够同时处理多个客户端请求，就必须使用多线程（主要原因是 socket.accept()、 socket.read()、 socket.write() 涉及的三个主要函数都是同步阻塞的），也就是说它在接收到客户端连接请求之后为每个客户端创建一个新的线程进行链路处理，处理完成之后，通过输出流返回应答给客户端，线程销毁。这就是典型的 一请求一应答通信模型 。我们可以设想一下如果这个连接不做任何事情的话就会造成不必要的线程开销，不过可以通过 线程池机制 改善，线程池还可以让线程的创建和回收成本相对较低。使用FixedThreadPool 可以有效的控制了线程的最大数量，保证了系统有限的资源的控制，实现了N(客户端请求数量):M(处理客户端请求的线程数量)的伪异步I/O模型（N 可以远远大于 M），下面一节"伪异步 BIO"中会详细介绍到。
+...</p></div><footer class=entry-footer><span title='2022-04-06 21:12:41 +0000 UTC'>2022-04-06</span>&nbsp;·&nbsp;200 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to BIO,NIO,AIO" href=https://ethereal-lu.github.io/posts/java/java-%E8%BF%9B%E9%98%B6/bionioaio/></a></article><footer class=page-footer><nav class=pagination><a class=prev href=https://ethereal-lu.github.io/posts/page/3/>«&nbsp;Prev&nbsp;
 </a><a class=next href=https://ethereal-lu.github.io/posts/page/5/>Next&nbsp;&nbsp;»</a></nav></footer></main><footer class=footer><span>&copy; 2025 <a href=https://ethereal-lu.github.io/>lu</a></span> ·
 <span>Powered by
 <a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
