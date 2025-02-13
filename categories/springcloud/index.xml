@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>SpringCLoud on lu</title>
+    <link>https://ethereal-lu.github.io/categories/springcloud/</link>
+    <description>Recent content in SpringCLoud on lu</description>
+    <generator>Hugo -- 0.140.1</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Tue, 11 Feb 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://ethereal-lu.github.io/categories/springcloud/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>SpringFlux</title>
+      <link>https://ethereal-lu.github.io/notes/%E5%88%86%E5%B8%83%E5%BC%8F/springcloud/gateway/springflux/</link>
+      <pubDate>Tue, 11 Feb 2025 00:00:00 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/notes/%E5%88%86%E5%B8%83%E5%BC%8F/springcloud/gateway/springflux/</guid>
+      <description>&lt;h2 id=&#34;1-概述&#34;&gt;1 概述&lt;/h2&gt;
+&lt;p&gt;SpringFlux 基于 Reactor，默认使用容器是 Netty，是一种异步非阻塞IO模型，通过少量的容器线程就可以支撑大量的并发访问，所以 SpringFlux 可以有效提升系统的吞吐量和伸缩性，特别是在一些 IO 密集型应用中，例如微服务网关 Spring Cloud Gateway 就使用了 Flux，这样可以有效提升网管对下游服务的吞吐量。如果运用在日志监控系统，前端页面将不再需要通过“命令式”的轮询的方式不断向服务器请求数据然后进行更新，而是在建立好通道之后，数据流从系统源源不断流向页面，从而展现实时的指标变化曲线。&lt;/p&gt;
+&lt;h2 id=&#34;2-执行流程&#34;&gt;2 执行流程&lt;/h2&gt;
+&lt;p&gt;Netty服务器启动后会监听客户端的请求，当boss IO线程接收到完成TCP三次握手的请求后，会把连接套接字通道传递给worker IO线程进行具体处理，后者则会调用适配器ReactorHttpHandlerAdapter的apply方法进行处理，然后适配器就会把请求再转发给基础层的HttpHandler的实现类HttpWebHandlerAdapter的handle方法进行处理，其内部则会调用请求分配器DispatcherHandler的handle方法把请求分配到具体的controller进行执行。&lt;/p&gt;
+&lt;p&gt;SpringWebflux 核心控制器 DispatchHandler，实现了接口 WebHandler。WebHandler的源码如下：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;WebHandler&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;/**
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;     * Handle the web server exchange.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;     * @param exchange the current server exchange
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;     * @return {@code Mono&amp;lt;Void&amp;gt;} to indicate when request handling is complete
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;     */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Mono&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Void&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;handle&lt;/span&gt;(ServerWebExchange exchange);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;DispatchHandler实现了handle方法，如下：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; Mono&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Void&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;handle&lt;/span&gt;(ServerWebExchange exchange) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;handlerMappings&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;createNotFoundError&lt;/span&gt;() : Flux.&lt;span style=&#34;color:#a6e22e&#34;&gt;fromIterable&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;handlerMappings&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;concatMap&lt;/span&gt;((mapping) &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; mapping.&lt;span style=&#34;color:#a6e22e&#34;&gt;getHandler&lt;/span&gt;(exchange);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }).&lt;span style=&#34;color:#a6e22e&#34;&gt;next&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;switchIfEmpty&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;createNotFoundError&lt;/span&gt;()).&lt;span style=&#34;color:#a6e22e&#34;&gt;flatMap&lt;/span&gt;((handler) &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;invokeHandler&lt;/span&gt;(exchange, handler);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }).&lt;span style=&#34;color:#a6e22e&#34;&gt;flatMap&lt;/span&gt;((result) &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;handleResult&lt;/span&gt;(exchange, result);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;其中，参数ServerWebExchange是放http请求和响应信息；getHandler根据请求地址获取对应的mapping；invokeHandler调用具体的业务方法；handleResult处理结果返回。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Netty</title>
+      <link>https://ethereal-lu.github.io/notes/%E5%88%86%E5%B8%83%E5%BC%8F/springcloud/gateway/netty/</link>
+      <pubDate>Sat, 09 Jul 2022 19:12:41 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/notes/%E5%88%86%E5%B8%83%E5%BC%8F/springcloud/gateway/netty/</guid>
+      <description>&lt;h2 id=&#34;1-nio基础&#34;&gt;1 NIO基础&lt;/h2&gt;
+&lt;p&gt;non-blocking io 非阻塞IO&lt;/p&gt;
+&lt;h3 id=&#34;11-三大组件&#34;&gt;1.1 三大组件&lt;/h3&gt;
+&lt;h4 id=&#34;111-channel--buffer&#34;&gt;1.1.1 Channel &amp;amp; Buffer&lt;/h4&gt;
+&lt;p&gt;Buffer是内存中的数据缓冲区，Channel 是内存与磁盘之间的数据通道。不同于InputStream、OutputStream等BIO中的流都是单向数据通道，Channel 是双向数据通道，可以从 Channel 将数据读入 Buffer，也可以将Buffer 中的数据写入Channel 。&lt;/p&gt;
+&lt;p&gt;常见的 Channel 有：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;FileChannel ：文件通道&lt;/li&gt;
+&lt;li&gt;DatagramChannel ：udp&lt;/li&gt;
+&lt;li&gt;SocketChannel ：tcp；客户端服务端都可以&lt;/li&gt;
+&lt;li&gt;ServerSocketChannel ：tcp；专用于服务端&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Buffer 使用最多的就是 ByteBuffer，其他的也是每种基础数据类型有一个对应的Buffer，但用的不多。&lt;/p&gt;
+&lt;h4 id=&#34;112-selector&#34;&gt;1.1.2 Selector&lt;/h4&gt;
+&lt;p&gt;在使用传统BIO开发时，要么对每个连接都新建一个线程处理（线程太多撑爆内存、线程切换成本高），要么使用线程池（阻塞IO，每个线程同时只能处理一个连接，线程利用率不高）&amp;mdash;&amp;gt; 正因为此，原始的HTTP1.0才使用短连接，一个请求处理完立刻释放连接，让线程可以处理其他请求。&lt;/p&gt;
+&lt;p&gt;Selector 的作用就是配合一个线程来管理多个Channel ，获取这些Channel 上发生的事件，将有事件发生的Channel 交给线程处理。适合连接数多但流量低的场景，流量大意味着一个Channel 要处理大量数据，会使其他Channel 饥饿。&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;selector&#34; loading=&#34;lazy&#34; src=&#34;https://ethereal-lu.github.io/notes/%E5%88%86%E5%B8%83%E5%BC%8F/springcloud/gateway/netty/selector.png&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;12-bytebuffer&#34;&gt;1.2 ByteBuffer&lt;/h3&gt;
+&lt;h4 id=&#34;121-基本使用&#34;&gt;1.2.1 基本使用&lt;/h4&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;TestByteBuffer&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String&lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt; args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 获取 FileChannel&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; (FileChannel channel &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; FileInputStream(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;data.txt&amp;#34;&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;getChannel&lt;/span&gt;()) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 申请 10 个字节的缓冲区&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            ByteBuffer buffer &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ByteBuffer.&lt;span style=&#34;color:#a6e22e&#34;&gt;allocate&lt;/span&gt;(10);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 读取channel中的数据到buffer。read 方法返回读取到的字节数，-1表示读完了&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (channel.&lt;span style=&#34;color:#a6e22e&#34;&gt;read&lt;/span&gt;(buffer) &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;1) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                buffer.&lt;span style=&#34;color:#a6e22e&#34;&gt;flip&lt;/span&gt;();  &lt;span style=&#34;color:#75715e&#34;&gt;// 切换为读模式&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (buffer.&lt;span style=&#34;color:#a6e22e&#34;&gt;hasRemaining&lt;/span&gt;()) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(buffer.&lt;span style=&#34;color:#a6e22e&#34;&gt;get&lt;/span&gt;());  &lt;span style=&#34;color:#75715e&#34;&gt;// get 每次读一个字节&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                buffer.&lt;span style=&#34;color:#a6e22e&#34;&gt;clear&lt;/span&gt;();  &lt;span style=&#34;color:#75715e&#34;&gt;// 切换为写模式&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        } &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; (IOException e) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            e.&lt;span style=&#34;color:#a6e22e&#34;&gt;printStackTrace&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;122-内部结构&#34;&gt;1.2.2 内部结构&lt;/h4&gt;
+&lt;p&gt;ByteBuffer有以下几个重要属性&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

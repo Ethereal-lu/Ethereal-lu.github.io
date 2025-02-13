@@ -22,7 +22,7 @@ worker进程个数：
 导致后果：许多worker进程被内核重新调度唤醒，只有一个进程可以accept这个连接进行处理，其他余者皆失败，导致性能浪费。
 nginx解决方案：使用锁机制，让抢到锁的一个worker进程去accept（epoll_wait）这个socket；如果操作系统支持原子整型，才会使用共享内存实现原子上锁，否则使用文件上锁。
 4、Nginx 配置 4.1、默认配置文件 /etc/nginx/nginx.conf
-...</p></div><footer class=entry-footer><span title='2022-05-30 22:42:15 +0000 UTC'>2022-05-30</span>&nbsp;·&nbsp;485 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to Nginx基础" href=https://ethereal-lu.github.io/posts/%E5%88%86%E5%B8%83%E5%BC%8F/nginx/nginx%E5%9F%BA%E7%A1%80/></a></article></main><footer class=footer><span>&copy; 2025 <a href=https://ethereal-lu.github.io/>lu</a></span> ·
+...</p></div><footer class=entry-footer><span title='2022-05-30 22:42:15 +0000 UTC'>2022-05-30</span>&nbsp;·&nbsp;485 words&nbsp;·&nbsp;lu</footer><a class=entry-link aria-label="post link to Nginx基础" href=https://ethereal-lu.github.io/notes/%E5%88%86%E5%B8%83%E5%BC%8F/nginx/nginx%E5%9F%BA%E7%A1%80/></a></article></main><footer class=footer><span>&copy; 2025 <a href=https://ethereal-lu.github.io/>lu</a></span> ·
 <span>Powered by
 <a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
         <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
