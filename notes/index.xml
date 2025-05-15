@@ -6,8 +6,32 @@
     <description>Recent content in Notes on lu</description>
     <generator>Hugo -- 0.140.1</generator>
     <language>zh-CN</language>
-    <lastBuildDate>Tue, 11 Feb 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 15 Apr 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://ethereal-lu.github.io/notes/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>日常记录小知识</title>
+      <link>https://ethereal-lu.github.io/notes/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%97%A5%E5%B8%B8%E8%AE%B0%E5%BD%95%E5%B0%8F%E7%9F%A5%E8%AF%86/</link>
+      <pubDate>Tue, 15 Apr 2025 00:00:00 +0000</pubDate>
+      <guid>https://ethereal-lu.github.io/notes/%E5%B0%8F%E7%A2%8E%E7%89%87%E7%9F%A5%E8%AF%86/%E6%97%A5%E5%B8%B8%E8%AE%B0%E5%BD%95%E5%B0%8F%E7%9F%A5%E8%AF%86/</guid>
+      <description>&lt;h2 id=&#34;1-office激活&#34;&gt;1 Office激活&lt;/h2&gt;
+&lt;p&gt;Office Tool Plus下载正版Office，HEU_KMS_Activator激活。&lt;/p&gt;
+&lt;h2 id=&#34;2-虚拟机网络问题&#34;&gt;2 虚拟机网络问题&lt;/h2&gt;
+&lt;h3 id=&#34;21-虚拟机网络无法连接&#34;&gt;2.1 虚拟机网络无法连接&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;问题描述：银河麒麟虚拟机网络无法连接，提示“未插入对应的网卡网线”&lt;/li&gt;
+&lt;li&gt;解决方法：重启网络服务，步骤如下
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;systemctl stop NetworkManager &amp;amp;&amp;amp; systemctl disable NetworkManager&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;systemctl restart NetworkManager&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;22-虚拟机挂起后影响--docker-网络&#34;&gt;2.2 虚拟机挂起后，影响  docker 网络&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;问题描述：虚拟机挂起再继续运行后，外部网络无法访问 docker&lt;/li&gt;
+&lt;li&gt;解决方法：重启 docker 网络服务 &lt;code&gt;systemctl restart NetworkManager docker&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;</description>
+    </item>
     <item>
       <title>SpringFlux</title>
       <link>https://ethereal-lu.github.io/notes/%E5%88%86%E5%B8%83%E5%BC%8F/springcloud/gateway/springflux/</link>
